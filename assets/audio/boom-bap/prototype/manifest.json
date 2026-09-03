@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "boom-bap-prototype-kit",
+  "status": "local-prototype",
+  "releaseBlocked": true,
+  "assets": {
+    "kick": {
+      "file": "kick.wav",
+      "sha256": "bd3d65e592d338f7d0bd9957b0e73381fbbce0fde35db94360ba9773d9876474",
+      "source": "user-provided",
+      "license": "temporary-local-use"
+    },
+    "snare": {
+      "file": "snare.wav",
+      "sha256": "f1ac8f1e85a7fdc0dc4cbef279c742444a9f4d862d36bfaafb7d01ec4fca3d33",
+      "source": "user-provided",
+      "license": "temporary-local-use"
+    },
+    "closedHat": {
+      "file": "closed-hat.wav",
+      "sha256": "f85a1a670067253f86bcd33a190242a95b474a9973f716d031e8a704cd40744a",
+      "source": "stargatedaw/stargate-sample-pack@dbfd6ec52d4ed53b60bdbea5fc6adf295127c027",
+      "license": "CC0-1.0"
+    },
+    "openHat": {
+      "file": "open-hat.wav",
+      "sha256": "ec460260b8f8ff8335788f0e3c9f1a1f2160327cfcd224053ae7d4321ea50171",
+      "source": "stargatedaw/stargate-sample-pack@dbfd6ec52d4ed53b60bdbea5fc6adf295127c027",
+      "license": "CC0-1.0"
+    }
+  }
+}

@@ -3,3 +3,6 @@ AGENTS.md
 AGENTS.override.md
 .agents/
 .codex/
+
+# Temporary local audio; replace before public release
+assets/audio/boom-bap/prototype/*.wav
