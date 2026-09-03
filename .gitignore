@@ -1,0 +1,5 @@
+# Local Codex instructions, skills, and configuration
+AGENTS.md
+AGENTS.override.md
+.agents/
+.codex/
