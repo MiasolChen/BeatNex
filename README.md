@@ -1,6 +1,6 @@
 # BeatNex
 
-BeatNex 是面向街舞练习者的互动节奏训练工具。当前进入 Web Prototype 阶段，技术栈为 React、TypeScript、Vite 和 Web Audio API。
+BeatNex 是面向街舞练习者的互动节奏训练工具。当前 Web Prototype 已可在本地播放六个 Boom Bap Pattern，并提供 BPM、Count-in、播放指针和四鼓件分层控制。
 
 ## 本地运行
 
@@ -15,6 +15,14 @@ corepack pnpm dev
 corepack pnpm typecheck
 corepack pnpm build
 ```
+
+自动检查：
+
+```bash
+corepack pnpm test
+```
+
+首次点击“开始练习”时，浏览器会解锁音频、加载四个本地 WAV，并播放一小节 Count-in。Prototype 素材只用于本地开发，不能用于公开发行。
 
 ## 模块边界
 
