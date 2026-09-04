@@ -4,5 +4,12 @@ AGENTS.override.md
 .agents/
 .codex/
 
+# Local dependencies and build output
+node_modules/
+dist/
+*.tsbuildinfo
+*.local
+.DS_Store
+
 # Temporary local audio; replace before public release
 assets/audio/boom-bap/prototype/*.wav
