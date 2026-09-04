@@ -9,6 +9,22 @@ const drumLabels: Record<DrumId, { name: string; short: string }> = {
   closedHat: { name: 'Closed Hat', short: 'CH' }, openHat: { name: 'Open Hat', short: 'OH' },
 }
 
+const emptyDiagnostics = {
+  scheduledHits: 0,
+  skippedSteps: 0,
+  minScheduleLeadMs: null,
+  maxScheduleLeadMs: null,
+}
+
+function formatDuration(seconds: number) {
+  const minutes = Math.floor(seconds / 60)
+  return `${String(minutes).padStart(2, '0')}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`
+}
+
+function formatLead(value: number | null) {
+  return value === null ? '—' : `${value.toFixed(1)} ms`
+}
+
 function Icon({ name }: { name: 'play' | 'pause' | 'stop' }) {
   if (name === 'play') return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5Z" /></svg>
   if (name === 'pause') return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 5h4v14H7zm6 0h4v14h-4z" /></svg>
@@ -21,6 +37,7 @@ export function App() {
   const selectedPattern = useMemo(() => findPattern(patternName, difficulty), [difficulty, patternName])
   const [bpm, setBpm] = useState(selectedPattern.recommendedBpm)
   const { snapshot, mixes, pendingChange, play, pause, stop, retry, updateMix } = useDrumMachine(selectedPattern, bpm)
+  const diagnostics = snapshot.diagnostics ?? emptyDiagnostics
   const isPlaying = snapshot.status === 'playing'
   const isLoading = snapshot.status === 'loading'
   const canStop = isPlaying || snapshot.status === 'paused'
@@ -68,6 +85,19 @@ export function App() {
           <div className="playhead" style={{ '--progress': snapshot.isCountIn ? 0 : snapshot.progress } as CSSProperties} aria-hidden="true" />
         </div></div>
       </section>
+
+      <details className="diagnostics">
+        <summary>计时诊断 <span>用于 M1 长循环验收</span></summary>
+        <p>数据来自当前 AudioContext；停止后会保留到下一次全新播放。</p>
+        <dl>
+          <div><dt>音频时间</dt><dd data-testid="diagnostic-elapsed">{formatDuration(snapshot.elapsed)}</dd></div>
+          <div><dt>完成循环</dt><dd>{snapshot.cycle}</dd></div>
+          <div><dt>已调度鼓点</dt><dd>{diagnostics.scheduledHits}</dd></div>
+          <div><dt>跳过过期 Step</dt><dd>{diagnostics.skippedSteps}</dd></div>
+          <div><dt>最小提前量</dt><dd>{formatLead(diagnostics.minScheduleLeadMs)}</dd></div>
+          <div><dt>最大提前量</dt><dd>{formatLead(diagnostics.maxScheduleLeadMs)}</dd></div>
+        </dl>
+      </details>
 
       <section className="mixer" aria-labelledby="mixer-title"><div className="section-heading"><div><p className="section-kicker">02 / Layers</p><h2 id="mixer-title">分层聆听</h2></div><p className="section-copy">切换不会停止时间轴。Focus 会压低其他声部，适合专注听一层。</p></div><div className="channel-grid">
         {DRUM_IDS.map((drum) => <article className="channel" key={drum}><div className="channel-title"><span>{drumLabels[drum].short}</span><h3>{drumLabels[drum].name}</h3></div><label className="volume-label" htmlFor={`${drum}-volume`}><span>Volume</span><output>{Math.round(mixes[drum].volume * 100)}</output></label><input id={`${drum}-volume`} type="range" min="0" max="100" value={mixes[drum].volume * 100} onChange={(event) => updateMix(drum, { volume: Number(event.target.value) / 100 })} /><div className="mix-actions"><button aria-pressed={mixes[drum].solo} onClick={() => updateMix(drum, { solo: !mixes[drum].solo })}>Solo</button><button aria-pressed={mixes[drum].muted} onClick={() => updateMix(drum, { muted: !mixes[drum].muted })}>Mute</button><button aria-pressed={mixes[drum].focused} onClick={() => updateMix(drum, { focused: !mixes[drum].focused })}>Focus</button></div></article>)}

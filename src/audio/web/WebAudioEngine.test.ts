@@ -134,6 +134,12 @@ describe('WebAudioEngine scheduling and mixing', () => {
       isCountIn: false,
     })
     expect(engine.getPosition().progress).toBeCloseTo(0, 8)
+    expect(engine.getSnapshot().diagnostics).toMatchObject({
+      scheduledHits: context.starts.length,
+      skippedSteps: 0,
+    })
+    expect(engine.getSnapshot().diagnostics.minScheduleLeadMs).toBeGreaterThanOrEqual(0)
+    expect(engine.getSnapshot().diagnostics.maxScheduleLeadMs).toBeLessThanOrEqual(120)
     engine.dispose()
   })
 
@@ -148,6 +154,7 @@ describe('WebAudioEngine scheduling and mixing', () => {
 
     expect(context.starts.length).toBeGreaterThan(0)
     expect(context.starts.every(({ scheduledAt, time }) => time >= scheduledAt)).toBe(true)
+    expect(engine.getSnapshot().diagnostics.skippedSteps).toBeGreaterThan(0)
     engine.dispose()
   })
 

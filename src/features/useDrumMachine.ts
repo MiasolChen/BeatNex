@@ -5,7 +5,10 @@ import type { EngineSnapshot, TrackMix } from '../audio/types'
 import { WebAudioEngine } from '../audio/web/WebAudioEngine'
 import { DRUM_IDS, type DrumId, type Pattern } from '../core/pattern/types'
 
-const initialSnapshot: EngineSnapshot = { status: 'idle', step: 0, cycle: 0, progress: 0, isCountIn: false }
+const initialSnapshot: EngineSnapshot = {
+  status: 'idle', step: 0, cycle: 0, progress: 0, isCountIn: false, elapsed: 0,
+  diagnostics: { scheduledHits: 0, skippedSteps: 0, minScheduleLeadMs: null, maxScheduleLeadMs: null },
+}
 const initialMixes = Object.fromEntries(
   DRUM_IDS.map((drum) => [drum, { muted: false, solo: false, focused: false, volume: 0.82 }]),
 ) as Record<DrumId, TrackMix>

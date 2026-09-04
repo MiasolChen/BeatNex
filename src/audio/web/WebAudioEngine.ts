@@ -3,6 +3,7 @@ import { absoluteStepTime, patternDuration, positionAtTime, stepsPerPattern } fr
 import type {
   AudioEngine,
   DrumKit,
+  EngineDiagnostics,
   EngineSnapshot,
   EngineStatus,
   PlaybackPosition,
@@ -34,6 +35,7 @@ export class WebAudioEngine implements AudioEngine {
   private countInStartedAt = 0
   private nextAbsoluteStep = 0
   private pausedMusicOffset = 0
+  private diagnostics: EngineDiagnostics = this.emptyDiagnostics()
 
   async prepare(kit: DrumKit) {
     if (this.status === 'ready' || this.status === 'playing' || this.status === 'paused') return
@@ -96,6 +98,7 @@ export class WebAudioEngine implements AudioEngine {
       this.musicStartedAt = this.countInStartedAt + countInSteps * stepSeconds
       this.nextAbsoluteStep = -countInSteps
       this.pausedMusicOffset = 0
+      this.diagnostics = this.emptyDiagnostics()
     }
     this.setStatus('playing')
     this.schedule()
@@ -138,7 +141,7 @@ export class WebAudioEngine implements AudioEngine {
 
   getPosition(): PlaybackPosition {
     if (!this.context || !this.request || ['idle', 'loading', 'ready', 'stopped', 'error'].includes(this.status)) {
-      return { status: this.status, step: 0, cycle: 0, progress: 0, isCountIn: false }
+      return { status: this.status, step: 0, cycle: 0, progress: 0, isCountIn: false, elapsed: 0 }
     }
     if (this.status === 'paused') {
       if (this.pausedMusicOffset < 0) {
@@ -152,6 +155,7 @@ export class WebAudioEngine implements AudioEngine {
           cycle: 0,
           progress,
           isCountIn: true,
+          elapsed: 0,
         }
       }
       const position = positionAtTime(this.request.pattern, this.request.bpm, 0, this.pausedMusicOffset)
@@ -162,13 +166,13 @@ export class WebAudioEngine implements AudioEngine {
       const countInDuration = this.musicStartedAt - this.countInStartedAt
       const progress = countInDuration ? Math.max(0, now - this.countInStartedAt) / countInDuration : 0
       const step = Math.max(0, Math.floor(progress * this.request.pattern.beatsPerBar * this.request.pattern.subdivision))
-      return { status: this.status, step, cycle: 0, progress, isCountIn: true }
+      return { status: this.status, step, cycle: 0, progress, isCountIn: true, elapsed: 0 }
     }
     return { status: this.status, ...positionAtTime(this.request.pattern, this.request.bpm, this.musicStartedAt, now), isCountIn: false }
   }
 
   getSnapshot(): EngineSnapshot {
-    return { ...this.getPosition(), error: this.error }
+    return { ...this.getPosition(), error: this.error, diagnostics: { ...this.diagnostics } }
   }
 
   subscribe(listener: () => void) {
@@ -178,7 +182,7 @@ export class WebAudioEngine implements AudioEngine {
 
   dispose() {
     this.cancelSchedule()
-    void this.context?.close()
+    if (this.context?.state !== 'closed') void this.context?.close()
     this.listeners.clear()
   }
 
@@ -196,7 +200,10 @@ export class WebAudioEngine implements AudioEngine {
       (context.currentTime - this.musicStartedAt) /
       (60 / request.bpm / request.pattern.subdivision),
     )
-    this.nextAbsoluteStep = Math.max(this.nextAbsoluteStep, firstSchedulableStep)
+    if (firstSchedulableStep > this.nextAbsoluteStep) {
+      this.diagnostics.skippedSteps += firstSchedulableStep - this.nextAbsoluteStep
+      this.nextAbsoluteStep = firstSchedulableStep
+    }
 
     while (true) {
       const time = absoluteStepTime(this.musicStartedAt, this.nextAbsoluteStep, request.bpm, request.pattern.subdivision)
@@ -254,6 +261,14 @@ export class WebAudioEngine implements AudioEngine {
     }
     this.activeSources.add(source)
     if (drum === 'openHat') this.openHatSources.add(source)
+    const leadMs = Math.max(0, (time - context.currentTime) * 1_000)
+    this.diagnostics.scheduledHits += 1
+    this.diagnostics.minScheduleLeadMs = this.diagnostics.minScheduleLeadMs === null
+      ? leadMs
+      : Math.min(this.diagnostics.minScheduleLeadMs, leadMs)
+    this.diagnostics.maxScheduleLeadMs = this.diagnostics.maxScheduleLeadMs === null
+      ? leadMs
+      : Math.max(this.diagnostics.maxScheduleLeadMs, leadMs)
     source.start(time)
   }
 
@@ -291,5 +306,14 @@ export class WebAudioEngine implements AudioEngine {
 
   private emit() {
     for (const listener of this.listeners) listener()
+  }
+
+  private emptyDiagnostics(): EngineDiagnostics {
+    return {
+      scheduledHits: 0,
+      skippedSteps: 0,
+      minScheduleLeadMs: null,
+      maxScheduleLeadMs: null,
+    }
   }
 }

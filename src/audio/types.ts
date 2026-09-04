@@ -21,12 +21,21 @@ export type PlaybackPosition = {
   cycle: number
   progress: number
   isCountIn: boolean
+  elapsed: number
+}
+
+export type EngineDiagnostics = {
+  scheduledHits: number
+  skippedSteps: number
+  minScheduleLeadMs: number | null
+  maxScheduleLeadMs: number | null
 }
 
 export type DrumKit = Record<DrumId, string>
 
 export type EngineSnapshot = PlaybackPosition & {
   error?: string
+  diagnostics: EngineDiagnostics
 }
 
 export interface AudioEngine {
