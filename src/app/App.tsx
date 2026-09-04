@@ -16,6 +16,12 @@ const emptyDiagnostics = {
   maxScheduleLeadMs: null,
 }
 
+const recommendedPractice = {
+  duration: '约 5 分钟',
+  style: 'Boom Bap',
+  target: 'Kick',
+} as const
+
 function formatDuration(seconds: number) {
   const minutes = Math.floor(seconds / 60)
   return `${String(minutes).padStart(2, '0')}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`
@@ -84,6 +90,11 @@ export function App() {
         <div className="now-card" aria-label="当前练习">
           <div className="now-meta"><span>当前练习</span><strong>{bpm} BPM</strong></div><h2>{selectedPattern.name}</h2>
           <p>{difficulty === 'simple' ? '稳定后拍与身体重心' : '加入切分、Ghost Note 与句尾推动'}</p>
+          <dl className="practice-facts" aria-label="推荐练习信息">
+            <div><dt>风格</dt><dd>{recommendedPractice.style}</dd></div>
+            <div><dt>首练目标</dt><dd>{recommendedPractice.target}</dd></div>
+            <div><dt>预计时长</dt><dd>{recommendedPractice.duration}</dd></div>
+          </dl>
           <div className="transport"><button className="play-button" onClick={isPlaying ? pause : play} disabled={isLoading}><Icon name={isPlaying ? 'pause' : 'play'} />{isLoading ? '加载中…' : isPlaying ? '暂停' : snapshot.status === 'paused' ? '继续' : '开始练习'}</button><button className="icon-button" onClick={stop} disabled={!canStop} aria-label="停止并回到开头"><Icon name="stop" /></button></div>
           <p className="count-in-note">{snapshot.isCountIn ? 'Count-in · 准备进入' : pendingChange ? '将在下一小节切换' : '首次播放包含一小节 Count-in'}</p>
         </div>
@@ -118,7 +129,7 @@ export function App() {
         </dl>
       </details>
 
-      <div className="mobile-transport" aria-label="移动端走带控制"><div><strong>{selectedPattern.name}</strong><span>{bpm} BPM · {snapshot.isCountIn ? 'Count-in' : `第 ${snapshot.step + 1} 步`}</span></div><button className="mobile-play" onClick={isPlaying ? pause : play} disabled={isLoading} aria-label={isPlaying ? '暂停' : '播放'}><Icon name={isPlaying ? 'pause' : 'play'} /></button><button className="mobile-stop" onClick={stop} disabled={!canStop} aria-label="停止并回到开头"><Icon name="stop" /></button></div>
+      <div className="mobile-transport" aria-label="移动端走带控制"><div><strong>{selectedPattern.name}</strong><span>{bpm} BPM · {snapshot.isCountIn ? 'Count-in' : `第 ${snapshot.step + 1} 步`}</span></div><button className="mobile-play" onClick={isPlaying ? pause : play} disabled={isLoading}><Icon name={isPlaying ? 'pause' : 'play'} /><span>{isLoading ? '加载中…' : isPlaying ? '暂停' : snapshot.status === 'paused' ? '继续' : '开始练习'}</span></button><button className="mobile-stop" onClick={stop} disabled={!canStop} aria-label="停止并回到开头"><Icon name="stop" /></button></div>
       <nav className="mobile-tabs" aria-label="主要页面">{([{ id: 'practice', label: '练习' }, { id: 'tracks', label: '轨道' }, { id: 'status', label: '状态' }] as const).map((tab) => <button key={tab.id} onClick={() => chooseMobileTab(tab.id)} aria-current={mobileTab === tab.id ? 'page' : undefined}><Icon name={tab.id} /><span>{tab.label}</span></button>)}</nav>
     </main>
   )
