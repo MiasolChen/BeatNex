@@ -17,4 +17,15 @@ describe('recommended practice entry', () => {
     expect(markup).not.toContain('<dialog')
     expect(markup).not.toContain('<form')
   })
+
+  it('renders the available dance library without introducing future placeholder categories', () => {
+    const markup = renderToStaticMarkup(<App />)
+
+    expect(markup).toContain('练习库分类视角')
+    expect(markup).toContain('Hip-Hop')
+    expect(markup).toContain('3 个练习')
+    expect(markup).toContain('88–96 BPM')
+    expect(markup).not.toContain('Locking')
+    expect(markup).not.toContain('House Dance')
+  })
 })
