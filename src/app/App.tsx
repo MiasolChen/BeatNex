@@ -41,6 +41,7 @@ export function App() {
   const isPlaying = snapshot.status === 'playing'
   const isLoading = snapshot.status === 'loading'
   const canStop = isPlaying || snapshot.status === 'paused'
+  const visualProgress = snapshot.isCountIn ? 0 : snapshot.progress
   const statusLabel = snapshot.status === 'error'
     ? '音频错误'
     : isLoading
@@ -80,9 +81,9 @@ export function App() {
         <div className="section-heading"><div><p className="section-kicker">01 / Groove</p><h2>选择 Pattern</h2></div><div className="difficulty-switch" aria-label="难度">{(['simple', 'hard'] as const).map((value) => <button key={value} aria-pressed={difficulty === value} onClick={() => setDifficulty(value)}>{value === 'simple' ? 'Simple' : 'Hard'}</button>)}</div></div>
         <div className="pattern-tabs">{PATTERN_NAMES.map((name, index) => <button key={name} className={patternName === name ? 'active' : ''} aria-pressed={patternName === name} onClick={() => choosePattern(name)}><span>0{index + 1}</span>{name}</button>)}</div>
         <div className="tempo-row"><label htmlFor="tempo">Tempo</label><input id="tempo" type="range" min="60" max="140" value={bpm} onChange={(event) => setBpm(Number(event.target.value))} /><output htmlFor="tempo">{bpm} <small>BPM</small></output></div>
-        <div className="grid-shell"><div className="beat-numbers" aria-hidden="true"><span /><span>1</span><span>2</span><span>3</span><span>4</span></div><div className="rhythm-grid" aria-label={`${selectedPattern.name} 十六步节奏网格`}>
-          {DRUM_IDS.map((drum) => { const track = selectedPattern.tracks.find((item) => item.drum === drum); return <div className="track-row" key={drum}><div className="track-name"><span>{drumLabels[drum].short}</span>{drumLabels[drum].name}</div><div className="steps">{Array.from({ length: 16 }, (_, step) => { const hit = track?.hits.find((item) => item.step === step); const current = isPlaying && !snapshot.isCountIn && snapshot.step === step; return <span key={step} className={`step ${hit ? 'hit' : ''} ${current ? 'current' : ''}`} data-velocity={hit?.velocity ?? 0} /> })}</div></div> })}
-          <div className="playhead" style={{ '--progress': snapshot.isCountIn ? 0 : snapshot.progress } as CSSProperties} aria-hidden="true" />
+        <div className="grid-shell"><div className="beat-numbers" aria-hidden="true"><span /><span>1</span><span>2</span><span>3</span><span>4</span></div><div className="rhythm-grid" aria-label={`${selectedPattern.name} 十六步节奏网格`} data-audio-step={snapshot.step} data-audio-cycle={snapshot.cycle} data-audio-progress={visualProgress}>
+          {DRUM_IDS.map((drum) => { const track = selectedPattern.tracks.find((item) => item.drum === drum); return <div className="track-row" key={drum}><div className="track-name"><span>{drumLabels[drum].short}</span>{drumLabels[drum].name}</div><div className="steps">{Array.from({ length: 16 }, (_, step) => { const hit = track?.hits.find((item) => item.step === step); const current = isPlaying && !snapshot.isCountIn && snapshot.step === step; return <span key={step} className={`step ${hit ? 'hit' : ''} ${current ? 'current' : ''}`} data-step={step} data-velocity={hit?.velocity ?? 0} /> })}</div></div> })}
+          <div className="playhead" data-audio-progress={visualProgress} style={{ '--progress': visualProgress } as CSSProperties} aria-hidden="true" />
         </div></div>
       </section>
 

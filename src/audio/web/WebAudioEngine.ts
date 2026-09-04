@@ -38,6 +38,7 @@ export class WebAudioEngine implements AudioEngine {
   private diagnostics: EngineDiagnostics = this.emptyDiagnostics()
 
   async prepare(kit: DrumKit) {
+    if (this.context?.state === 'closed') this.resetAudioGraph()
     if (this.status === 'ready' || this.status === 'playing' || this.status === 'paused') return
     if (this.context && this.context.state !== 'closed' && this.buffers.size === DRUM_IDS.length) {
       await this.context.resume()
@@ -182,7 +183,9 @@ export class WebAudioEngine implements AudioEngine {
 
   dispose() {
     this.cancelSchedule()
-    if (this.context?.state !== 'closed') void this.context?.close()
+    const context = this.context
+    this.resetAudioGraph()
+    if (context?.state !== 'closed') void context?.close()
     this.listeners.clear()
   }
 
@@ -315,5 +318,17 @@ export class WebAudioEngine implements AudioEngine {
       minScheduleLeadMs: null,
       maxScheduleLeadMs: null,
     }
+  }
+
+  private resetAudioGraph() {
+    this.context = undefined
+    this.master = undefined
+    this.buffers.clear()
+    this.gains.clear()
+    this.activeSources.clear()
+    this.openHatSources.clear()
+    this.request = undefined
+    this.pendingRequest = undefined
+    this.status = 'idle'
   }
 }

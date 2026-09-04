@@ -24,4 +24,21 @@ describe('music time', () => {
     expect(position).toMatchObject({ cycle: 0, step: 7 })
     expect(position.progress).toBeCloseTo(7 / 16, 12)
   })
+
+  it.each([80, 100, 120])('keeps visual step and progress stable across long loops at %i BPM', (bpm) => {
+    const pattern = BOOM_BAP_PATTERNS[0]
+    const origin = 0.08
+
+    for (const cycle of [0, 1, 10, 100, 5_000]) {
+      for (const step of [0, 1, 7, 15]) {
+        const absoluteStep = cycle * 16 + step
+        const now = absoluteStepTime(origin, absoluteStep, bpm, pattern.subdivision)
+        const position = positionAtTime(pattern, bpm, origin, now)
+
+        expect(position.cycle).toBe(cycle)
+        expect(position.step).toBe(step)
+        expect(position.progress).toBeCloseTo(step / 16, 10)
+      }
+    }
+  })
 })

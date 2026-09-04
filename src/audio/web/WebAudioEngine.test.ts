@@ -87,6 +87,30 @@ describe('WebAudioEngine loading', () => {
     expect(engine.getSnapshot().status).toBe('ready')
     engine.dispose()
   })
+
+  it('rebuilds its audio graph after a development lifecycle disposal', async () => {
+    const contexts: FakeAudioContext[] = []
+    vi.stubGlobal('AudioContext', class {
+      constructor() {
+        const next = new FakeAudioContext()
+        contexts.push(next)
+        return next
+      }
+    })
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(8),
+    })))
+    const engine = new WebAudioEngine()
+
+    await engine.prepare(kit)
+    engine.dispose()
+    await engine.prepare(kit)
+
+    expect(contexts).toHaveLength(2)
+    expect(engine.getSnapshot().status).toBe('ready')
+    engine.dispose()
+  })
 })
 
 describe('WebAudioEngine scheduling and mixing', () => {
