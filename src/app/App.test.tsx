@@ -28,4 +28,20 @@ describe('recommended practice entry', () => {
     expect(markup).not.toContain('Locking')
     expect(markup).not.toContain('House Dance')
   })
+
+  it('shows the complete six-phase guided practice before audio starts', () => {
+    const markup = renderToStaticMarkup(<App />)
+
+    for (const label of ['Full', 'Solo', 'Focus', 'Normal', 'Mute Target', 'Check']) {
+      expect(markup).toContain(`>${label}</strong>`)
+    }
+    expect(markup).toContain('role="progressbar"')
+    expect(markup).toContain('class="bar-ticks"')
+    expect(markup).toContain('phase-boundary')
+    expect(markup).toContain('四拍预备后播放 完整鼓组')
+    expect(markup).toContain('目标鼓')
+    expect(markup).toContain('添加训练阶段')
+    expect(markup).toContain('恢复默认组合')
+    expect(markup).not.toContain('Guide Setup')
+  })
 })

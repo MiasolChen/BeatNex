@@ -32,8 +32,8 @@ export const PRACTICE_CATEGORIES: readonly PracticeCategory[] = [
     id: 'hip-hop',
     view: 'dance',
     name: 'Hip-Hop',
-    description: '从 Bounce 与 Pocket 入手，练习重心、后拍和切分。',
-    guidance: '把 Kick 当作重心落点，让 Snare 带出 Bounce。',
+    description: '从 Bounce 与 Pocket 入手，听清 Kick、后拍和切分。',
+    guidance: '先听 Kick 的落点，再辨认 Snare 与 Hat 如何组成 Bounce。',
     practiceIds: PRACTICE_ENTRIES.map(({ id }) => id),
   },
   {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { PROTOTYPE_KIT } from '../audio/kit'
-import type { EngineSnapshot, TrackMix } from '../audio/types'
+import type { EngineSnapshot, TrackMix, TrainingMix } from '../audio/types'
 import { WebAudioEngine } from '../audio/web/WebAudioEngine'
 import { DRUM_IDS, type DrumId, type Pattern } from '../core/pattern/types'
 
@@ -65,6 +65,14 @@ export function useDrumMachine(pattern: Pattern, bpm: number) {
     } catch { setSnapshot(engine.getSnapshot()) }
   }, [bpm, engine, pattern])
 
+  const restart = useCallback(async () => {
+    engine.stop()
+    try {
+      await engine.prepare(PROTOTYPE_KIT)
+      await engine.start({ pattern, bpm, countIn: true })
+    } catch { setSnapshot(engine.getSnapshot()) }
+  }, [bpm, engine, pattern])
+
   const updateMix = useCallback((drum: DrumId, patch: Partial<TrackMix>) => {
     setMixes((current) => {
       const next = { ...current, [drum]: { ...current[drum], ...patch } }
@@ -73,5 +81,17 @@ export function useDrumMachine(pattern: Pattern, bpm: number) {
     })
   }, [engine])
 
-  return { snapshot, mixes, pendingChange, play, retry, pause: () => engine.pause(), stop: () => engine.stop(), updateMix }
+  const resetMixes = useCallback(() => {
+    const next = Object.fromEntries(
+      DRUM_IDS.map((drum) => [drum, { muted: false, solo: false, focused: false, volume: 0.82 }]),
+    ) as Record<DrumId, TrackMix>
+    setMixes(next)
+    DRUM_IDS.forEach((drum) => engine.setTrackMix(drum, next[drum]))
+  }, [engine])
+
+  const setTrainingMix = useCallback((mix?: TrainingMix, timing?: 'immediate' | 'next-bar') => {
+    engine.setTrainingMix(mix, timing)
+  }, [engine])
+
+  return { snapshot, mixes, pendingChange, play, restart, retry, pause: () => engine.pause(), stop: () => engine.stop(), updateMix, resetMixes, setTrainingMix }
 }

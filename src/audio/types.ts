@@ -9,6 +9,11 @@ export type TrackMix = {
   volume: number
 }
 
+export type TrainingMix = {
+  mode: 'full' | 'solo' | 'focus' | 'mute-target'
+  target: DrumId
+}
+
 export type PlaybackRequest = {
   pattern: Pattern
   bpm: number
@@ -45,6 +50,7 @@ export interface AudioEngine {
   stop(): void
   update(request: Omit<PlaybackRequest, 'countIn'>): void
   setTrackMix(drum: DrumId, mix: TrackMix): void
+  setTrainingMix(mix?: TrainingMix, timing?: 'immediate' | 'next-bar'): void
   getPosition(): PlaybackPosition
   getSnapshot(): EngineSnapshot
   subscribe(listener: () => void): () => void

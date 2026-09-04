@@ -235,6 +235,37 @@ describe('WebAudioEngine scheduling and mixing', () => {
     engine.dispose()
   })
 
+  it('applies guided training mixes at the next full bar boundary', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 100, countIn: false })
+
+    engine.setTrainingMix({ mode: 'solo', target: 'kick' }, 'next-bar')
+    context.currentTime = 2.37
+    tick()
+
+    expect(context.trackGains.get('kick')?.gain.targets.at(-1)).toMatchObject({ value: 0.82, time: 2.48 })
+    expect(context.trackGains.get('snare')?.gain.targets.at(-1)).toMatchObject({ value: 0, time: 2.48 })
+    expect(context.trackGains.get('closedHat')?.gain.targets.at(-1)).toMatchObject({ value: 0, time: 2.48 })
+    expect(engine.getSnapshot().status).toBe('playing')
+    engine.dispose()
+  })
+
+  it('resumes from the current complete bar without losing the cycle count', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+
+    context.currentTime = 5.31
+    engine.pause()
+    expect(engine.getPosition()).toMatchObject({ status: 'paused', cycle: 2, step: 0 })
+
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.currentTime = 5.39
+    expect(engine.getPosition()).toMatchObject({ status: 'playing', cycle: 2, step: 0 })
+    engine.dispose()
+  })
+
   it('applies Pattern and BPM changes once at a bar boundary without duplicate hits', async () => {
     const engine = new WebAudioEngine()
     await engine.prepare(kit)
@@ -249,6 +280,8 @@ describe('WebAudioEngine scheduling and mixing', () => {
     expect(context.stops.some(({ time }) => time === 2.48)).toBe(true)
     expect(engine.getSnapshot().status).toBe('playing')
     expect(vi.mocked(window.setInterval)).toHaveBeenCalledTimes(1)
+    context.currentTime = 2.49
+    expect(engine.getSnapshot().cycle).toBe(1)
     engine.dispose()
   })
 })

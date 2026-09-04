@@ -9,6 +9,7 @@ import type {
   PlaybackPosition,
   PlaybackRequest,
   TrackMix,
+  TrainingMix,
 } from '../types'
 
 const LOOK_AHEAD_SECONDS = 0.12
@@ -23,6 +24,9 @@ export class WebAudioEngine implements AudioEngine {
   private buffers = new Map<DrumId, AudioBuffer>()
   private gains = new Map<DrumId, GainNode>()
   private mixes = new Map<DrumId, TrackMix>(DRUM_IDS.map((drum) => [drum, defaultMix()]))
+  private trainingMix?: TrainingMix
+  private pendingTrainingMix?: TrainingMix
+  private hasPendingTrainingMix = false
   private activeSources = new Set<AudioBufferSourceNode>()
   private openHatSources = new Set<AudioBufferSourceNode>()
   private listeners = new Set<() => void>()
@@ -34,6 +38,7 @@ export class WebAudioEngine implements AudioEngine {
   private musicStartedAt = 0
   private countInStartedAt = 0
   private nextAbsoluteStep = 0
+  private cycleOffset = 0
   private pausedMusicOffset = 0
   private diagnostics: EngineDiagnostics = this.emptyDiagnostics()
 
@@ -98,6 +103,7 @@ export class WebAudioEngine implements AudioEngine {
       this.countInStartedAt = now + START_DELAY_SECONDS
       this.musicStartedAt = this.countInStartedAt + countInSteps * stepSeconds
       this.nextAbsoluteStep = -countInSteps
+      this.cycleOffset = 0
       this.pausedMusicOffset = 0
       this.diagnostics = this.emptyDiagnostics()
     }
@@ -109,9 +115,8 @@ export class WebAudioEngine implements AudioEngine {
   pause() {
     if (this.status !== 'playing' || !this.context || !this.request) return
     const offset = this.context.currentTime - this.musicStartedAt
-    this.pausedMusicOffset = offset < 0
-      ? offset
-      : offset % patternDuration(this.request.pattern, this.request.bpm)
+    const barDuration = patternDuration(this.request.pattern, this.request.bpm)
+    this.pausedMusicOffset = offset < 0 ? offset : Math.floor(offset / barDuration) * barDuration
     this.cancelSchedule()
     this.setStatus('paused')
   }
@@ -120,6 +125,7 @@ export class WebAudioEngine implements AudioEngine {
     this.cancelSchedule()
     this.pausedMusicOffset = 0
     this.nextAbsoluteStep = 0
+    this.cycleOffset = 0
     this.pendingRequest = undefined
     this.setStatus('stopped')
   }
@@ -138,6 +144,18 @@ export class WebAudioEngine implements AudioEngine {
     this.mixes.set(drum, { ...mix, volume: Math.min(1, Math.max(0, mix.volume)) })
     this.applyMix()
     this.emit()
+  }
+
+  setTrainingMix(mix?: TrainingMix, timing: 'immediate' | 'next-bar' = 'immediate') {
+    if (timing === 'next-bar' && this.status === 'playing') {
+      this.pendingTrainingMix = mix
+      this.hasPendingTrainingMix = true
+      return
+    }
+    this.trainingMix = mix
+    this.pendingTrainingMix = undefined
+    this.hasPendingTrainingMix = false
+    this.applyMix()
   }
 
   getPosition(): PlaybackPosition {
@@ -160,7 +178,7 @@ export class WebAudioEngine implements AudioEngine {
         }
       }
       const position = positionAtTime(this.request.pattern, this.request.bpm, 0, this.pausedMusicOffset)
-      return { status: this.status, ...position, isCountIn: false }
+      return { status: this.status, ...position, cycle: position.cycle + this.cycleOffset, isCountIn: false }
     }
     const now = this.context.currentTime
     if (now < this.musicStartedAt) {
@@ -169,7 +187,8 @@ export class WebAudioEngine implements AudioEngine {
       const step = Math.max(0, Math.floor(progress * this.request.pattern.beatsPerBar * this.request.pattern.subdivision))
       return { status: this.status, step, cycle: 0, progress, isCountIn: true, elapsed: 0 }
     }
-    return { status: this.status, ...positionAtTime(this.request.pattern, this.request.bpm, this.musicStartedAt, now), isCountIn: false }
+    const position = positionAtTime(this.request.pattern, this.request.bpm, this.musicStartedAt, now)
+    return { status: this.status, ...position, cycle: position.cycle + this.cycleOffset, isCountIn: false }
   }
 
   getSnapshot(): EngineSnapshot {
@@ -216,8 +235,10 @@ export class WebAudioEngine implements AudioEngine {
         if (this.nextAbsoluteStep % request.pattern.subdivision === 0) this.play('closedHat', 72, time)
       } else {
         const step = this.nextAbsoluteStep % patternSteps
-        if (step === 0 && this.nextAbsoluteStep > 0 && this.pendingRequest) {
+        const isBarBoundary = step === 0 && this.nextAbsoluteStep > 0
+        if (isBarBoundary && this.pendingRequest) {
           const boundaryTime = time
+          this.cycleOffset += this.nextAbsoluteStep / patternSteps
           request = { ...this.pendingRequest, countIn: false }
           this.request = request
           this.pendingRequest = undefined
@@ -225,6 +246,12 @@ export class WebAudioEngine implements AudioEngine {
           this.nextAbsoluteStep = 0
           patternSteps = stepsPerPattern(request.pattern)
           this.cancelScheduledSources(boundaryTime)
+        }
+        if (isBarBoundary && this.hasPendingTrainingMix) {
+          this.trainingMix = this.pendingTrainingMix
+          this.pendingTrainingMix = undefined
+          this.hasPendingTrainingMix = false
+          this.applyMix(time)
         }
         this.schedulePatternStep(request.pattern, step, time)
       }
@@ -275,20 +302,28 @@ export class WebAudioEngine implements AudioEngine {
     source.start(time)
   }
 
-  private applyMix() {
+  private applyMix(atTime = this.context?.currentTime ?? 0) {
     if (!this.context) return
     const values = [...this.mixes.values()]
     const hasSolo = values.some(({ solo }) => solo)
     const hasFocus = values.some(({ focused, muted, solo }) => focused && !muted && (!hasSolo || solo))
     for (const [drum, mix] of this.mixes) {
-      const audible = !mix.muted && (!hasSolo || mix.solo)
-      const focusScale = hasFocus && !mix.focused ? 0.18 : 1
+      const trainingAudible = this.trainingMix?.mode === 'solo'
+        ? drum === this.trainingMix.target
+        : this.trainingMix?.mode === 'mute-target'
+          ? drum !== this.trainingMix.target
+          : true
+      const manualAudible = this.trainingMix ? true : !mix.muted && (!hasSolo || mix.solo)
+      const audible = trainingAudible && manualAudible
+      const trainingFocusScale = this.trainingMix?.mode === 'focus' && drum !== this.trainingMix.target ? 0.18 : 1
+      const manualFocusScale = this.trainingMix ? 1 : hasFocus && !mix.focused ? 0.18 : 1
+      const focusScale = trainingFocusScale * manualFocusScale
       const target = audible ? mix.volume * focusScale : 0
       const gain = this.gains.get(drum)?.gain
       if (!gain) continue
-      if (typeof gain.cancelAndHoldAtTime === 'function') gain.cancelAndHoldAtTime(this.context.currentTime)
-      else gain.cancelScheduledValues(this.context.currentTime)
-      gain.setTargetAtTime(target, this.context.currentTime, 0.012)
+      if (typeof gain.cancelAndHoldAtTime === 'function') gain.cancelAndHoldAtTime(atTime)
+      else gain.cancelScheduledValues(atTime)
+      gain.setTargetAtTime(target, atTime, 0.012)
     }
   }
 
@@ -333,6 +368,10 @@ export class WebAudioEngine implements AudioEngine {
     this.openHatSources.clear()
     this.request = undefined
     this.pendingRequest = undefined
+    this.trainingMix = undefined
+    this.pendingTrainingMix = undefined
+    this.hasPendingTrainingMix = false
+    this.cycleOffset = 0
     this.status = 'idle'
   }
 }
