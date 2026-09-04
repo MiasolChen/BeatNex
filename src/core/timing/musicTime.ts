@@ -22,14 +22,19 @@ export function absoluteStepTime(
 }
 
 export function positionAtTime(pattern: Pattern, bpm: number, startedAt: number, now: number) {
-  const duration = patternDuration(pattern, bpm)
   const elapsed = Math.max(0, now - startedAt)
-  const cycleTime = elapsed % duration
-  const exactStep = cycleTime / secondsPerStep(bpm, pattern.subdivision)
+  const patternSteps = stepsPerPattern(pattern)
+  const rawAbsoluteStep = elapsed / secondsPerStep(bpm, pattern.subdivision)
+  const nearestStep = Math.round(rawAbsoluteStep)
+  const absoluteStep = Math.abs(rawAbsoluteStep - nearestStep) < 1e-9
+    ? nearestStep
+    : rawAbsoluteStep
+  const completedSteps = Math.floor(absoluteStep)
+  const stepInPattern = absoluteStep % patternSteps
   return {
     elapsed,
-    cycle: Math.floor(elapsed / duration),
-    step: Math.floor(exactStep) % stepsPerPattern(pattern),
-    progress: cycleTime / duration,
+    cycle: Math.floor(completedSteps / patternSteps),
+    step: completedSteps % patternSteps,
+    progress: stepInPattern / patternSteps,
   }
 }

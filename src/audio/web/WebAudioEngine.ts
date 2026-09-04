@@ -187,7 +187,16 @@ export class WebAudioEngine implements AudioEngine {
     let request = this.request
     if (!context || !request || this.status !== 'playing') return
     const horizon = context.currentTime + LOOK_AHEAD_SECONDS
-    const patternSteps = stepsPerPattern(request.pattern)
+    let patternSteps = stepsPerPattern(request.pattern)
+
+    // A throttled timer must never replay every event it missed. Keep the
+    // transport on the absolute AudioContext timeline and resume from the
+    // first step that can still be scheduled in the future.
+    const firstSchedulableStep = Math.ceil(
+      (context.currentTime - this.musicStartedAt) /
+      (60 / request.bpm / request.pattern.subdivision),
+    )
+    this.nextAbsoluteStep = Math.max(this.nextAbsoluteStep, firstSchedulableStep)
 
     while (true) {
       const time = absoluteStepTime(this.musicStartedAt, this.nextAbsoluteStep, request.bpm, request.pattern.subdivision)
@@ -204,6 +213,7 @@ export class WebAudioEngine implements AudioEngine {
           this.pendingRequest = undefined
           this.musicStartedAt = boundaryTime
           this.nextAbsoluteStep = 0
+          patternSteps = stepsPerPattern(request.pattern)
           this.cancelScheduledSources(boundaryTime)
         }
         this.schedulePatternStep(request.pattern, step, time)

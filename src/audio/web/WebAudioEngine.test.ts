@@ -1,25 +1,64 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { BOOM_BAP_PATTERNS } from '../../core/pattern/fixtures'
+import { DRUM_IDS, type DrumId } from '../../core/pattern/types'
 import type { DrumKit } from '../types'
 import { WebAudioEngine } from './WebAudioEngine'
 
 class FakeAudioParam {
   value = 1
-  setTargetAtTime() {}
+  targets: Array<{ value: number; time: number; constant: number }> = []
+  setTargetAtTime(value: number, time: number, constant: number) {
+    this.targets.push({ value, time, constant })
+  }
 }
 
 class FakeGain {
   gain = new FakeAudioParam()
-  connect() { return this }
+  target?: FakeGain
+  constructor(readonly drum?: DrumId) {}
+  connect(target?: FakeGain) { this.target = target; return target ?? this }
+  disconnect() {}
+}
+
+type StartRecord = { drum?: DrumId; scheduledAt: number; time: number }
+
+class FakeSource {
+  buffer = {}
+  onended?: () => void
+  target?: FakeGain
+  constructor(private readonly context: FakeAudioContext) {}
+  connect(target: FakeGain) { this.target = target; return target }
+  disconnect() {}
+  start(time: number) {
+    this.context.starts.push({
+      drum: this.target?.target?.drum,
+      scheduledAt: this.context.currentTime,
+      time,
+    })
+  }
+  stop() { this.onended?.() }
 }
 
 class FakeAudioContext {
   currentTime = 0
   destination = {}
   state: AudioContextState = 'running'
+  starts: StartRecord[] = []
+  trackGains = new Map<DrumId, FakeGain>()
+  private gainCount = 0
   async resume() {}
   async close() { this.state = 'closed' }
-  createGain() { return new FakeGain() }
+  createGain() {
+    const drum = this.gainCount >= 1 && this.gainCount <= DRUM_IDS.length
+      ? DRUM_IDS[this.gainCount - 1]
+      : undefined
+    this.gainCount += 1
+    const gain = new FakeGain(drum)
+    if (drum) this.trackGains.set(drum, gain)
+    return gain
+  }
+  createBufferSource() { return new FakeSource(this) }
   async decodeAudioData() { return {} }
 }
 
@@ -46,6 +85,89 @@ describe('WebAudioEngine loading', () => {
     shouldFail = false
     await expect(engine.prepare(kit)).resolves.toBeUndefined()
     expect(engine.getSnapshot().status).toBe('ready')
+    engine.dispose()
+  })
+})
+
+describe('WebAudioEngine scheduling and mixing', () => {
+  let context: FakeAudioContext
+  let tick: () => void
+
+  beforeEach(() => {
+    context = new FakeAudioContext()
+    vi.stubGlobal('AudioContext', class {
+      constructor() { return context }
+    })
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(8),
+    })))
+    vi.stubGlobal('window', {
+      setInterval: vi.fn((callback: () => void) => { tick = callback; return 1 }),
+      clearInterval: vi.fn(),
+    })
+  })
+
+  afterEach(() => vi.unstubAllGlobals())
+
+  it.each([80, 100, 120])('keeps a 10 minute transport on the absolute clock at %i BPM', async (bpm) => {
+    const engine = new WebAudioEngine()
+    const pattern = BOOM_BAP_PATTERNS[0]
+    await engine.prepare(kit)
+    await engine.start({ pattern, bpm, countIn: true })
+
+    const musicStart = 0.08 + 60 / bpm * pattern.beatsPerBar
+    for (let time = 0.1; time <= musicStart + 600.2; time += 0.1) {
+      context.currentTime = time
+      tick()
+    }
+
+    expect(context.starts.length).toBeGreaterThan(1_000)
+    expect(context.starts.every(({ scheduledAt, time }) => time >= scheduledAt - 1e-9)).toBe(true)
+    const eventKeys = context.starts.map(({ drum, time }) => `${drum}:${time.toFixed(9)}`)
+    expect(new Set(eventKeys).size).toBe(eventKeys.length)
+
+    context.currentTime = musicStart + 600
+    expect(engine.getPosition()).toMatchObject({
+      cycle: Math.floor(600 / (60 / bpm * pattern.beatsPerBar)),
+      step: 0,
+      isCountIn: false,
+    })
+    expect(engine.getPosition().progress).toBeCloseTo(0, 8)
+    engine.dispose()
+  })
+
+  it('skips expired steps after a delayed scheduler tick instead of replaying a burst', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.starts.length = 0
+
+    context.currentTime = 5
+    tick()
+
+    expect(context.starts.length).toBeGreaterThan(0)
+    expect(context.starts.every(({ scheduledAt, time }) => time >= scheduledAt)).toBe(true)
+    engine.dispose()
+  })
+
+  it('derives the visual position from the same audio clock and changes gain without restarting transport', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 100, countIn: false })
+    const initialIntervalCalls = vi.mocked(window.setInterval).mock.calls.length
+
+    context.currentTime = 1.13
+    expect(engine.getPosition()).toMatchObject({ step: 7, cycle: 0, isCountIn: false })
+
+    engine.setTrackMix('kick', { muted: false, solo: false, focused: true, volume: 0.82 })
+    expect(context.trackGains.get('kick')?.gain.targets.at(-1)?.value).toBeCloseTo(0.82)
+    expect(context.trackGains.get('snare')?.gain.targets.at(-1)?.value).toBeCloseTo(0.82 * 0.18)
+
+    engine.setTrackMix('snare', { muted: true, solo: false, focused: false, volume: 0.82 })
+    expect(context.trackGains.get('snare')?.gain.targets.at(-1)?.value).toBe(0)
+    expect(vi.mocked(window.setInterval).mock.calls.length).toBe(initialIntervalCalls)
+    expect(engine.getSnapshot().status).toBe('playing')
     engine.dispose()
   })
 })

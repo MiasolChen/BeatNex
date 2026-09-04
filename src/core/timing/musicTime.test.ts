@@ -17,4 +17,11 @@ describe('music time', () => {
     expect(boundary).toBeCloseTo(origin + loopCount * barSeconds, 10)
     expect(positionAtTime(BOOM_BAP_PATTERNS[0], bpm, origin, boundary).progress).toBeCloseTo(0, 10)
   })
+
+  it('normalizes floating point noise at an exact visual step boundary', () => {
+    const position = positionAtTime(BOOM_BAP_PATTERNS[0], 100, 0.08, 1.13)
+
+    expect(position).toMatchObject({ cycle: 0, step: 7 })
+    expect(position.progress).toBeCloseTo(7 / 16, 12)
+  })
 })
