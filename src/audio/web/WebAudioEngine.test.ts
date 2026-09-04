@@ -8,6 +8,10 @@ import { WebAudioEngine } from './WebAudioEngine'
 class FakeAudioParam {
   value = 1
   targets: Array<{ value: number; time: number; constant: number }> = []
+  heldAt: number[] = []
+  cancelledAt: number[] = []
+  cancelAndHoldAtTime(time: number) { this.heldAt.push(time) }
+  cancelScheduledValues(time: number) { this.cancelledAt.push(time) }
   setTargetAtTime(value: number, time: number, constant: number) {
     this.targets.push({ value, time, constant })
   }
@@ -22,6 +26,7 @@ class FakeGain {
 }
 
 type StartRecord = { drum?: DrumId; scheduledAt: number; time: number }
+type StopRecord = { drum?: DrumId; time?: number }
 
 class FakeSource {
   buffer = {}
@@ -37,7 +42,10 @@ class FakeSource {
       time,
     })
   }
-  stop() { this.onended?.() }
+  stop(time?: number) {
+    this.context.stops.push({ drum: this.target?.target?.drum, time })
+    this.onended?.()
+  }
 }
 
 class FakeAudioContext {
@@ -45,6 +53,7 @@ class FakeAudioContext {
   destination = {}
   state: AudioContextState = 'running'
   starts: StartRecord[] = []
+  stops: StopRecord[] = []
   trackGains = new Map<DrumId, FakeGain>()
   private gainCount = 0
   async resume() {}
@@ -194,11 +203,52 @@ describe('WebAudioEngine scheduling and mixing', () => {
     engine.setTrackMix('kick', { muted: false, solo: false, focused: true, volume: 0.82 })
     expect(context.trackGains.get('kick')?.gain.targets.at(-1)?.value).toBeCloseTo(0.82)
     expect(context.trackGains.get('snare')?.gain.targets.at(-1)?.value).toBeCloseTo(0.82 * 0.18)
+    expect(context.trackGains.get('kick')?.gain.heldAt.at(-1)).toBe(context.currentTime)
 
     engine.setTrackMix('snare', { muted: true, solo: false, focused: false, volume: 0.82 })
     expect(context.trackGains.get('snare')?.gain.targets.at(-1)?.value).toBe(0)
     expect(vi.mocked(window.setInterval).mock.calls.length).toBe(initialIntervalCalls)
     expect(engine.getSnapshot().status).toBe('playing')
+    engine.dispose()
+  })
+
+  it('resolves Solo, Mute, and Focus combinations without interrupting the transport', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 100, countIn: false })
+    const intervalCalls = vi.mocked(window.setInterval).mock.calls.length
+
+    engine.setTrackMix('kick', { muted: false, solo: true, focused: false, volume: 0.75 })
+    expect(context.trackGains.get('kick')?.gain.targets.at(-1)?.value).toBeCloseTo(0.75)
+    expect(context.trackGains.get('snare')?.gain.targets.at(-1)?.value).toBe(0)
+
+    engine.setTrackMix('kick', { muted: false, solo: true, focused: true, volume: 0.75 })
+    engine.setTrackMix('snare', { muted: false, solo: true, focused: false, volume: 0.5 })
+    expect(context.trackGains.get('kick')?.gain.targets.at(-1)?.value).toBeCloseTo(0.75)
+    expect(context.trackGains.get('snare')?.gain.targets.at(-1)?.value).toBeCloseTo(0.5 * 0.18)
+
+    engine.setTrackMix('kick', { muted: true, solo: true, focused: true, volume: 0.75 })
+    expect(context.trackGains.get('kick')?.gain.targets.at(-1)?.value).toBe(0)
+    expect(context.trackGains.get('snare')?.gain.targets.at(-1)?.value).toBeCloseTo(0.5)
+    expect(vi.mocked(window.setInterval).mock.calls.length).toBe(intervalCalls)
+    expect(engine.getSnapshot().status).toBe('playing')
+    engine.dispose()
+  })
+
+  it('applies Pattern and BPM changes once at a bar boundary without duplicate hits', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 100, countIn: false })
+    engine.update({ pattern: BOOM_BAP_PATTERNS[2], bpm: 120 })
+
+    context.currentTime = 2.37
+    tick()
+
+    const eventKeys = context.starts.map(({ drum, time }) => `${drum}:${time.toFixed(9)}`)
+    expect(new Set(eventKeys).size).toBe(eventKeys.length)
+    expect(context.stops.some(({ time }) => time === 2.48)).toBe(true)
+    expect(engine.getSnapshot().status).toBe('playing')
+    expect(vi.mocked(window.setInterval)).toHaveBeenCalledTimes(1)
     engine.dispose()
   })
 })

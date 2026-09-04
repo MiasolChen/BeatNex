@@ -279,12 +279,16 @@ export class WebAudioEngine implements AudioEngine {
     if (!this.context) return
     const values = [...this.mixes.values()]
     const hasSolo = values.some(({ solo }) => solo)
-    const hasFocus = values.some(({ focused }) => focused)
+    const hasFocus = values.some(({ focused, muted, solo }) => focused && !muted && (!hasSolo || solo))
     for (const [drum, mix] of this.mixes) {
       const audible = !mix.muted && (!hasSolo || mix.solo)
       const focusScale = hasFocus && !mix.focused ? 0.18 : 1
       const target = audible ? mix.volume * focusScale : 0
-      this.gains.get(drum)?.gain.setTargetAtTime(target, this.context.currentTime, 0.012)
+      const gain = this.gains.get(drum)?.gain
+      if (!gain) continue
+      if (typeof gain.cancelAndHoldAtTime === 'function') gain.cancelAndHoldAtTime(this.context.currentTime)
+      else gain.cancelScheduledValues(this.context.currentTime)
+      gain.setTargetAtTime(target, this.context.currentTime, 0.012)
     }
   }
 
