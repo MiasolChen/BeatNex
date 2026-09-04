@@ -80,7 +80,7 @@ export function App() {
       </header>
 
       <section className={`hero mobile-panel ${mobileTab === 'practice' ? 'mobile-panel-active' : ''}`} id="top">
-        <div><p className="eyebrow">Boom Bap · Loop Lab</p><h1>听清每一层，<br /><em>踩进拍里。</em></h1><p className="intro">选择一个 Groove，四拍预备后直接开始。所有鼓点和播放指针都由同一条音频时间轴驱动。</p></div>
+        <div className="hero-copy"><p className="eyebrow">Boom Bap · Loop Lab</p><h1>听清每一层，<br /><em>踩进拍里。</em></h1><p className="intro">选择一个 Groove，四拍预备后开始；鼓点与播放指针共用同一条音频时间轴。</p></div>
         <div className="now-card" aria-label="当前练习">
           <div className="now-meta"><span>当前练习</span><strong>{bpm} BPM</strong></div><h2>{selectedPattern.name}</h2>
           <p>{difficulty === 'simple' ? '稳定后拍与身体重心' : '加入切分、Ghost Note 与句尾推动'}</p>
