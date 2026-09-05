@@ -37,6 +37,8 @@ type PhaseChipEditorProps = {
 
 export function PhaseChipEditor({ phases, locked, activeIndex, sessionStarted, completed, onBarsChange, onReorder, onDelete, onStatus, children }: PhaseChipEditorProps) {
   const [editingId, setEditingId] = useState<string>()
+  const [barsDraft, setBarsDraft] = useState('')
+  const cancelEdit = useRef(false)
   const [drag, setDrag] = useState<DragState>()
   const dragRef = useRef<DragState>()
   const pendingRef = useRef<PendingDrag>()
@@ -212,9 +214,24 @@ export function PhaseChipEditor({ phases, locked, activeIndex, sessionStarted, c
     pendingRef.current = undefined
   }
 
+  const beginEditing = (phase: TrainingPhase) => {
+    setBarsDraft(String(phase.bars))
+    setEditingId(phase.instanceId)
+  }
+
+  const finishEditing = (phase: TrainingPhase, save = true) => {
+    if (cancelEdit.current) cancelEdit.current = false
+    else if (save) {
+      const parsed = Number.parseInt(barsDraft, 10)
+      onBarsChange(phase.instanceId, Number.isFinite(parsed) ? Math.min(32, Math.max(1, parsed)) : phase.bars)
+    }
+    setEditingId(undefined)
+    setBarsDraft('')
+  }
+
   const keyboardAction = (event: KeyboardEvent<HTMLDivElement>, phase: TrainingPhase, index: number) => {
     if (locked) return
-    if (event.key === 'Enter') { event.preventDefault(); setEditingId(phase.instanceId) }
+    if (event.key === 'Enter') { event.preventDefault(); beginEditing(phase) }
     else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') { event.preventDefault(); if (index > 0) onReorder(index, index - 1) }
     else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') { event.preventDefault(); if (index < phases.length - 1) onReorder(index, index + 1) }
     else if ((event.key === 'Delete' || event.key === 'Backspace') && phases.length > 1) { event.preventDefault(); onDelete(phase.instanceId) }
@@ -245,13 +262,12 @@ export function PhaseChipEditor({ phases, locked, activeIndex, sessionStarted, c
             onPointerMove={updatePending}
             onPointerUp={cancelPending}
             onPointerCancel={cancelPending}
-            onDoubleClick={() => !locked && setEditingId(phase.instanceId)}
+            onDoubleClick={() => !locked && beginEditing(phase)}
             onKeyDown={(event) => keyboardAction(event, phase, phases.indexOf(phase))}
           >
-            <span className="drag-handle" aria-hidden="true" />
             <strong>{phase.label}</strong>
             {editingId === phase.instanceId
-              ? <label><span className="sr-only">{phase.label} 小节数</span><select autoFocus value={phase.bars} onChange={(event) => onBarsChange(phase.instanceId, Number(event.target.value))} onBlur={() => setEditingId(undefined)}>{Array.from({ length: 32 }, (_, value) => <option key={value + 1} value={value + 1}>{value + 1}</option>)}</select></label>
+              ? <label className="bar-count-editor"><span className="sr-only">{phase.label} 小节数，1 到 32</span><input aria-label={`${phase.label} 小节数`} autoFocus inputMode="numeric" type="number" min="1" max="32" value={barsDraft} onFocus={(event) => event.currentTarget.select()} onChange={(event) => setBarsDraft(event.target.value)} onBlur={() => finishEditing(phase)} onKeyDown={(event) => { event.stopPropagation(); if (event.key === 'Enter') { event.preventDefault(); event.currentTarget.blur() } else if (event.key === 'Escape') { event.preventDefault(); cancelEdit.current = true; setEditingId(undefined); setBarsDraft('') } }} /></label>
               : <span className="bar-count" aria-hidden="true">{phase.bars}<small>小节</small></span>}
           </div>
         : <div key="phase-placeholder" data-phase-slot={slot} className="phase-chip-placeholder" aria-hidden="true" />)}
@@ -259,7 +275,7 @@ export function PhaseChipEditor({ phases, locked, activeIndex, sessionStarted, c
     </div>
     {drag && draggedPhase && typeof document !== 'undefined' && createPortal(<>
       <div ref={floatingLayer} className="phase-drag-layer" style={{ transform: `translate3d(${drag.x - drag.offsetX}px, ${drag.y - drag.offsetY}px, 0)` } as CSSProperties} aria-hidden="true">
-        <div className="phase-chip phase-chip-floating" style={{ width: drag.width, height: drag.height }}><span className="drag-handle" /><strong>{draggedPhase.label}</strong><span className="bar-count">{draggedPhase.bars}<small>小节</small></span></div>
+        <div className="phase-chip phase-chip-floating" style={{ width: drag.width, height: drag.height }}><strong>{draggedPhase.label}</strong><span className="bar-count">{draggedPhase.bars}<small>小节</small></span></div>
       </div>
       {drag.canDelete && <div ref={trashNode} data-phase-trash className={`phase-trash visible ${drag.overTrash ? 'over' : ''} ${phases.length === 1 ? 'disabled' : ''}`} aria-hidden="true">
         <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 12H8L7 9Zm3 2v8h2v-8h-2Zm4 0v8h2v-8h-2Z" /></svg>
