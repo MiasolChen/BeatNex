@@ -260,12 +260,12 @@ export function PhaseChipEditor(props: Props) {
     if (reduced()) done()
     else {
       const animation = panel.animate(trayState === 'open' ? [{ ...folded, opacity: 1 }, full] : [from, folded],
-        { duration: trayState === 'open' ? 360 : 220, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'both' })
+        { duration: trayState === 'open' ? 230 : 220, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'both' })
       animation.onfinish = done
       trayAnimations.current.push(animation)
       trayAnimations.current.push(shade.animate([{ backgroundColor: trayState === 'open' ? '#20211f00' : '#20211f50' }, { backgroundColor: trayState === 'open' ? '#20211f50' : '#20211f00' }], { duration: 220, fill: 'both' }))
       if (trayState === 'open') panel.querySelectorAll<HTMLElement>('h3,.bn-add-options button').forEach((element, index) => {
-        trayAnimations.current.push(element.animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, delay: 60 + index * 16, fill: 'both', easing: 'ease-out' }))
+        trayAnimations.current.push(element.animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 160, delay: 20 + index * 8, fill: 'both', easing: 'ease-out' }))
       })
     }
     if (trayState === 'open') panel.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true })

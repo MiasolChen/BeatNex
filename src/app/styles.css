@@ -19,7 +19,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-placeholder{touch-action:none}
 #bn .bn-source-slider{left:4px;top:4px;bottom:4px;width:calc(50% - 7px);transition:transform 260ms cubic-bezier(.22,1,.36,1)}
 #bn .bn-mode-tabs i{transition:transform 260ms cubic-bezier(.22,1,.36,1)}
-#bn .bn-calendar-slider{transition:transform 260ms cubic-bezier(.22,1,.36,1)}
+#bn .bn-calendar-slider{transition:none}
 #bn>.bn-nav .bn-nav-slider{transition:transform 280ms cubic-bezier(.82,.01,.28,.99),opacity 180ms}
 #bn .bn-grid-head{will-change:transform;left:6px}
 #bn .bn-editor-toolbar label{min-width:0}

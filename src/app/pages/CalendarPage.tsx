@@ -35,23 +35,30 @@ const CalendarSheet = memo(function CalendarSheet({ active, mode, setMode, reset
   const tabs = useRef<HTMLDivElement>(null), slider = useRef<HTMLSpanElement>(null)
   const tabAnimation = useRef<Animation | null>(null)
   const previousMode = useRef(mode)
+  const markerGeometry = useRef<{ x: number; width: number } | null>(null)
   const grid = useRef<HTMLDivElement>(null)
   const previousGrid = useRef<{ key: number; html: string } | null>(null)
   const lastTap = useRef({ key: '', time: 0 })
   useEffect(() => () => { tabAnimation.current?.cancel() }, [])
   useEffect(() => { setDay(localDay(new Date())) }, [resetDate])
   useBrowserLayoutEffect(() => {
-    if (!active || !tabs.current || !slider.current) { tabAnimation.current?.cancel(); return }
+    if (!active || !tabs.current || !slider.current) { tabAnimation.current?.cancel(); markerGeometry.current = null; return }
     const host = tabs.current, marker = slider.current
     const update = () => {
       const selected = host.querySelector<HTMLButtonElement>('[aria-selected="true"]')
       if (!selected) return
+      const geometry = { x: selected.offsetLeft, width: selected.offsetWidth }
+      // ResizeObserver also fires immediately after observing. Do not cancel a
+      // running tab transition when the layout has not actually changed.
+      if (markerGeometry.current?.x === geometry.x && markerGeometry.current.width === geometry.width) return
+      const initialized = markerGeometry.current !== null
+      markerGeometry.current = geometry
       const from = getComputedStyle(marker).transform
       tabAnimation.current?.cancel()
       const target = `translateX(${selected.offsetLeft}px)`
       marker.style.width = `${selected.offsetWidth}px`
       marker.style.transform = target
-      if (previousMode.current !== mode && !reducedMotion()) tabAnimation.current = marker.animate([{ transform: from === 'none' ? target : from }, { transform: target }], { duration: 260, easing: 'cubic-bezier(.22,1,.36,1)' })
+      if (initialized && previousMode.current !== mode && !reducedMotion()) tabAnimation.current = marker.animate([{ transform: from === 'none' ? target : from }, { transform: target }], { duration: 260, easing: 'cubic-bezier(.22,1,.36,1)' })
       previousMode.current = mode
     }
     update()
