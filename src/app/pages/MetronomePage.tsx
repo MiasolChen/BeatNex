@@ -130,7 +130,7 @@ export function MetronomePage({ active, notice }: MetronomePageProps) {
   }
 
   return <section className="bn-page" data-view="metronome" hidden={!active}>
-    <div className="bn-heading"><div><div className="bn-eyebrow">FIND YOUR TEMPO.</div><h1>跟着这一拍。</h1></div></div>
+    <div className="bn-heading"><div><h1>节拍器</h1></div></div>
     <article className="bn-metronome">
       <div className="bn-metro-stage" aria-hidden="true" ref={stageRef}>
         <div className="bn-see-floor" />

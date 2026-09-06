@@ -15,7 +15,7 @@ export function CalendarPage({ active, notice }: { active: boolean; notice: (mes
   const [resetDate, setResetDate] = useState(0)
   const minutes = Math.floor(calendar.ms / 60_000), hours = Math.floor(minutes / 60)
   return <section className="bn-page" data-view="calendar" data-calendar-mode={mode} hidden={!active}>
-    <div className="bn-heading"><div><div className="bn-eyebrow">SHOW UP. KEEP MOVING.</div><h1>练舞日历<span className="bn-diary-mark" aria-hidden="true" /></h1></div><span className="bn-diary-caption">{calendar.persistent ? '真实记录 · 本机保存' : '真实记录 · 仅本次暂存'}</span></div>
+    <div className="bn-heading"><div><h1>练舞日历<span className="bn-diary-mark" aria-hidden="true" /></h1></div><span className="bn-diary-caption bn-sr-only">{calendar.persistent ? '真实记录 · 本机保存' : '真实记录 · 仅本次暂存'}</span></div>
     <article className={`bn-dance-timer${calendar.running ? ' running' : ''}`}>
       <div className="bn-row"><span>练舞计时</span><span id="bn-dance-state">{calendar.running ? calendar.ms < 60_000 ? '计时中 · 未满1分钟' : '正在练舞' : calendar.ms ? '已暂停' : '准备开始'}</span></div>
       <div id="bn-dance-clock" className={hours ? 'bn-hours' : ''} role="timer" aria-label={`练舞用时 ${danceDuration(calendar.ms)}`}>{hours ? <><b>{hours}</b><span>小时</span>{minutes % 60 > 0 && <><b>{minutes % 60}</b><span>分钟</span></>}</> : <><b>{minutes}</b><span>分钟</span></>}</div>

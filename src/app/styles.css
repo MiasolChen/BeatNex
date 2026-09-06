@@ -81,8 +81,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-mode-panel .bn-repeat-control{height:48px;width:104px}
 #bn .bn-mode-panel .bn-repeat-control i{width:48px;height:40px}
 #bn .bn-mode-panel .bn-repeat-control button{height:40px;min-height:40px}
-#bn .bn-free-summary{display:flex;flex-direction:column;gap:8px;margin-top:20px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
-#bn .bn-free-summary strong{font-size:32px;font-variant-numeric:tabular-nums;color:var(--ink)}
 #bn .bn-session .bn-player-tempo{display:block}
 #bn .bn-session .bn-player-tempo .bn-tempo{width:100%;margin:0}
 #bn .bn-session .bn-sub{min-height:18px}
@@ -124,8 +122,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn .bn-mode-panel .bn-course{padding-top:10px}
  #bn .bn-mode-panel .bn-course #bn-route-hint{margin-top:2px}
  #bn .bn-mode-panel #bn-phases{margin-top:10px;gap:8px}
- #bn .bn-free-summary{gap:6px;margin-top:12px;padding-top:12px}
- #bn .bn-free-summary strong{font-size:24px}
 }
 @container bn-preview (max-width:699px){
  #bn [data-view="practice"] .bn-bpm-wheel{height:56px}
@@ -145,7 +141,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 
 /* Both practice modes share geometry; only the content below the tabs changes. */
 @container bn-preview (max-width:699px){
- #bn [data-view="practice"] .bn-session h2{font-size:18px;line-height:1.2;margin:4px 0 2px;overflow-wrap:anywhere}
+ #bn [data-view="practice"] .bn-session h2{font-size:18px;line-height:1.2;margin:10px 0 6px;overflow-wrap:anywhere}
  #bn .bn-session .bn-tag{padding:2px 6px;font-size:12px}
  #bn .bn-session .bn-live{font-size:12px}
  #bn .bn-session .bn-beat{height:30px;min-height:30px}
@@ -156,19 +152,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn .bn-mode-panel .bn-drum{height:56px;min-height:56px;font-size:12px;padding:4px 0;gap:2px}
  #bn .bn-mode-panel .bn-drum svg{width:20px;height:20px;flex-shrink:0}
  #bn .bn-mode-panel #bn-drum-help{font-size:12px;line-height:18px;margin-top:4px}
- #bn .bn-free-summary{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 8px;margin-top:6px;padding-top:6px;line-height:18px}
- #bn .bn-free-summary strong{font-size:20px;line-height:24px;text-align:right}
- #bn .bn-free-summary>span:last-child{grid-column:1 / -1}
  #bn [data-view="practice"] .bn-layout{gap:8px}
- #bn [data-view="practice"] .bn-session{padding:8px 10px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);column-gap:8px;align-items:center}
+ #bn [data-view="practice"] .bn-session{padding:14px 16px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);column-gap:8px;align-items:center}
  #bn .bn-session>div:first-child{grid-column:1 / -1}
  #bn .bn-session>div:nth-child(2){display:contents}
  #bn .bn-session .bn-beats{grid-column:1 / -1}
  #bn .bn-session>div:nth-child(2)>.bn-row{gap:8px}
  #bn .bn-session .bn-primary{min-width:44px;padding:0 6px;gap:4px}
- #bn [data-view="practice"] .bn-session .bn-beats{margin:4px 0}
+ #bn [data-view="practice"] .bn-session .bn-beats{margin:6px 0}
  #bn [data-view="practice"] .bn-session .bn-in-player{margin:0;padding:0;border:0;min-width:0}
- #bn .bn-mode-content{padding:6px 10px}
+ #bn .bn-mode-content{padding:16px}
 }
 
 /* Shared phone scale across all five pages. Preserve native input and touch sizes. */
@@ -179,8 +172,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn .bn-mark{width:24px;height:24px;font-size:18px;border-radius:7px}
  #bn .bn-brand small{font-size:9px}
  #bn .bn-local{font-size:9px;letter-spacing:1px}
- #bn>main,#bn.bn-library-screen>main,#bn.bn-calendar-screen>main{padding:8px 12px calc(78px + max(0px,env(safe-area-inset-bottom) - 16px));scroll-padding-bottom:94px}
- #bn .bn-heading,#bn [data-view=calendar]>.bn-heading{margin:0 0 8px;gap:8px}
+ #bn>main,#bn.bn-library-screen>main,#bn.bn-calendar-screen>main{padding:12px 16px calc(78px + max(0px,env(safe-area-inset-bottom) - 16px));scroll-padding-bottom:94px}
+ #bn .bn-heading,#bn [data-view=calendar]>.bn-heading{margin:4px 0 16px;gap:8px}
  #bn h1,#bn [data-view=calendar] h1{font-size:20px;line-height:1.25;letter-spacing:-.5px;margin:0}
  #bn .bn-heading h2,#bn .bn-dialog h2{font-size:18px;line-height:1.3}
  #bn .bn-eyebrow{font-size:10px;letter-spacing:1px}
@@ -189,8 +182,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn .bn-session .bn-sub{font-size:12px}
  #bn .bn-session #bn-free-end,#bn .bn-session #bn-reset{flex:none;width:44px;min-width:44px}
  #bn .bn-layout{gap:8px}
- #bn .bn-source-tabs{margin-bottom:8px}
- #bn .bn-source-tabs button{font-size:13px;min-height:44px}
+ #bn .bn-source-tabs{width:240px;max-width:100%;margin:0 0 16px;padding:3px;border-radius:13px}
+ #bn .bn-source-tabs button{font-size:12px;min-height:38px;height:38px;padding:0 10px}
  #bn .bn-categories{padding:10px;border-radius:14px}
  #bn .bn-category-window,#bn .bn-category-window>.bn-category-rail{height:100px;min-height:100px;max-height:100px}
  #bn .bn-category-window .bn-category{height:92px;min-height:92px;max-height:92px;flex-basis:104px;padding:8px}
@@ -200,7 +193,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn .bn-rail-footer{font-size:12px;margin-top:4px}
  #bn .bn-curated-tools{margin:8px 0;font-size:12px}
  #bn .bn-library-grid{gap:8px}
- #bn .bn-record{padding:10px;gap:10px;border-radius:14px}
+ #bn .bn-record{padding:12px;gap:6px;border-radius:16px}
  #bn .bn-record-body h3{font-size:14px;margin:0 0 4px;overflow-wrap:anywhere}
  #bn .bn-record-body button{margin-top:6px;min-height:44px;padding:6px 8px}
  #bn .bn-record-body .bn-muted{font-size:12px}
@@ -208,30 +201,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn .bn-empty{padding:20px 12px;min-height:160px}
  #bn .bn-empty h3{font-size:16px}
  #bn .bn-empty p{font-size:12px}
- #bn .bn-machine{padding:10px;border-radius:14px}
- #bn .bn-editor-toolbar{padding:0 0 8px;gap:8px}
+ #bn .bn-machine{padding:16px;border-radius:18px}
+ #bn .bn-editor-toolbar{padding:12px;gap:12px;border-radius:14px}
  #bn .bn-editor-toolbar label{font-size:12px}
  #bn .bn-editor-toolbar #bn-save{padding:0 6px;gap:4px;font-size:12px;white-space:nowrap}
  #bn .bn-editor-toolbar #bn-save svg{width:18px;height:18px}
- #bn .bn-editor-toolbar .bn-editor-options>label{gap:2px}
+ #bn .bn-editor-toolbar .bn-editor-options>label{gap:6px}
  #bn .bn-editor-toolbar .bn-tool-label{font-size:12px}
  #bn .bn-daw-hint{font-size:12px;margin:6px 0}
  #bn .bn-machine-foot{padding-top:8px;margin-top:8px}
- #bn .bn-metronome{padding:10px 12px 12px;border-radius:16px}
- #bn .bn-metro-stage{height:230px}
+ #bn .bn-metronome{padding:16px;border-radius:18px}
+ #bn .bn-metro-stage{height:300px}
  #bn .bn-metronome>.bn-bpm-wheel{height:64px;margin:8px 0 12px}
  #bn .bn-metronome .bn-bpm-rail,#bn .bn-metronome .bn-bpm-rail button{height:44px;min-height:44px}
  #bn .bn-metronome .bn-bpm-rail button{font-size:18px;transform:none}
  #bn .bn-metronome .bn-bpm-wheel:before{top:2px;height:40px}
  #bn .bn-metronome .bn-bpm-wheel>small{top:46px;font-size:12px}
  #bn .bn-metronome .bn-wheel-input{top:2px;height:40px;font-size:18px}
- #bn .bn-dance-timer{padding:10px 12px;gap:4px 8px;grid-template-columns:minmax(0,1fr) 112px;min-height:0;border-radius:14px}
+ #bn .bn-dance-timer{padding:20px;gap:8px 16px;grid-template-columns:minmax(0,1fr) 112px;min-height:132px;border-radius:18px}
  #bn #bn-dance-clock b{font-size:30px;letter-spacing:-1px}
  #bn #bn-dance-clock.bn-hours b{font-size:24px}
- #bn .bn-dance-actions{gap:4px}
+ #bn .bn-dance-actions{gap:10px}
  #bn .bn-dance-actions button{min-height:44px;height:44px}
- #bn .bn-calendar-sheet{margin-top:8px;padding:10px;min-height:0;border-radius:16px}
- #bn .bn-calendar-tabs{margin-bottom:6px}
+ #bn .bn-calendar-sheet{margin-top:20px;padding:16px;min-height:0;border-radius:18px}
+ #bn .bn-calendar-tabs{margin-bottom:16px}
  #bn .bn-calendar-tabs button{font-size:13px}
  #bn .bn-calendar-top strong{font-size:14px}
  #bn .bn-dance-stats b{font-size:16px}
@@ -246,4 +239,68 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn .bn-save-meta{font-size:12px;margin:8px 0}
  #bn .bn-feedback{gap:8px;margin:12px 0}
  #bn>.bn-nav button svg,#bn>.bn-calendar-launch svg{width:19px;height:19px}
+}
+
+/* Give artwork and icon actions independent space. */
+#bn .bn-record{grid-template-columns:48px minmax(0,1fr) 44px 44px;align-items:center}
+#bn .bn-record .bn-art,#bn .bn-record .bn-saved-art{height:48px;width:48px;padding:4px}
+#bn .bn-record .bn-disc{width:40px;height:40px}
+#bn .bn-record .bn-favorite,#bn .bn-record-play,#bn .bn-record-edit{position:static;width:44px;height:44px;min-height:44px;padding:10px;display:grid;place-items:center;border:0;border-radius:50%;margin:0;background:transparent;font-size:20px}
+#bn .bn-record-play{background:var(--acid)}
+#bn .bn-record-play svg,#bn .bn-record-edit svg{width:18px;height:18px}
+#bn .bn-record-body .bn-row{flex-wrap:wrap;justify-content:flex-start;gap:2px 8px}
+#bn .bn-editor-toolbar .bn-editor-actions button,#bn .bn-editor-toolbar #bn-undo,#bn .bn-editor-toolbar #bn-redo,#bn .bn-editor-toolbar #bn-follow{display:grid;grid-template-rows:none;place-items:center;align-content:center;min-height:44px;height:44px;padding:10px;gap:0;background:transparent}
+#bn .bn-editor-toolbar .bn-editor-options{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px}
+#bn .bn-editor-toolbar #bn-save{min-width:44px;width:44px;padding:10px}
+/* Route sections need breathing room; keep the shared player and tabs stable. */
+#bn:not(.bn-free-mode) .bn-mode-content{padding:20px}
+#bn:not(.bn-free-mode) .bn-mode-help{margin:8px 0 16px}
+#bn:not(.bn-free-mode) .bn-mode-panel .bn-drums{margin-top:0;gap:10px}
+#bn:not(.bn-free-mode) .bn-mode-panel .bn-drum{height:auto;min-height:64px;padding:10px 2px;gap:6px}
+#bn:not(.bn-free-mode) .bn-mode-panel #bn-drum-help{margin-top:12px}
+#bn:not(.bn-free-mode) .bn-mode-panel .bn-practice-progress{margin-top:20px;padding:20px 0}
+#bn:not(.bn-free-mode) .bn-progress-heading{margin-bottom:14px}
+#bn:not(.bn-free-mode) .bn-current-phase{margin:14px 0 8px}
+#bn:not(.bn-free-mode) .bn-mode-panel .bn-course{padding-top:20px}
+#bn:not(.bn-free-mode) .bn-mode-panel .bn-course #bn-route-hint{margin-top:8px}
+#bn:not(.bn-free-mode) .bn-mode-panel #bn-phases{margin-top:20px;gap:12px;grid-auto-rows:minmax(56px,auto);min-height:0}
+#bn:not(.bn-free-mode) .bn-mode-panel .bn-phase,#bn:not(.bn-free-mode) .bn-mode-panel #bn-add-phase{height:56px;min-height:56px}
+#bn:not(.bn-free-mode) .bn-mode-panel .bn-phase-face{height:54px;min-height:54px;padding-left:12px}
+#bn:not(.bn-free-mode) .bn-route-dock{margin-top:20px;padding-top:16px;min-height:76px}
+@container bn-preview (max-width:360px){
+ #bn:not(.bn-free-mode) .bn-mode-content{padding:16px}
+ #bn:not(.bn-free-mode) .bn-mode-panel #bn-phases{grid-template-columns:1fr}
+}
+@container bn-preview (max-width:699px){
+ #bn .bn-library-head{padding-top:4px}
+ #bn .bn-source-tabs .bn-source-slider{left:3px;top:3px;bottom:3px;border-radius:10px}
+ #bn .bn-record-body h3{font-size:13px;line-height:1.3}
+ #bn .bn-record-body .bn-muted{font-size:11px}
+ #bn .bn-editor-toolbar .bn-editor-actions{padding:10px 0 0;gap:6px}
+ #bn .bn-editor-toolbar .bn-editor-actions button{background:transparent;border:0}
+ #bn .bn-editor-toolbar .bn-select-trigger{padding:0 6px}
+ #bn .bn-editor-toolbar .bn-bpm-rail button{font-size:16px;transform:none}
+ #bn .bn-daw-hint{margin:14px 0 10px}
+ #bn .bn-machine-foot{margin-top:16px;padding-top:0}
+ #bn .bn-calendar-top{margin-bottom:12px}
+ #bn .bn-dance-stats{margin-bottom:16px}
+ #bn .bn-calendar-key{margin-top:14px}
+ #bn #bn-day-detail{margin-top:16px;padding-top:16px}
+ #bn:has([data-view="practice"]:not([hidden]))>main{padding:8px 12px calc(78px + max(0px,env(safe-area-inset-bottom) - 16px))}
+}
+
+#bn.bn-free-mode .bn-mode-help{margin:8px 0 12px}
+#bn.bn-free-mode .bn-mode-panel #bn-drum-help{margin-top:10px}
+@container bn-preview (max-width:699px){
+ @media(max-height:699px){
+  #bn.bn-free-mode .bn-mode-content{padding-bottom:12px}
+ }
+ @media(min-height:700px){
+  #bn [data-view="practice"] .bn-session{padding:20px}
+  #bn [data-view="practice"] .bn-session h2{margin:14px 0 10px}
+  #bn [data-view="practice"] .bn-session .bn-beats{margin:12px 0}
+  #bn.bn-free-mode .bn-mode-content{padding:20px}
+  #bn.bn-free-mode .bn-mode-panel .bn-drum{height:auto;min-height:64px;padding:10px 2px;gap:6px}
+  #bn.bn-free-mode .bn-mode-panel #bn-drum-help{margin-top:14px}
+ }
 }

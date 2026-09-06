@@ -14,7 +14,8 @@ export function transferToPractice(button:HTMLElement,action:()=>void){
  const surface=document.createElement('div');surface.className='bn-transfer-surface';Object.assign(surface.style,{left:end.left-base.left+'px',top:end.top-mainRect.top+'px',width:end.width+'px',height:end.height+'px',borderRadius:getComputedStyle(target).borderRadius,transformOrigin:'0 0'})
  const flip=document.createElement('div');flip.className='bn-transfer-flip'
  const face=document.createElement('div');face.className='bn-transfer-face bn-transfer-front';face.style.background='var(--white)';Object.assign(front.style,{width:start.width+'px',height:start.height+'px'})
- const back=document.createElement('div');back.className='bn-transfer-face bn-transfer-back'
+ // The snapshot must keep the player's page-scoped layout, including pseudo-elements.
+ const back=document.createElement('div');back.className='bn-transfer-face bn-transfer-back';back.dataset.view='practice'
  const clone=target.cloneNode(true) as HTMLElement
  const originals=[target,...target.querySelectorAll<HTMLElement>('*')]
  const copies=[clone,...clone.querySelectorAll<HTMLElement>('*')]

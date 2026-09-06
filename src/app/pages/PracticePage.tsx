@@ -25,6 +25,6 @@ export function PracticePage({app}:{app:BeatNex}){
  {settings.routeEnabled?<>
  <PracticeProgress total={totalBars} cycle={cycle} snapshot={snapshot} complete={app.completed} round={app.round} infinite={settings.repeat==='infinite'} enabled phaseLabel={phases[activeIndex].label} guide={settings.targets.length?guide:'点选需要的目标鼓件；双击可取消选择'}/>
  <div className="bn-course" aria-label="练习路线编排"><div className="bn-row"><div><h3>路线阶段</h3><span className="bn-muted" id="bn-route-hint">长按拖动 · 拖入垃圾桶删除</span></div><div className="bn-repeat-control" role="group" aria-label="路线循环模式"><i aria-hidden="true" style={{transform:`translateX(${settings.repeat==='infinite'?100:0}%)`}}/>{(['once','infinite'] as const).map(mode=><button key={mode} type="button" aria-label={mode==='once'?'循环一次':'无限循环'} title={mode==='once'?'循环一次':'无限循环'} aria-pressed={settings.repeat===mode} disabled={playing||loading} onClick={()=>app.changeRepeat(mode)}>{mode==='once'?'1×':'∞'}</button>)}</div></div><PhaseChipEditor phases={phases} locked={playing||loading||app.page!=='practice'} activeIndex={activeIndex} onBarsChange={app.changeBars} onReorder={app.reorder} onDelete={app.removePhase} onAdd={app.addPhase} notice={app.notice}/></div>
- </>:<div className="bn-free-summary"><span>已练习</span><strong>{freeTime}</strong><span>点击播放器中的「结束」完成本次练习</span></div>}
+ </>:null}
  </div></article></div></section>
 }
