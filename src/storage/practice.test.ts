@@ -16,6 +16,22 @@ function useStorage(initial: Record<string, string> = {}) {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('practice settings persistence', () => {
+  it('keeps route targets and free playback drums independent across reloads', () => {
+    useStorage()
+    expect(savePractice({ ...defaultSettings(), targets: ['kick'], freeTargets: ['snare'] })).toBe(true)
+    expect(readPractice().targets).toEqual(['kick'])
+    expect(readPractice().freeTargets).toEqual(['snare'])
+    expect(savePractice({ ...readPractice(), targets: ['closedHat'] })).toBe(true)
+    expect(readPractice().freeTargets).toEqual(['snare'])
+  })
+
+  it('preserves corrupt free drum settings rather than overwriting them', () => {
+    const raw = JSON.stringify({ ...defaultSettings(), freeTargets: ['unknown'] })
+    const { data } = useStorage({ [PRACTICE_KEY]: raw })
+    expect(savePractice(defaultSettings())).toBe(false)
+    expect(data.get(PRACTICE_KEY)).toBe(raw)
+  })
+
   it('defaults older v2 settings to once and persists infinite mode', () => {
     const { repeat: _, ...old } = defaultSettings()
     useStorage({ [PRACTICE_KEY]: JSON.stringify(old) })

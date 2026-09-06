@@ -7,8 +7,8 @@ export function barProgress(total: number, cycle: number, started: boolean, comp
   return { done, current, start, end: Math.min(total, start + 24) }
 }
 
-export function PracticeProgress({ total, cycle, snapshot, complete, enabled, guide, round = 1, infinite = false }: {
-  total: number; cycle: number; snapshot: EngineSnapshot; complete: boolean; enabled: boolean; guide: string; round?: number; infinite?: boolean
+export function PracticeProgress({ total, cycle, snapshot, complete, enabled, guide, round = 1, infinite = false, phaseLabel }: {
+  total: number; cycle: number; snapshot: EngineSnapshot; complete: boolean; enabled: boolean; guide: string; round?: number; infinite?: boolean; phaseLabel?: string
 }) {
   const started = snapshot.status === 'playing' || snapshot.status === 'paused' || snapshot.elapsed > 0
   const { done, current, start, end } = barProgress(total, cycle, started, complete)
@@ -18,6 +18,7 @@ export function PracticeProgress({ total, cycle, snapshot, complete, enabled, gu
     <div id="bn-progress" className="bn-bar-track" role="progressbar" aria-label="练习进度" aria-valuemin={0} aria-valuemax={total} aria-valuenow={done} aria-valuetext={label}>
       {Array.from({ length: end - start }, (_, offset) => { const index = start + offset; return <i key={index} className={index < done ? 'done' : index + 1 === current ? 'current' : ''} aria-hidden="true" /> })}
     </div>
+    {phaseLabel && <p className="bn-current-phase">{complete?'路线完成':started?'当前阶段':'首个阶段'} · {phaseLabel}</p>}
     <p id="bn-guide">{guide}</p>
   </article>
 }

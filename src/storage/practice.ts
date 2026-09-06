@@ -7,6 +7,7 @@ export type RoutePhase = { id: string; instanceId: string; bars: number }
 export type PracticeSettings = {
   version: 2
   targets: DrumId[]
+  freeTargets?: DrumId[]
   phases: RoutePhase[]
   repeat: 'once' | 'infinite'
   routeEnabled: boolean
@@ -61,6 +62,9 @@ function isPracticeSettings(value: unknown): value is PracticeSettings {
     && typeof value.routeEnabled === 'boolean' && Array.isArray(value.targets)
     && value.targets.every((drum) => DRUM_IDS.includes(drum as DrumId))
     && new Set(value.targets).size === value.targets.length
+    && (value.freeTargets === undefined || (Array.isArray(value.freeTargets)
+      && value.freeTargets.every((drum) => DRUM_IDS.includes(drum as DrumId))
+      && new Set(value.freeTargets).size === value.freeTargets.length))
 }
 
 /** Read the actual legacy bytes: its forgiving UI reader cannot distinguish corruption from defaults. */
