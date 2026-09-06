@@ -31,3 +31,5 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 @media(prefers-reduced-motion:reduce){#bn .bn-count-marker{transition:none}}
 /* Short landscape screens need the category header to scroll out of the way. */
 @media(max-height:600px){#bn.bn-library-screen .bn-library-head{position:static}}
+/* Keep the mobile seesaw's travel envelope when the surrounding card widens. */
+#bn .bn-see-beam{width:min(80%,250px);left:max(10%,calc(50% - 125px))}
