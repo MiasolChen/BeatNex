@@ -33,3 +33,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 @media(max-height:600px){#bn.bn-library-screen .bn-library-head{position:static}}
 /* Keep the mobile seesaw's travel envelope when the surrounding card widens. */
 #bn .bn-see-beam{width:min(80%,250px);left:max(10%,calc(50% - 125px))}
+#bn .bn-practice-progress{padding:14px 18px;margin-bottom:14px;min-width:0}
+#bn .bn-practice-progress[hidden]{display:none}
+#bn .bn-progress-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+#bn .bn-progress-heading strong{font-size:15px;line-height:20px}
+#bn .bn-progress-heading>span{font-size:10px;color:var(--muted);white-space:nowrap}
+#bn .bn-bar-track{display:flex;gap:4px;height:6px;margin:0 0 9px}
+#bn .bn-bar-track i{flex:1;min-width:0;border-radius:4px;background:var(--line);transition:background 120ms ease-out}
+#bn .bn-bar-track i.done{background:var(--ink)}
+#bn .bn-bar-track i.current{background:var(--acid);box-shadow:0 0 0 1px #98a54b}
+#bn .bn-practice-progress #bn-guide{height:32px;font-size:11px;line-height:16px;color:var(--muted)}
