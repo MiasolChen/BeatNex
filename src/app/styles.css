@@ -142,3 +142,41 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn .bn-mode-panel .bn-inline-bars input{font-size:16px}
  #bn .bn-mode-panel #bn-add-phase{height:46px;min-height:46px;font-size:12px;border-radius:10px}
 }
+
+/* Free practice fits a phone without clipping content or reducing touch targets. */
+@container bn-preview (max-width:699px){
+ #bn.bn-free-mode:has([data-view="practice"]:not([hidden]))>main{padding:10px 12px calc(78px + max(0px,env(safe-area-inset-bottom) - 16px));scroll-padding-bottom:94px}
+ #bn.bn-free-mode [data-view="practice"] .bn-session{padding:12px}
+ #bn.bn-free-mode [data-view="practice"] .bn-session h2{font-size:20px;line-height:1.2;margin:6px 0 4px;overflow-wrap:anywhere}
+ #bn.bn-free-mode .bn-session .bn-tag{padding:2px 6px;font-size:12px}
+ #bn.bn-free-mode .bn-session .bn-live{font-size:12px}
+ #bn.bn-free-mode [data-view="practice"] .bn-session .bn-beats{margin:8px 0}
+ #bn.bn-free-mode .bn-session .bn-beat{height:30px;min-height:30px}
+ #bn.bn-free-mode [data-view="practice"] .bn-session .bn-in-player{margin-top:8px;padding-top:4px}
+ #bn.bn-free-mode [data-view="practice"] .bn-bpm-rail button{transform:none}
+ #bn.bn-free-mode .bn-mode-content{padding:10px}
+ #bn.bn-free-mode .bn-target-heading{min-height:22px}
+ #bn.bn-free-mode .bn-mode-help{margin:2px 0 6px}
+ #bn.bn-free-mode .bn-mode-panel .bn-drums{gap:8px;margin-top:6px}
+ #bn.bn-free-mode .bn-mode-panel .bn-drum{height:56px;min-height:56px;font-size:12px;padding:4px 0;gap:2px}
+ #bn.bn-free-mode .bn-mode-panel .bn-drum svg{width:20px;height:20px;flex-shrink:0}
+ #bn.bn-free-mode .bn-mode-panel #bn-drum-help{font-size:12px;line-height:18px;margin-top:4px}
+ #bn.bn-free-mode .bn-free-summary{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 8px;margin-top:6px;padding-top:6px;line-height:18px}
+ #bn.bn-free-mode .bn-free-summary strong{font-size:20px;line-height:24px;text-align:right}
+ #bn.bn-free-mode .bn-free-summary>span:last-child{grid-column:1 / -1}
+ @media(max-height:700px){
+  #bn.bn-free-mode:has([data-view="practice"]:not([hidden]))>.bn-top{height:48px;min-height:48px;padding:6px 12px}
+  #bn.bn-free-mode:has([data-view="practice"]:not([hidden]))>main{padding-top:6px}
+  #bn.bn-free-mode [data-view="practice"] .bn-layout{gap:8px}
+  #bn.bn-free-mode [data-view="practice"] .bn-session{padding:8px 10px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);column-gap:8px;align-items:center}
+  #bn.bn-free-mode .bn-session>div:first-child{grid-column:1 / -1}
+  #bn.bn-free-mode .bn-session>div:nth-child(2){display:contents}
+  #bn.bn-free-mode .bn-session .bn-beats{grid-column:1 / -1}
+  #bn.bn-free-mode .bn-session>div:nth-child(2)>.bn-row{gap:8px}
+  #bn.bn-free-mode .bn-session .bn-primary{min-width:44px;padding:0 6px;gap:4px}
+  #bn.bn-free-mode [data-view="practice"] .bn-session h2{font-size:18px;margin:4px 0 2px}
+  #bn.bn-free-mode [data-view="practice"] .bn-session .bn-beats{margin:4px 0}
+  #bn.bn-free-mode [data-view="practice"] .bn-session .bn-in-player{margin:0;padding:0;border:0;min-width:0}
+  #bn.bn-free-mode .bn-mode-content{padding:6px 10px}
+ }
+}
