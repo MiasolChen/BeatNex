@@ -59,9 +59,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 /* Mode controls precede all mode-dependent content; no hidden route spacer. */
 #bn .bn-layout{align-items:start}
 #bn .bn-mode-panel{min-width:0;padding:0;overflow:visible;order:1}
-#bn .bn-practice-modes{display:flex;gap:4px;padding:6px;background:var(--paper);border-bottom:1px solid var(--line);border-radius:20px 20px 0 0}
-#bn .bn-practice-modes button{flex:1;min-height:44px;border:0;border-radius:14px;background:transparent;font-size:15px;color:var(--ink)}
-#bn .bn-practice-modes button[aria-pressed="true"]{background:var(--ink);color:var(--white);font-weight:700}
+#bn .bn-practice-modes{--mode-inset:6px;--mode-gap:4px;--mode-radius:14px;position:relative;isolation:isolate;display:flex;gap:var(--mode-gap);padding:var(--mode-inset);background:var(--paper);border-bottom:1px solid var(--line);border-radius:20px 20px 0 0}
+#bn .bn-practice-modes:before{content:'';position:absolute;left:var(--mode-inset);top:var(--mode-inset);bottom:var(--mode-inset);width:calc((100% - 2 * var(--mode-inset) - var(--mode-gap))/2);border-radius:var(--mode-radius);background:var(--ink);pointer-events:none;transition:transform 260ms cubic-bezier(.22,1,.36,1)}
+#bn .bn-practice-modes:has(button:last-child[aria-pressed="true"]):before{transform:translateX(calc(100% + var(--mode-gap)))}
+#bn .bn-practice-modes button{position:relative;z-index:1;flex:1;min-width:0;min-height:44px;border:0;border-radius:var(--mode-radius);background:transparent;font-size:15px;font-weight:700;color:var(--ink);transform:none;transition:color 160ms ease-out}
+#bn .bn-practice-modes button[aria-pressed="true"]{color:var(--white)}
 #bn .bn-practice-modes button:active{opacity:.8}
 #bn .bn-mode-content{padding:18px}
 #bn .bn-target-heading{display:flex;justify-content:space-between;align-items:center;min-height:44px;gap:8px}
@@ -103,7 +105,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn [data-view="practice"] .bn-session .bn-primary{font-size:13px;min-height:44px;height:44px}
  #bn [data-view="practice"] .bn-session #bn-reset,#bn [data-view="practice"] .bn-session #bn-free-end{height:44px;min-height:44px;width:44px;min-width:44px}
  #bn .bn-mode-panel{border-radius:16px}
- #bn .bn-practice-modes{padding:3px;gap:3px;border-radius:16px 16px 0 0}
+ #bn .bn-practice-modes{--mode-inset:3px;--mode-gap:3px;--mode-radius:12px;border-radius:16px 16px 0 0}
  #bn .bn-practice-modes button{font-size:13px;border-radius:12px}
  #bn .bn-mode-content{padding:12px}
  #bn .bn-target-heading{min-height:28px}
@@ -253,11 +255,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-editor-toolbar .bn-editor-options{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px}
 #bn .bn-editor-toolbar #bn-save{min-width:44px;width:44px;padding:10px}
 /* Route sections need breathing room; keep the shared player and tabs stable. */
-#bn:not(.bn-free-mode) .bn-mode-content{padding:20px}
-#bn:not(.bn-free-mode) .bn-mode-help{margin:8px 0 16px}
-#bn:not(.bn-free-mode) .bn-mode-panel .bn-drums{margin-top:0;gap:10px}
-#bn:not(.bn-free-mode) .bn-mode-panel .bn-drum{height:auto;min-height:64px;padding:10px 2px;gap:6px}
-#bn:not(.bn-free-mode) .bn-mode-panel #bn-drum-help{margin-top:12px}
+#bn .bn-mode-content{padding:20px}
+#bn .bn-mode-help{margin:8px 0 16px}
+#bn .bn-mode-panel .bn-drums{margin-top:0;gap:10px}
+#bn .bn-mode-panel .bn-drum{height:auto;min-height:64px;padding:10px 2px;gap:6px}
+#bn .bn-mode-panel #bn-drum-help{margin-top:12px}
 #bn:not(.bn-free-mode) .bn-mode-panel .bn-practice-progress{margin-top:20px;padding:20px 0}
 #bn:not(.bn-free-mode) .bn-progress-heading{margin-bottom:14px}
 #bn:not(.bn-free-mode) .bn-current-phase{margin:14px 0 8px}
@@ -268,7 +270,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn:not(.bn-free-mode) .bn-mode-panel .bn-phase-face{height:54px;min-height:54px;padding-left:12px}
 #bn:not(.bn-free-mode) .bn-route-dock{margin-top:20px;padding-top:16px;min-height:76px}
 @container bn-preview (max-width:360px){
- #bn:not(.bn-free-mode) .bn-mode-content{padding:16px}
+ #bn .bn-mode-content{padding:16px}
  #bn:not(.bn-free-mode) .bn-mode-panel #bn-phases{grid-template-columns:1fr}
 }
 @container bn-preview (max-width:699px){
@@ -289,18 +291,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn:has([data-view="practice"]:not([hidden]))>main{padding:8px 12px calc(78px + max(0px,env(safe-area-inset-bottom) - 16px))}
 }
 
-#bn.bn-free-mode .bn-mode-help{margin:8px 0 12px}
-#bn.bn-free-mode .bn-mode-panel #bn-drum-help{margin-top:10px}
 @container bn-preview (max-width:699px){
  @media(max-height:699px){
-  #bn.bn-free-mode .bn-mode-content{padding-bottom:12px}
+  #bn .bn-mode-content{padding:12px}
+  #bn .bn-mode-panel .bn-drum{min-height:56px;padding:6px 2px;gap:4px}
+  #bn .bn-mode-panel #bn-drum-help{margin-top:8px}
  }
  @media(min-height:700px){
   #bn [data-view="practice"] .bn-session{padding:20px}
   #bn [data-view="practice"] .bn-session h2{margin:14px 0 10px}
   #bn [data-view="practice"] .bn-session .bn-beats{margin:12px 0}
-  #bn.bn-free-mode .bn-mode-content{padding:20px}
-  #bn.bn-free-mode .bn-mode-panel .bn-drum{height:auto;min-height:64px;padding:10px 2px;gap:6px}
-  #bn.bn-free-mode .bn-mode-panel #bn-drum-help{margin-top:14px}
  }
 }
