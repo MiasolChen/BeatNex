@@ -8,6 +8,7 @@ export type PracticeSettings = {
   version: 2
   targets: DrumId[]
   phases: RoutePhase[]
+  repeat: 'once' | 'infinite'
   routeEnabled: boolean
   bpm: number
   patternName: string
@@ -23,6 +24,7 @@ export const defaultSettings = (): PracticeSettings => ({
   version: 2,
   targets: [...DRUM_IDS],
   phases: phaseIds.map((id, index) => ({ id, instanceId: `phase-${index}`, bars: 4 })),
+  repeat: 'once',
   routeEnabled: true,
   bpm: 88,
   patternName: 'Foundation Backbeat',
@@ -55,6 +57,7 @@ function validCommon(value: Record<string, unknown>) {
 
 function isPracticeSettings(value: unknown): value is PracticeSettings {
   return isRecord(value) && value.version === 2 && validCommon(value)
+    && (value.repeat === undefined || value.repeat === 'once' || value.repeat === 'infinite')
     && typeof value.routeEnabled === 'boolean' && Array.isArray(value.targets)
     && value.targets.every((drum) => DRUM_IDS.includes(drum as DrumId))
     && new Set(value.targets).size === value.targets.length
@@ -81,7 +84,7 @@ export function readPractice(): PracticeSettings {
     const raw = storage.getItem(PRACTICE_KEY)
     if (raw !== null) {
       const value: unknown = JSON.parse(raw)
-      return isPracticeSettings(value) ? value : defaultSettings()
+      return isPracticeSettings(value) ? { ...value, repeat: value.repeat ?? 'once' } : defaultSettings()
     }
     const legacy = storage.getItem(TRAINING_CONFIG_KEY)
     if (legacy !== null) return migrateLegacy(legacy) ?? defaultSettings()

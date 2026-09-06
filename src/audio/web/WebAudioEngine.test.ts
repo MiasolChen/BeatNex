@@ -411,6 +411,31 @@ describe('WebAudioEngine scheduling and mixing', () => {
     engine.dispose()
   })
 
+  it('repeats every route phase on the same clock without finite sample cutoff', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setProgram([
+      { bars: 1, mix: { mode: 'full', targets: ['kick'] } },
+      { bars: 1, mix: { mode: 'mute-target', targets: ['kick'] } },
+    ], true)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    for (let time = 0.025; time < 12.15; time += 0.025) { context.currentTime = time; tick() }
+    const targets = context.trackGains.get('kick')!.gain.targets
+    for (const time of [4.08, 8.08, 12.08]) expect(targets.some(v => Math.abs(v.time-time)<1e-8 && Math.abs(v.value-.82)<1e-8)).toBe(true)
+    for (const time of [2.08, 6.08, 10.08]) expect(targets.some(v => Math.abs(v.time-time)<1e-8 && v.value===0)).toBe(true)
+    expect(context.stops.filter(v => v.time!==undefined)).toHaveLength(0)
+    expect(engine.getPosition().cycle).toBe(6)
+    expect(engine.getPosition().status).toBe('playing')
+    const events = context.starts.map(v=>`${v.drum}:${v.time.toFixed(8)}`)
+    expect(new Set(events).size).toBe(events.length)
+    const position = engine.getPosition()
+    engine.pause(); context.currentTime += 20
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    expect(engine.getPosition().cycle).toBe(position.cycle)
+    expect(engine.getPosition().elapsed).toBeCloseTo(position.elapsed)
+    engine.dispose()
+  })
+
   it('changes program phase audio exactly at a boundary and schedules no extra final hit', async () => {
     const engine = new WebAudioEngine()
     await engine.prepare(kit)

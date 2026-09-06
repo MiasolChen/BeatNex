@@ -16,6 +16,22 @@ function useStorage(initial: Record<string, string> = {}) {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('practice settings persistence', () => {
+  it('defaults older v2 settings to once and persists infinite mode', () => {
+    const { repeat: _, ...old } = defaultSettings()
+    useStorage({ [PRACTICE_KEY]: JSON.stringify(old) })
+    expect(readPractice().repeat).toBe('once')
+    expect(savePractice({ ...readPractice(), repeat: 'infinite' })).toBe(true)
+    expect(readPractice().repeat).toBe('infinite')
+  })
+
+  it('does not overwrite an unknown repeat mode', () => {
+    const raw = JSON.stringify({ ...defaultSettings(), repeat: 'future-mode' })
+    const { data } = useStorage({ [PRACTICE_KEY]: raw })
+    expect(readPractice().repeat).toBe('once')
+    expect(savePractice(defaultSettings())).toBe(false)
+    expect(data.get(PRACTICE_KEY)).toBe(raw)
+  })
+
   it('starts with 24 bars and all drums, using independently mutable defaults', () => {
     const { storage } = useStorage()
     const settings = readPractice()

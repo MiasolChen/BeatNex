@@ -50,6 +50,7 @@ export class WebAudioEngine implements AudioEngine {
   private nextAbsoluteStep = 0
   private cycleOffset = 0
   private pausedMusicOffset = 0
+  private repeatProgram = false
   private program?: TrainingProgram
   private endingAt?: number
   private elapsedOffset = 0
@@ -214,8 +215,9 @@ export class WebAudioEngine implements AudioEngine {
     this.setStatus('stopped')
   }
 
-  setProgram(program?: TrainingProgram) {
+  setProgram(program?: TrainingProgram, repeat = false) {
     this.program = program
+    this.repeatProgram = repeat
     if (program?.length) this.setTrainingMix(this.phaseAtCycle(this.getPosition().cycle)?.mix ?? program[0].mix)
     else this.setTrainingMix(undefined)
     this.updateEndingTime()
@@ -437,12 +439,14 @@ export class WebAudioEngine implements AudioEngine {
   }
 
   private phaseAtCycle(cycle: number) {
+    const total = this.program?.reduce((sum, phase) => sum + phase.bars, 0) ?? 0
+    if (this.repeatProgram && total > 0) cycle = ((cycle % total) + total) % total
     let boundary = 0
     return this.program?.find(phase => { boundary += phase.bars; return cycle < boundary })
   }
 
   private updateEndingTime() {
-    if (!this.program?.length || !this.request) { this.endingAt = undefined; return }
+    if (this.repeatProgram || !this.program?.length || !this.request) { this.endingAt = undefined; return }
     const bars = this.program.reduce((sum, phase) => sum + phase.bars, 0)
     this.endingAt = this.musicStartedAt + (bars - this.cycleOffset) * patternDuration(this.request.pattern, this.request.bpm)
   }

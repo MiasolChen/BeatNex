@@ -43,3 +43,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-bar-track i.done{background:var(--ink)}
 #bn .bn-bar-track i.current{background:var(--acid);box-shadow:0 0 0 1px #98a54b}
 #bn .bn-practice-progress #bn-guide{height:32px;font-size:11px;line-height:16px;color:var(--muted)}
+#bn .bn-course{position:relative}
+#bn .bn-repeat-control{position:relative;display:flex;width:88px;height:32px;padding:3px;margin:0;flex-shrink:0;border-radius:10px;background:var(--paper);border:1px solid var(--line);box-sizing:border-box}
+#bn .bn-repeat-control[hidden]{display:none}
+#bn .bn-repeat-control i{position:absolute;left:3px;top:3px;width:40px;height:24px;border-radius:7px;background:var(--acid);transition:transform 220ms cubic-bezier(.22,1,.36,1)}
+#bn .bn-repeat-control button{position:relative;flex:1;min-width:0;border:0;background:none;font-size:17px;line-height:24px;padding:0;z-index:1;color:var(--ink)}
+#bn .bn-repeat-control button:disabled{opacity:.5;cursor:default}
+
+#bn .bn-course>.bn-row>div:first-child{min-width:0;flex:1}
+#bn .bn-route-status[hidden]{display:none}
+#bn .bn-repeat-control button{min-height:24px;height:24px;display:grid;place-items:center;line-height:1}

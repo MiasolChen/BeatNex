@@ -25,12 +25,13 @@ export function useBeatNex(){
  const notice=(text:string)=>{setToast(text);clearTimeout(notifyTimer.current);notifyTimer.current=setTimeout(()=>setToast(''),2800)}
  const totalBars=settings.phases.reduce((n,p)=>n+p.bars,0)
  const program=useMemo<TrainingProgram|undefined>(()=>page==='practice'&&settings.routeEnabled?settings.phases.map(p=>({bars:p.bars,mix:{mode:({full:'full',solo:'solo',focus:'weaken',normal:'full',muteTarget:'mute-target',check:'full'} as Record<string,TrainingMix['mode']>)[p.id],targets:settings.targets}})):undefined,[page,settings.phases,settings.targets,settings.routeEnabled])
- const audio=useDrumMachine(pattern,settings.bpm,program)
+ const audio=useDrumMachine(pattern,settings.bpm,program,settings.repeat==='infinite')
  const {snapshot}=audio
  const playing=snapshot.status==='playing',loading=audio.loading||snapshot.status==='loading'
- const cycle=completed?totalBars:snapshot.cycle
+ const round=settings.repeat==='infinite'?Math.floor(snapshot.cycle/totalBars)+1:1
+ const cycle=completed?totalBars:settings.repeat==='infinite'?snapshot.cycle%totalBars:snapshot.cycle
  let boundary=0;const found=settings.phases.findIndex(p=>{boundary+=p.bars;return cycle<boundary});const activeIndex=found<0?settings.phases.length-1:found
- useEffect(()=>{if(program&&snapshot.cycle>=totalBars&&!completed){audio.stop();setCompleted(true);setFeedback('')}},[program,snapshot.cycle,totalBars,completed,audio.stop])
+ useEffect(()=>{if(program&&settings.repeat==='once'&&snapshot.cycle>=totalBars&&!completed){audio.stop();setCompleted(true);setFeedback('')}},[program,settings.repeat,snapshot.cycle,totalBars,completed,audio.stop])
  useEffect(()=>{DRUM_IDS.forEach(d=>audio.updateMix(d,{muted:muted.includes(d)||(page==='practice'&&!settings.routeEnabled&&!settings.targets.includes(d))}))},[muted,settings.targets,settings.routeEnabled,page,audio.updateMix])
  const warned=useRef(false)
  useEffect(()=>{if(!savePractice(settings)&&!warned.current){warned.current=true;notice('设置仅在本次保留：无法写入本机存储')}},[settings])
@@ -64,10 +65,11 @@ export function useBeatNex(){
  const removePhase=(id:string)=>{if(settings.phases.length>1)changeRoute(settings.phases.filter(p=>p.instanceId!==id))}
  const addPhase=(index:number)=>{if(settings.phases.length>=16){notice('这份路线最多 16 个阶段');return}changeRoute([...settings.phases,{id:phaseIds[index],instanceId:crypto.randomUUID(),bars:4}])}
  const changeBars=(id:string,bars:number)=>changeRoute(settings.phases.map(p=>p.instanceId===id?{...p,bars}:p))
+ const changeRepeat=(repeat:PracticeSettings['repeat'])=>{if(playing||loading||!settings.routeEnabled||repeat===settings.repeat)return;reset();patch({repeat})}
  const toggleRoute=()=>{reset();patch({routeEnabled:!settings.routeEnabled});notice(settings.routeEnabled?'自由练习，手动结束':'已启用练习路线')}
  const endFree=()=>{notice('本次自由练习 '+Math.floor(snapshot.elapsed/60).toString().padStart(2,'0')+':'+Math.floor(snapshot.elapsed%60).toString().padStart(2,'0'));reset()}
  const phases=settings.phases.map(p=>({...p,label:PHASE_LABELS[phaseIds.indexOf(p.id as never)]}))
  const submitFeedback=(value:string)=>{setFeedback(value);try{localStorage.setItem('beatnex:last-training-feedback',value)}catch{notice('反馈仅保留在本次练习')}}
- return {settings,pattern,source,page,muted,history,future,combinations:combinations.value,favorites:favorites.value,activeId,toast,completed,saveOpen,setSaveOpen,feedback,submitFeedback,landscape,setLandscape,follow,setFollow,notice,audio,snapshot,playing,loading,totalBars,cycle,activeIndex,phases,switchPage,changeBpm,togglePlayback,selectDrum,choosePattern,toggleStep,changeMeter,undo,redo,restore,toggleMute,save,load,toggleFavorite,reorder,removePhase,addPhase,changeBars,toggleRoute,endFree,reset,setCompleted}
+ return {settings,pattern,source,page,muted,history,future,combinations:combinations.value,favorites:favorites.value,activeId,toast,completed,saveOpen,setSaveOpen,feedback,submitFeedback,landscape,setLandscape,follow,setFollow,notice,audio,snapshot,playing,loading,totalBars,cycle,round,changeRepeat,activeIndex,phases,switchPage,changeBpm,togglePlayback,selectDrum,choosePattern,toggleStep,changeMeter,undo,redo,restore,toggleMute,save,load,toggleFavorite,reorder,removePhase,addPhase,changeBars,toggleRoute,endFree,reset,setCompleted}
 }
 export type BeatNex=ReturnType<typeof useBeatNex>

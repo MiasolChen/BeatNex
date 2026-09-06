@@ -8,7 +8,7 @@ const defaultMixes = () => Object.fromEntries(DRUM_IDS.map(drum => [drum, {
   muted: false, solo: false, focused: false, volume: 0.82,
 }])) as Record<DrumId, TrackMix>
 
-export function useDrumMachine(pattern: Pattern, bpm: number, program?: TrainingProgram) {
+export function useDrumMachine(pattern: Pattern, bpm: number, program?: TrainingProgram, repeat = false) {
   const [engine] = useState(() => new WebAudioEngine())
   const [snapshot, setSnapshot] = useState<EngineSnapshot>(() => engine.getSnapshot())
   const [mixes, setMixes] = useState(defaultMixes)
@@ -55,7 +55,7 @@ export function useDrumMachine(pattern: Pattern, bpm: number, program?: Training
     request.current = { pattern, bpm }
     engine.update(request.current)
   }, [engine, pattern, bpm])
-  useEffect(() => { engine.setProgram(program) }, [engine, program])
+  useEffect(() => { engine.setProgram(program, repeat) }, [engine, program, repeat])
 
   const play = useCallback(async () => {
     const token = ++generation.current
