@@ -15,8 +15,22 @@ export function transferToPractice(button:HTMLElement,action:()=>void){
  const flip=document.createElement('div');flip.className='bn-transfer-flip'
  const face=document.createElement('div');face.className='bn-transfer-face bn-transfer-front';face.style.background='var(--white)';Object.assign(front.style,{width:start.width+'px',height:start.height+'px'})
  const back=document.createElement('div');back.className='bn-transfer-face bn-transfer-back'
- const clone=target.cloneNode(true) as HTMLElement;clone.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));clone.removeAttribute('id');clone.inert=true;Object.assign(clone.style,{width:end.width+'px',height:end.height+'px',minHeight:end.height+'px'})
+ const clone=target.cloneNode(true) as HTMLElement
+ const originals=[target,...target.querySelectorAll<HTMLElement>('*')]
+ const copies=[clone,...clone.querySelectorAll<HTMLElement>('*')]
+ // Removing duplicate IDs must not remove the appearance they select in CSS.
+ // Freeze those elements (and descendants) before detaching the visual snapshot.
+ originals.forEach((node,index)=>{
+  const copy=copies[index],idAncestor=node.parentElement?.closest('[id]')
+  if(node.id||(idAncestor&&target.contains(idAncestor))){
+   const computed=getComputedStyle(node)
+   for(const property of computed)copy.style.setProperty(property,computed.getPropertyValue(property))
+  }
+  if(node.id){copy.dataset.snapshotId=node.id;copy.removeAttribute('id')}
+ })
+ clone.inert=true;Object.assign(clone.style,{width:end.width+'px',height:end.height+'px',minHeight:end.height+'px'})
  face.append(front);back.append(clone);flip.append(face,back);surface.append(flip);layer.append(surface);root.append(layer)
+ originals.forEach((node,index)=>{copies[index].scrollLeft=node.scrollLeft;copies[index].scrollTop=node.scrollTop})
  const move:Keyframe[]=[],turn:Keyframe[]=[],content:Keyframe[]=[]
  const bez=(a:number,b:number,c:number,t:number)=>(1-t)*(1-t)*a+2*(1-t)*t*b+t*t*c
  for(let i=0;i<=60;i++){const t=i/60,u=1-Math.pow(1-t,3),x=bez(start.left,base.left+10,end.left,u),y=bez(start.top,Math.min(start.top,end.top)-45,end.top,u),w=bez(start.width,Math.min(base.width-20,end.width*1.12),end.width,u),h=bez(start.height,end.height*1.08,end.height,u),sx=w/end.width,sy=h/end.height,f=Math.max(0,Math.min(1,(t-.08)/.82));move.push({offset:t,transform:`translate(${x-end.left}px,${y-end.top}px) scale(${sx},${sy})`});turn.push({offset:t,transform:`rotateY(${-180*(f*f*(3-2*f))}deg)`});content.push({offset:t,transform:`scale(${(1+.05*Math.sin(Math.PI*t))/sx},${(1+.05*Math.sin(Math.PI*t))/sy})`})}
