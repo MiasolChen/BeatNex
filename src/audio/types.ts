@@ -10,8 +10,9 @@ export type TrackMix = {
 }
 
 export type TrainingMix = {
-  mode: 'full' | 'solo' | 'focus' | 'mute-target'
-  target: DrumId
+  mode: 'full' | 'solo' | 'focus' | 'weaken' | 'mute-target'
+  target?: DrumId
+  targets?: DrumId[]
 }
 
 export type PlaybackRequest = {
@@ -56,3 +57,5 @@ export interface AudioEngine {
   subscribe(listener: () => void): () => void
   dispose(): void
 }
+
+export type TrainingProgram = Array<{ bars: number; mix: TrainingMix }>

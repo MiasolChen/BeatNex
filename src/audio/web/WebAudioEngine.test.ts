@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { BOOM_BAP_PATTERNS } from '../../core/pattern/fixtures'
-import { DRUM_IDS, type DrumId } from '../../core/pattern/types'
+import { DRUM_IDS, type DrumId, type Pattern } from '../../core/pattern/types'
 import type { DrumKit } from '../types'
 import { WebAudioEngine } from './WebAudioEngine'
 
@@ -44,7 +44,7 @@ class FakeSource {
   }
   stop(time?: number) {
     this.context.stops.push({ drum: this.target?.target?.drum, time })
-    this.onended?.()
+    if (time === undefined || time <= this.context.currentTime) this.onended?.()
   }
 }
 
@@ -52,6 +52,7 @@ class FakeAudioContext {
   currentTime = 0
   destination = {}
   state: AudioContextState = 'running'
+  onstatechange: (() => void) | null = null
   starts: StartRecord[] = []
   stops: StopRecord[] = []
   trackGains = new Map<DrumId, FakeGain>()
@@ -118,6 +119,58 @@ describe('WebAudioEngine loading', () => {
 
     expect(contexts).toHaveLength(2)
     expect(engine.getSnapshot().status).toBe('ready')
+    engine.dispose()
+  })
+
+  it('shares a pending preparation instead of downloading and connecting two graphs', async () => {
+    const context = new FakeAudioContext()
+    const gains = vi.spyOn(context, 'createGain')
+    vi.stubGlobal('AudioContext', class { constructor() { return context } })
+    let release!: () => void
+    const gate = new Promise<void>(resolve => { release = resolve })
+    const fetcher = vi.fn(async () => {
+      await gate
+      return { ok: true, arrayBuffer: async () => new ArrayBuffer(8) }
+    })
+    vi.stubGlobal('fetch', fetcher)
+    const engine = new WebAudioEngine()
+    const first = engine.prepare(kit)
+    const second = engine.prepare(kit)
+    expect(first).toBe(second)
+    await Promise.resolve()
+    expect(fetcher).toHaveBeenCalledTimes(4)
+    release()
+    await Promise.all([first, second])
+    expect(gains).toHaveBeenCalledTimes(5)
+    expect(context.trackGains.size).toBe(4)
+    engine.dispose()
+  })
+
+  it('discards a disposed lifecycle preparation when a new graph finishes first', async () => {
+    const contexts: FakeAudioContext[] = []
+    vi.stubGlobal('AudioContext', class {
+      constructor() { const context = new FakeAudioContext(); contexts.push(context); return context }
+    })
+    let releaseOld!: () => void
+    const gate = new Promise<void>(resolve => { releaseOld = resolve })
+    let calls = 0
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      if (calls++ < 4) await gate
+      return { ok: true, arrayBuffer: async () => new ArrayBuffer(8) }
+    }))
+    const engine = new WebAudioEngine()
+    const oldPreparation = engine.prepare(kit)
+    await Promise.resolve()
+    engine.dispose()
+    await engine.prepare(kit)
+    expect(contexts).toHaveLength(2)
+    expect(engine.getSnapshot().status).toBe('ready')
+    releaseOld()
+    await oldPreparation
+    expect(contexts[0].state).toBe('closed')
+    expect(contexts[0].trackGains.size).toBe(0)
+    expect(contexts[1].trackGains.size).toBe(4)
+    expect(engine.getSnapshot()).toMatchObject({ status: 'ready', error: undefined })
     engine.dispose()
   })
 })
@@ -251,18 +304,332 @@ describe('WebAudioEngine scheduling and mixing', () => {
     engine.dispose()
   })
 
-  it('resumes from the current complete bar without losing the cycle count', async () => {
+  it('resumes the exact paused fraction of a beat without replaying earlier hits or counting paused time', async () => {
     const engine = new WebAudioEngine()
     await engine.prepare(kit)
     await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
 
     context.currentTime = 5.31
     engine.pause()
-    expect(engine.getPosition()).toMatchObject({ status: 'paused', cycle: 2, step: 0 })
+    const paused = engine.getPosition()
+    expect(paused).toMatchObject({ status: 'paused', cycle: 2, step: 9 })
+    expect(paused.elapsed).toBeCloseTo(5.23)
+    expect(paused.progress).toBeCloseTo(0.615)
 
+    context.currentTime = 100
     await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
-    context.currentTime = 5.39
-    expect(engine.getPosition()).toMatchObject({ status: 'playing', cycle: 2, step: 0 })
+    context.currentTime = 100.08
+    const resumed = engine.getPosition()
+    expect(resumed).toMatchObject({ status: 'playing', cycle: 2, step: 9 })
+    expect(resumed.elapsed).toBeCloseTo(paused.elapsed)
+    expect(resumed.progress).toBeCloseTo(paused.progress)
+    context.currentTime = 100.18
+    tick()
+    expect(context.starts.filter(start => start.scheduledAt >= 100).every(start => start.time >= 100.10 - 1e-9)).toBe(true)
+    expect(engine.getPosition().elapsed).toBeCloseTo(5.33)
+    engine.dispose()
+  })
+
+  it('keeps the paused position frozen during the resume scheduling lead time', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.currentTime = 1.33
+    engine.pause()
+    const paused = engine.getPosition()
+    context.currentTime = 50
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    expect(engine.getPosition().elapsed).toBeCloseTo(paused.elapsed)
+    expect(engine.getPosition().step).toBe(paused.step)
+    engine.dispose()
+  })
+
+  it('preserves actual accumulated practice time when the tempo changes while paused', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 60, countIn: false })
+    context.currentTime = 2.58
+    engine.pause()
+    const paused = engine.getPosition()
+    engine.update({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120 })
+    expect(engine.getPosition().progress).toBeCloseTo(paused.progress)
+    expect(engine.getPosition().elapsed).toBeCloseTo(2.5)
+    context.currentTime = 50
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.currentTime = 50.58
+    expect(engine.getPosition().elapsed).toBeCloseTo(3)
+    engine.dispose()
+  })
+
+  it.each(['solo', 'weaken', 'mute-target'] as const)('applies %s to every selected drum, including an explicitly empty selection', async mode => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setTrainingMix({ mode, targets: ['kick', 'closedHat'] })
+    for (const drum of DRUM_IDS) {
+      const selected = drum === 'kick' || drum === 'closedHat'
+      const gain = mode === 'solo' ? (selected ? 0.82 : 0) : mode === 'weaken' ? 0.82 * (selected ? 0.18 : 1) : (selected ? 0 : 0.82)
+      expect(context.trackGains.get(drum)?.gain.targets.at(-1)?.value).toBeCloseTo(gain)
+    }
+    // An empty multi-selection must override the legacy single-target fallback.
+    engine.setTrainingMix({ mode, targets: [], target: 'kick' })
+    for (const drum of DRUM_IDS) expect(context.trackGains.get(drum)?.gain.targets.at(-1)?.value).toBeCloseTo(mode === 'solo' ? 0 : 0.82)
+    engine.dispose()
+  })
+
+  it('restores all four drums after the weaken and hidden-target phases', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setTrainingMix({ mode: 'weaken', targets: ['kick', 'snare'] })
+    engine.setTrainingMix({ mode: 'mute-target', targets: ['kick', 'snare'] })
+    engine.setTrainingMix({ mode: 'full', targets: ['kick', 'snare'] })
+    for (const drum of DRUM_IDS) expect(context.trackGains.get(drum)?.gain.targets.at(-1)?.value).toBeCloseTo(0.82)
+    engine.dispose()
+  })
+
+  it.each([[2, 4], [3, 4], [4, 4], [5, 4], [6, 8], [7, 8], [9, 8], [12, 8]] as const)('schedules and ends a %i/%i training bar on its real musical boundary', async (beatsPerBar, beatUnit) => {
+    const engine = new WebAudioEngine()
+    const steps = beatsPerBar * 4 / beatUnit * 4
+    const pattern: Pattern = {
+      ...BOOM_BAP_PATTERNS[0], beatsPerBar, beatUnit,
+      tracks: [{ drum: 'kick', hits: Array.from({ length: steps }, (_, step) => ({ step, velocity: 90 })) }],
+    }
+    const duration = beatsPerBar * 4 / beatUnit * 60 / 120
+    const end = 0.08 + duration
+    await engine.prepare(kit)
+    engine.setProgram([{ bars: 1, mix: { mode: 'full', targets: ['kick'] } }])
+    await engine.start({ pattern, bpm: 120, countIn: false })
+    for (let time = 0.025; time < end + 0.1; time += 0.025) {
+      context.currentTime = time
+      tick()
+    }
+    expect(context.starts).toHaveLength(steps)
+    expect(context.starts.every(start => start.time < end - 1e-9)).toBe(true)
+    expect(context.starts.at(-1)?.time).toBeCloseTo(end - 0.125)
+    expect(engine.getPosition()).toMatchObject({ status: 'paused', cycle: 1, step: 0 })
+    expect(engine.getPosition().elapsed).toBeCloseTo(duration)
+    expect(vi.mocked(window.clearInterval)).toHaveBeenCalled()
+    engine.dispose()
+  })
+
+  it('changes program phase audio exactly at a boundary and schedules no extra final hit', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setProgram([
+      { bars: 1, mix: { mode: 'full', targets: ['kick', 'snare'] } },
+      { bars: 1, mix: { mode: 'weaken', targets: ['kick', 'snare'] } },
+    ])
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    for (let time = 0.025; time < 4.15; time += 0.025) {
+      context.currentTime = time
+      tick()
+    }
+    expect(context.trackGains.get('kick')?.gain.targets.some(target => Math.abs(target.time - 2.08) < 1e-9 && Math.abs(target.value - 0.82 * 0.18) < 1e-9)).toBe(true)
+    expect(context.starts.every(start => start.time < 4.08 - 1e-9)).toBe(true)
+    expect(engine.getPosition().elapsed).toBeCloseTo(4)
+    engine.dispose()
+  })
+
+  it('schedules each sample cutoff on the audio clock even before the UI reaches the final bar', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setProgram([{ bars: 1, mix: { mode: 'full' } }])
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    expect(context.starts.length).toBeGreaterThan(0)
+    expect(context.stops.filter(stop => stop.time === 2.08)).toHaveLength(context.starts.length)
+    // No scheduler callback is needed to cap the visual/recording clock at finish.
+    context.currentTime = 10
+    expect(engine.getPosition().elapsed).toBeCloseTo(2)
+    engine.dispose()
+  })
+
+  it('resumes the current program mix when paused in the middle of a later phase', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    const program = [
+      { bars: 1, mix: { mode: 'full' as const, targets: ['kick' as const] } },
+      { bars: 2, mix: { mode: 'solo' as const, targets: ['kick' as const] } },
+    ]
+    engine.setProgram(program)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.currentTime = 2.4
+    tick()
+    engine.pause()
+    engine.setProgram(program)
+    context.currentTime = 10
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    expect(context.trackGains.get('kick')?.gain.targets.at(-1)?.value).toBeCloseTo(0.82)
+    expect(context.trackGains.get('snare')?.gain.targets.at(-1)?.value).toBe(0)
+    engine.dispose()
+  })
+
+  it.each([[6, 8], [7, 8], [9, 8], [12, 8]] as const)('keeps %i/%i count-in within its actual step range before and after pause', async (beatsPerBar, beatUnit) => {
+    const engine = new WebAudioEngine()
+    const pattern: Pattern = { ...BOOM_BAP_PATTERNS[0], beatsPerBar, beatUnit }
+    await engine.prepare(kit)
+    await engine.start({ pattern, bpm: 120, countIn: true })
+    const duration = beatsPerBar * 4 / beatUnit * 0.5
+    context.currentTime = 0.08 + duration * 0.75
+    const expectedStep = Math.floor(beatsPerBar * 4 / beatUnit * 4 * 0.75)
+    expect(engine.getPosition()).toMatchObject({ isCountIn: true, step: expectedStep, elapsed: 0 })
+    engine.pause()
+    expect(engine.getPosition()).toMatchObject({ isCountIn: true, step: expectedStep, elapsed: 0 })
+    engine.dispose()
+  })
+
+  it.each(['stop', 'pause'] as const)('does not restart after an asynchronous resume was cancelled with %s', async cancel => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    let resume!: () => void
+    context.resume = () => new Promise<void>(resolve => { resume = resolve })
+    const pending = engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    engine[cancel]()
+    resume()
+    await pending
+    expect(engine.getPosition().status).toBe(cancel === 'stop' ? 'stopped' : 'ready')
+    expect(context.starts).toHaveLength(0)
+    expect(vi.mocked(window.setInterval)).not.toHaveBeenCalled()
+    engine.dispose()
+  })
+
+  it('lets the newest asynchronous playback request win without a duplicate scheduler', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    const resumes: Array<() => void> = []
+    context.resume = () => new Promise<void>(resolve => { resumes.push(resolve) })
+    const oldStart = engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 60, countIn: false })
+    const newStart = engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    resumes[1]()
+    await newStart
+    resumes[0]()
+    await oldStart
+    expect(vi.mocked(window.setInterval)).toHaveBeenCalledTimes(1)
+    context.currentTime = 1.08
+    expect(engine.getPosition().progress).toBeCloseTo(0.5)
+    engine.dispose()
+  })
+
+  it.each(['suspended', 'interrupted'])('turns a visible audio %s interruption into a resumable paused snapshot', async state => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.currentTime = 1.08
+    context.state = state as AudioContextState
+    context.onstatechange?.()
+    expect(engine.getSnapshot()).toMatchObject({ status: 'paused', elapsed: 1, error: '声音已中断，点击继续播放' })
+    expect(vi.mocked(window.clearInterval)).toHaveBeenCalled()
+    context.resume = async () => { context.state = 'running'; context.onstatechange?.() }
+    context.currentTime = 20
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    expect(engine.getSnapshot()).toMatchObject({ status: 'playing', error: undefined })
+    expect(engine.getSnapshot().elapsed).toBeCloseTo(1)
+    engine.dispose()
+  })
+
+  it('reports a failed resume while retaining the paused position for retry', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.currentTime = 1.08
+    engine.pause()
+    context.resume = async () => { throw new Error('声音未能开启') }
+    await expect(engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })).rejects.toThrow('声音未能开启')
+    expect(engine.getSnapshot()).toMatchObject({ status: 'paused', elapsed: 1, error: '声音未能开启' })
+    context.resume = async () => {}
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    expect(engine.getSnapshot()).toMatchObject({ status: 'playing', error: undefined })
+    engine.dispose()
+  })
+
+  it.each(['full', 'solo', 'weaken', 'mute-target'] as const)('preserves saved arrangement switches during the %s training phase', async mode => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setTrackMix('kick', { muted: true, solo: false, focused: false, volume: 0.82 })
+    engine.setTrainingMix({ mode, targets: ['kick', 'snare'] })
+    expect(context.trackGains.get('kick')?.gain.targets.at(-1)?.value).toBe(0)
+    const snare = context.trackGains.get('snare')?.gain.targets.at(-1)?.value
+    expect(snare).toBeCloseTo(mode === 'mute-target' ? 0 : mode === 'weaken' ? 0.82 * 0.18 : 0.82)
+    engine.dispose()
+  })
+
+  it('changes selected targets in the current phase without resetting progress or replaying phase one', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setProgram([
+      { bars: 1, mix: { mode: 'full', targets: ['kick'] } },
+      { bars: 2, mix: { mode: 'solo', targets: ['kick'] } },
+    ])
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.currentTime = 2.4
+    const before = engine.getPosition()
+    engine.setProgram([
+      { bars: 1, mix: { mode: 'full', targets: ['snare'] } },
+      { bars: 2, mix: { mode: 'solo', targets: ['snare'] } },
+    ])
+    expect(engine.getPosition()).toEqual(before)
+    expect(context.trackGains.get('kick')?.gain.targets.at(-1)?.value).toBe(0)
+    expect(context.trackGains.get('snare')?.gain.targets.at(-1)?.value).toBeCloseTo(0.82)
+    expect(vi.mocked(window.setInterval)).toHaveBeenCalledTimes(1)
+    engine.dispose()
+  })
+
+  it('preserves the imminent phase boundary when live targets change inside the lookahead window', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setProgram([
+      { bars: 1, mix: { mode: 'full', targets: ['kick'] } },
+      { bars: 2, mix: { mode: 'solo', targets: ['kick'] } },
+    ])
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.currentTime = 2
+    tick()
+    engine.setProgram([
+      { bars: 1, mix: { mode: 'full', targets: ['snare'] } },
+      { bars: 2, mix: { mode: 'solo', targets: ['snare'] } },
+    ])
+    // The hook updates arrangement switches in a separate effect after program.
+    engine.setTrackMix('closedHat', { muted: false, solo: false, focused: false, volume: 0.82 })
+    const kick = context.trackGains.get('kick')!.gain.targets
+    const snare = context.trackGains.get('snare')!.gain.targets
+    expect(kick.filter(change => change.time === 2).at(-1)?.value).toBeCloseTo(0.82)
+    expect(kick.at(-1)).toMatchObject({ time: 2.08, value: 0 })
+    expect(snare.at(-1)).toMatchObject({ time: 2.08, value: 0.82 })
+    expect(engine.getPosition().cycle).toBe(0)
+    expect(vi.mocked(window.setInterval)).toHaveBeenCalledTimes(1)
+    engine.dispose()
+  })
+
+  it('retains the true program end after pausing inside the final lookahead window', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setProgram([{ bars: 1, mix: { mode: 'full' } }])
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.currentTime = 2.02
+    tick()
+    engine.pause()
+    expect(engine.getPosition().elapsed).toBeCloseTo(1.94)
+    context.currentTime = 50
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.currentTime = 50.10
+    tick()
+    expect(engine.getPosition().status).toBe('playing')
+    context.currentTime = 50.16
+    tick()
+    expect(engine.getPosition()).toMatchObject({ status: 'paused', cycle: 1 })
+    expect(engine.getPosition().elapsed).toBeCloseTo(2)
+    engine.dispose()
+  })
+
+  it('caps completed duration at the actual route end even when a timer stalls across it', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setProgram([{ bars: 1, mix: { mode: 'full' } }])
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.currentTime = 12
+    tick()
+    tick()
+    expect(engine.getPosition()).toMatchObject({ status: 'paused', cycle: 1, step: 0 })
+    expect(engine.getPosition().elapsed).toBeCloseTo(2)
+    expect(context.starts.every(start => start.time < 2.08)).toBe(true)
     engine.dispose()
   })
 
@@ -282,6 +649,53 @@ describe('WebAudioEngine scheduling and mixing', () => {
     expect(vi.mocked(window.setInterval)).toHaveBeenCalledTimes(1)
     context.currentTime = 2.49
     expect(engine.getSnapshot().cycle).toBe(1)
+    engine.dispose()
+  })
+
+  it('keeps visuals on the sounding bar until a pre-scheduled tempo change is audible', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 100, countIn: false })
+    engine.update({ pattern: BOOM_BAP_PATTERNS[2], bpm: 120 })
+    context.currentTime = 2.37
+    tick()
+    expect(engine.getPosition()).toMatchObject({ cycle: 0, step: 15, isCountIn: false })
+    expect(engine.getPosition().elapsed).toBeCloseTo(2.29)
+    expect(engine.getPosition().progress).toBeCloseTo(2.29 / 2.4)
+    context.currentTime = 2.479
+    expect(engine.getPosition()).toMatchObject({ cycle: 0, step: 15, isCountIn: false })
+    context.currentTime = 2.48
+    expect(engine.getPosition()).toMatchObject({ cycle: 1, step: 0, isCountIn: false })
+    expect(engine.getPosition().elapsed).toBeCloseTo(2.4)
+    context.currentTime = 2.68
+    expect(engine.getPosition().progress).toBeCloseTo(0.1)
+    expect(engine.getPosition().elapsed).toBeCloseTo(2.6)
+    engine.dispose()
+  })
+
+  it('pauses the audible timeline if a future tempo boundary was already queued', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setProgram([{ bars: 2, mix: { mode: 'full' } }])
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 100, countIn: false })
+    engine.update({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120 })
+    context.currentTime = 2.37
+    tick()
+    context.currentTime = 2.4
+    engine.pause()
+    const paused = engine.getPosition()
+    expect(paused).toMatchObject({ cycle: 0, step: 15, isCountIn: false })
+    expect(paused.elapsed).toBeCloseTo(2.32)
+    context.currentTime = 50
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.currentTime = 50.08
+    expect(engine.getPosition()).toMatchObject({ cycle: 0, step: 15, isCountIn: false })
+    expect(engine.getPosition().elapsed).toBeCloseTo(paused.elapsed)
+    expect(engine.getPosition().progress).toBeCloseTo(paused.progress)
+    context.currentTime = 50.18
+    tick()
+    expect(engine.getPosition()).toMatchObject({ cycle: 1, isCountIn: false })
+    expect(engine.getPosition().elapsed).toBeCloseTo(2.42)
     engine.dispose()
   })
 })

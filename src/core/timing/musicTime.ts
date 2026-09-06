@@ -5,7 +5,15 @@ export function secondsPerStep(bpm: number, subdivision: number) {
 }
 
 export function stepsPerPattern(pattern: Pattern) {
-  return pattern.bars * pattern.beatsPerBar * pattern.subdivision
+  return pattern.bars * stepsPerBar(pattern)
+}
+
+export function beatsPerBarInQuarters(pattern: Pattern) {
+  return pattern.beatsPerBar * 4 / (pattern.beatUnit ?? 4)
+}
+
+export function stepsPerBar(pattern: Pattern) {
+  return beatsPerBarInQuarters(pattern) * pattern.subdivision
 }
 
 export function patternDuration(pattern: Pattern, bpm: number) {

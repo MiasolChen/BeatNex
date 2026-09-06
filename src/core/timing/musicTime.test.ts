@@ -1,9 +1,24 @@
 import { describe, expect, it } from 'vitest'
 
 import { BOOM_BAP_PATTERNS } from '../pattern/fixtures'
-import { absoluteStepTime, patternDuration, positionAtTime, secondsPerStep } from './musicTime'
+import { withMeter } from '../pattern/editor'
+import { METERS } from '../pattern/types'
+import { absoluteStepTime, patternDuration, positionAtTime, secondsPerStep, stepsPerPattern } from './musicTime'
 
 describe('music time', () => {
+  it.each(METERS)('keeps exact cycle boundaries and final steps in %s', (meter) => {
+    const pattern = withMeter(BOOM_BAP_PATTERNS[0], meter)
+    const width = stepsPerPattern(pattern)
+    const origin = 0.08
+    const bpm = 93
+    for (const cycle of [0, 1, 10, 100, 5_000]) {
+      const boundary = absoluteStepTime(origin, cycle * width, bpm, pattern.subdivision)
+      expect(positionAtTime(pattern, bpm, origin, boundary)).toMatchObject({ cycle, step: 0, progress: 0 })
+      const finalStep = absoluteStepTime(origin, cycle * width + width - 1, bpm, pattern.subdivision)
+      expect(positionAtTime(pattern, bpm, origin, finalStep)).toMatchObject({ cycle, step: width - 1 })
+    }
+  })
+
   it.each([80, 100, 120])('converts steps at %i BPM', (bpm) => {
     expect(secondsPerStep(bpm, 4)).toBeCloseTo(60 / bpm / 4, 12)
     expect(patternDuration(BOOM_BAP_PATTERNS[0], bpm)).toBeCloseTo(60 / bpm * 4, 12)
