@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
 import {BOOM_BAP_PATTERNS,findPattern} from '../core/pattern/fixtures'
 import {DRUM_IDS,type DrumId,type Pattern,type Meter} from '../core/pattern/types'
-import {withMeter,togglePatternStep,meterForPattern} from '../core/pattern/editor'
+import {withMeter,togglePatternStep,meterForPattern,resizePatternBars} from '../core/pattern/editor'
 import {readCombinations,writeCombinations,type Combination} from '../storage/combinations'
 import {readFavorites,writeFavorites} from '../storage/favorites'
 import {readPractice,savePractice,PHASE_LABELS,phaseIds,type PracticeSettings} from '../storage/practice'
@@ -50,7 +50,8 @@ export function useBeatNex(){
  const choosePattern=(id:string)=>{const next=BOOM_BAP_PATTERNS.find(p=>p.id===id);if(!next)return;resetAll();meterDrafts.current={};setPattern(next);setSource(next);setActiveId(undefined);setMuted([]);setHistory([]);setFuture([]);patch({bpm:next.recommendedBpm,patternName:next.name,difficulty:next.difficulty});setPage('practice')}
  const changePattern=(next:Pattern)=>{setHistory(h=>[...h.slice(-49),pattern]);setFuture([]);setPattern(next)}
  const toggleStep=(drum:DrumId,step:number)=>changePattern(togglePatternStep(pattern,drum,step))
- const changeMeter=(meter:Meter)=>{if(meter===meterForPattern(pattern))return;resetAll();meterDrafts.current[meterForPattern(pattern)]=pattern;changePattern(meterDrafts.current[meter]??withMeter(pattern,meter))}
+ const changePatternBars=(bars:number)=>{if(bars===pattern.bars)return;const next=resizePatternBars(pattern,bars);resetAll();meterDrafts.current={};changePattern(next);notice(bars<pattern.bars?'已缩短小节，撤销可恢复鼓点':'已添加空白小节')}
+ const changeMeter=(meter:Meter)=>{if(meter===meterForPattern(pattern))return;resetAll();meterDrafts.current[meterForPattern(pattern)]=pattern;changePattern((meterDrafts.current[meter]?.bars===pattern.bars?meterDrafts.current[meter]:undefined)??withMeter(pattern,meter))}
  const undo=()=>{const next=history.at(-1);if(next){setFuture(f=>[...f,pattern]);setHistory(h=>h.slice(0,-1));setPattern(next)}}
  const redo=()=>{const next=future.at(-1);if(next){setHistory(h=>[...h,pattern]);setFuture(f=>f.slice(0,-1));setPattern(next)}}
  const restore=()=>{changePattern(withMeter(source,`${pattern.beatsPerBar}/${pattern.beatUnit??4}` as Meter));notice('已恢复来源组合，仍可撤销')}
@@ -75,6 +76,6 @@ export function useBeatNex(){
  const endFree=()=>{notice('本次自由练习 '+Math.floor(snapshot.elapsed/60).toString().padStart(2,'0')+':'+Math.floor(snapshot.elapsed%60).toString().padStart(2,'0'));reset()}
  const phases=settings.phases.map(p=>({...p,label:PHASE_LABELS[phaseIds.indexOf(p.id as never)]}))
  const submitFeedback=(value:string)=>{setFeedback(value);try{localStorage.setItem('beatnex:last-training-feedback',value)}catch{notice('反馈仅保留在本次练习')}}
- return {settings,selectedDrums,pattern,source,page,muted,history,future,combinations:combinations.value,favorites:favorites.value,activeId,toast,completed:settings.routeEnabled&&completed,saveOpen,setSaveOpen,feedback,submitFeedback,landscape,setLandscape,follow,setFollow,notice,audio,snapshot,playing,loading,totalBars,cycle,round,changeRepeat,activeIndex,phases,switchPage,changeBpm,togglePlayback,selectDrum,choosePattern,toggleStep,changeMeter,undo,redo,restore,toggleMute,save,load,toggleFavorite,reorder,removePhase,addPhase,changeBars,toggleRoute,endFree,reset,setCompleted}
+ return {settings,selectedDrums,pattern,source,page,muted,history,future,combinations:combinations.value,favorites:favorites.value,activeId,toast,completed:settings.routeEnabled&&completed,saveOpen,setSaveOpen,feedback,submitFeedback,landscape,setLandscape,follow,setFollow,notice,audio,snapshot,playing,loading,totalBars,cycle,round,changeRepeat,activeIndex,phases,switchPage,changeBpm,togglePlayback,selectDrum,choosePattern,toggleStep,changeMeter,changePatternBars,undo,redo,restore,toggleMute,save,load,toggleFavorite,reorder,removePhase,addPhase,changeBars,toggleRoute,endFree,reset,setCompleted}
 }
 export type BeatNex=ReturnType<typeof useBeatNex>

@@ -29,7 +29,7 @@ const appFor = (status: EngineSnapshot['status'], options: { routeEnabled?: bool
     phases: settings.phases.map((phase, index) => ({ ...phase, label: ['完整聆听', '单独听辨', '弱化目标', '正常合奏', '自主保持', '完整检查'][index] })),
     audio: {} as BeatNex['audio'],
     notice() {}, switchPage() {}, changeBpm() {}, togglePlayback() {}, selectDrum() {}, choosePattern() {},
-    toggleStep() {}, changeMeter() {}, undo() {}, redo() {}, restore() {}, toggleMute() {}, save() { return true },
+    toggleStep() {}, changeMeter() {}, changePatternBars() {}, undo() {}, redo() {}, restore() {}, toggleMute() {}, save() { return true },
     load() {}, toggleFavorite() {}, reorder() {}, removePhase() {}, addPhase() {}, changeBars() {}, changeRepeat() {},
     toggleRoute() {}, endFree() {}, reset() {}, setCompleted() {}, setSaveOpen() {}, submitFeedback() {}, setLandscape() {}, setFollow() {},
   } as BeatNex

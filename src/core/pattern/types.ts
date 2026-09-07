@@ -21,7 +21,7 @@ export type Pattern = {
   name: string
   style: 'boom-bap'
   difficulty: Difficulty
-  bars: 1 | 2 | 4 | 8
+  bars: number
   beatsPerBar: 2 | 3 | 4 | 5 | 6 | 7 | 9 | 12
   /** Missing in the original v1 fixtures; those patterns use quarter-note beats. */
   beatUnit?: 4 | 8

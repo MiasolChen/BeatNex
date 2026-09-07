@@ -454,6 +454,32 @@ describe('WebAudioEngine scheduling and mixing', () => {
     engine.dispose()
   })
 
+  it('uses real bar boundaries for a multi-bar pattern and ends after the route bars', async () => {
+    const engine = new WebAudioEngine()
+    const pattern: Pattern = { ...BOOM_BAP_PATTERNS[0], bars: 3 }
+    await engine.prepare(kit)
+    engine.setProgram([
+      { bars: 1, mix: { mode: 'full', targets: ['kick'] } },
+      { bars: 1, mix: { mode: 'solo', targets: ['snare'] } },
+    ])
+    await engine.start({ pattern, bpm: 120, countIn: false })
+
+    for (const time of [0.025, 1.025, 2.025, 2.1, 3.1]) {
+      context.currentTime = time
+      tick()
+    }
+    const kickTargets = context.trackGains.get('kick')!.gain.targets
+    const snareTargets = context.trackGains.get('snare')!.gain.targets
+    expect(kickTargets.some(target => Math.abs(target.time - 2.08) < 1e-9 && target.value === 0)).toBe(true)
+    expect(snareTargets.some(target => Math.abs(target.time - 2.08) < 1e-9 && target.value === 0.82)).toBe(true)
+
+    context.currentTime = 4.1
+    tick()
+    expect(engine.getPosition()).toMatchObject({ status: 'paused', cycle: 2 })
+    expect(context.starts.every(start => start.time < 4.08 - 1e-9)).toBe(true)
+    engine.dispose()
+  })
+
   it('schedules each sample cutoff on the audio clock even before the UI reaches the final bar', async () => {
     const engine = new WebAudioEngine()
     await engine.prepare(kit)

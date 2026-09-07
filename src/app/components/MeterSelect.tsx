@@ -8,7 +8,7 @@ type Phase = 'closed' | 'open' | 'closing'
 const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /** The prototype's local listbox, portalled inside #bn to retain its visual tokens. */
-export function MeterSelect({ value, onChange }: { value: Meter; onChange: (value: Meter) => void }) {
+export function EditorSelect<T extends string | number>({ value, onChange, options, label }: { value: T; onChange: (value: T) => void; options: readonly T[]; label: string }) {
   const id = useId()
   const trigger = useRef<HTMLButtonElement>(null)
   const menu = useRef<HTMLDivElement>(null)
@@ -31,7 +31,7 @@ export function MeterSelect({ value, onChange }: { value: Meter; onChange: (valu
     setPhase(next)
     if (restore) trigger.current?.focus({ preventScroll: true })
   }, [cancelAnimations])
-  function open(index = METERS.indexOf(value)) {
+  function open(index = options.indexOf(value)) {
     cancelAnimations()
     initialFocus.current = index
     phaseRef.current = 'open'
@@ -59,10 +59,11 @@ export function MeterSelect({ value, onChange }: { value: Meter; onChange: (valu
     }
     popup.inert = false
     const r = button.getBoundingClientRect(), p = root.getBoundingClientRect()
-    const width = Math.min(Math.max(r.width, 152), p.width - 24)
+    const width = Math.min(Math.max(r.width, 184), p.width - 24)
     popup.style.width = `${width}px`
     popup.style.left = `${Math.max(12, Math.min(r.left - p.left, p.width - width - 12))}px`
     const below = r.bottom - p.top + 6
+    popup.style.maxHeight = `${Math.min(232, Math.max(88, p.height - below - 12))}px`
     popup.style.top = `${below + popup.offsetHeight < p.height - 12 ? below : Math.max(12, r.top - p.top - popup.offsetHeight - 6)}px`
     if (!reduced()) {
       animations.current.push(popup.animate([{ opacity: 0, transform: 'translateY(-6px) scale(.96,.8)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], { duration: 190, easing: 'cubic-bezier(.22,1,.36,1)' }))
@@ -98,18 +99,22 @@ export function MeterSelect({ value, onChange }: { value: Meter; onChange: (valu
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(true); return }
     // Let the browser advance from the original field, rather than the portalled menu.
     if (event.key === 'Tab') { close(true, true); return }
-    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
+    if (!['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
     event.preventDefault()
     const items = Array.from(menu.current?.querySelectorAll<HTMLButtonElement>('[role="option"]') ?? [])
     const index = items.indexOf(document.activeElement as HTMLButtonElement)
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? METERS.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : METERS.length - 1)) % METERS.length
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : (index + (event.key === 'ArrowDown' ? 2 : event.key === 'ArrowUp' ? -2 : event.key === 'ArrowRight' ? 1 : -1) + options.length) % options.length
     focusOption(next)
   }
 
   return <>
-    <button type="button" ref={trigger} className="bn-select-trigger" data-select-for="bn-machine-meter" aria-label="拍号" aria-haspopup="listbox" aria-expanded={phase === 'open'} aria-controls={phase !== 'closed' ? id : undefined} onClick={() => { if (phaseRef.current === 'open') close(); else open() }} onKeyDown={event => {
-      if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) { event.preventDefault(); open(event.key === 'Home' ? 0 : event.key === 'End' ? METERS.length - 1 : METERS.indexOf(value)) }
+    <button type="button" ref={trigger} className="bn-select-trigger"  aria-label={label} aria-haspopup="listbox" aria-expanded={phase === 'open'} aria-controls={phase !== 'closed' ? id : undefined} onClick={() => { if (phaseRef.current === 'open') close(); else open() }} onKeyDown={event => {
+      if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) { event.preventDefault(); open(event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : options.indexOf(value)) }
     }}><span>{value}</span><i className="bn-select-arrow" aria-hidden="true" /></button>
-    {root && phase !== 'closed' && createPortal(<div id={id} ref={menu} className="bn-select-menu" role="listbox" aria-label="拍号" aria-hidden={phase === 'closing' || undefined} onKeyDown={menuKeyDown}>{METERS.map(meter => <button key={meter} type="button" role="option" tabIndex={-1} aria-selected={value === meter} data-value={meter} onClick={() => { onChange(meter); close(true) }}>{meter}</button>)}</div>, root)}
+    {root && phase !== 'closed' && createPortal(<div id={id} ref={menu} className="bn-select-menu" role="listbox" aria-label={label} aria-hidden={phase === 'closing' || undefined} onKeyDown={menuKeyDown}>{options.map(meter => <button key={meter} type="button" role="option" tabIndex={-1} aria-selected={value === meter} data-value={meter} onClick={() => { onChange(meter); close(true) }}>{meter}</button>)}</div>, root)}
   </>
+}
+
+export function MeterSelect({value,onChange}:{value:Meter;onChange:(value:Meter)=>void}) {
+  return <EditorSelect value={value} onChange={onChange} options={METERS} label="拍号"/>
 }

@@ -62,3 +62,12 @@ export function togglePatternStep(pattern: Pattern, drum: DrumId, step: number, 
   grid[index][step] = !grid[index][step]
   return patternFromGrid(pattern, grid, velocity)
 }
+
+/** Keep existing bars; newly added bars are blank. Shrinking is undoable by the editor. */
+export function resizePatternBars(pattern: Pattern, bars: number): Pattern {
+  const next = {...pattern, bars, tracks: pattern.tracks.map(track => ({...track,
+    hits: track.hits.filter(hit => hit.step < stepsPerBar(pattern) * bars).map(hit => ({...hit})),
+  }))}
+  validatePattern(next)
+  return next
+}

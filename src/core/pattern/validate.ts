@@ -7,7 +7,7 @@ export function validatePattern(value: unknown): asserts value is Pattern {
   if (typeof pattern.id !== 'string' || !pattern.id.trim() || typeof pattern.name !== 'string' || !pattern.name.trim()) throw new Error('Pattern 缺少 id 或 name')
   if (pattern.style !== 'boom-bap') throw new Error('Pattern 风格无效')
   if (!['simple', 'hard'].includes(pattern.difficulty ?? '')) throw new Error('Pattern 难度无效')
-  if (![1, 2, 4, 8].includes(pattern.bars ?? 0)) throw new Error('Pattern 小节数无效')
+  if (!Number.isInteger(pattern.bars) || pattern.bars! < 1 || pattern.bars! > 8) throw new Error('Pattern 小节数无效')
   if (!Number.isInteger(pattern.beatsPerBar)
     || (pattern.beatUnit !== undefined && pattern.beatUnit !== 4 && pattern.beatUnit !== 8)
     || !METERS.includes(`${pattern.beatsPerBar}/${pattern.beatUnit ?? 4}` as Meter)

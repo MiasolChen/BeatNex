@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { patternDuration, stepsPerBar, stepsPerPattern } from '../timing/musicTime'
-import { meterForPattern, patternFromGrid, patternGrid, togglePatternStep, withMeter } from './editor'
+import { meterForPattern, patternFromGrid, patternGrid, resizePatternBars, togglePatternStep, withMeter } from './editor'
 import { BOOM_BAP_PATTERNS } from './fixtures'
-import { METERS } from './types'
+import { METERS, type Pattern } from './types'
 import { validatePattern } from './validate'
 
 describe('pattern editor and meters', () => {
@@ -42,6 +42,38 @@ describe('pattern editor and meters', () => {
     expect(stepsPerPattern(resized)).toBe(24)
     expect(resized.tracks[0].hits.map((hit) => hit.step)).toEqual([0, 4, 8, 12, 16, 20])
     expect(original.tracks[0].hits.map((hit) => hit.step)).toContain(28)
+  })
+
+  it.each([1, 2, 3, 4, 5, 6, 7, 8] as Pattern['bars'][])('resizes to %s bars without mutating or inventing hits', (bars) => {
+    const original: Pattern = {
+      ...BOOM_BAP_PATTERNS[0],
+      bars: 2,
+      tracks: BOOM_BAP_PATTERNS[0].tracks.map((track) => ({
+        ...track,
+        hits: [...track.hits, ...track.hits.map((hit) => ({ ...hit, step: hit.step + 16 }))],
+      })),
+    }
+    const before = structuredClone(original)
+    const resized = resizePatternBars(original, bars)
+
+    expect(resized).toEqual({
+      ...original,
+      bars,
+      tracks: original.tracks.map((track) => ({
+        ...track,
+        hits: track.hits.filter((hit) => hit.step < bars * 16),
+      })),
+    })
+    expect(original).toEqual(before)
+    expect(resized.tracks.flatMap((track) => track.hits).every((hit) => hit.step < bars * 16)).toBe(true)
+    validatePattern(resized)
+  })
+
+  it('rejects bar counts outside 1 through 8', () => {
+    const pattern = BOOM_BAP_PATTERNS[0]
+    expect(() => resizePatternBars(pattern, 0 as Pattern['bars'])).toThrow('小节数')
+    expect(() => resizePatternBars(pattern, 9 as Pattern['bars'])).toThrow('小节数')
+    expect(() => resizePatternBars(pattern, 1.5 as Pattern['bars'])).toThrow('小节数')
   })
 
   it('rejects unsupported meters, incomplete bar grids, and malformed track data', () => {

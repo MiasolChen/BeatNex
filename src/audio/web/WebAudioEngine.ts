@@ -173,7 +173,7 @@ export class WebAudioEngine implements AudioEngine {
     }
     this.updateEndingTime()
     if (this.program?.length) {
-      const cycle = this.cycleOffset + Math.floor(Math.max(0, this.pausedMusicOffset) / patternDuration(activeRequest.pattern, activeRequest.bpm))
+      const cycle = this.cycleOffset + Math.floor(Math.max(0, this.pausedMusicOffset) / (patternDuration(activeRequest.pattern, activeRequest.bpm) / activeRequest.pattern.bars))
       this.trainingMix = this.phaseAtCycle(cycle)?.mix
       this.applyMix()
     }
@@ -278,7 +278,7 @@ export class WebAudioEngine implements AudioEngine {
         }
       }
       const position = positionAtTime(this.request.pattern, this.request.bpm, 0, this.pausedMusicOffset)
-      return { status: this.status, ...position, cycle: position.cycle + this.cycleOffset, elapsed: position.elapsed + this.elapsedOffset, isCountIn: false }
+      return { status: this.status, ...position, cycle: position.cycle * this.request.pattern.bars + Math.floor(position.step / stepsPerBar(this.request.pattern)) + this.cycleOffset, elapsed: position.elapsed + this.elapsedOffset, isCountIn: false }
     }
     // Scheduling can commit the next bar's audio up to 120 ms early. The UI and
     // recording clock continue reading the old timeline until that audio starts.
@@ -286,7 +286,7 @@ export class WebAudioEngine implements AudioEngine {
     if (previous && this.context.currentTime < previous.until) {
       const now = Math.min(Math.max(this.context.currentTime, previous.resumeAt), previous.endingAt ?? Infinity)
       const position = positionAtTime(previous.request.pattern, previous.request.bpm, previous.musicStartedAt, now)
-      return { status: this.status, ...position, cycle: position.cycle + previous.cycleOffset, elapsed: position.elapsed + previous.elapsedOffset, isCountIn: false }
+      return { status: this.status, ...position, cycle: position.cycle * previous.request.pattern.bars + Math.floor(position.step / stepsPerBar(previous.request.pattern)) + previous.cycleOffset, elapsed: position.elapsed + previous.elapsedOffset, isCountIn: false }
     }
     const now = Math.min(Math.max(this.context.currentTime, this.resumeAt), this.endingAt ?? Infinity)
     if (now < this.musicStartedAt) {
@@ -296,7 +296,7 @@ export class WebAudioEngine implements AudioEngine {
       return { status: this.status, step, cycle: 0, progress, isCountIn: true, elapsed: 0 }
     }
     const position = positionAtTime(this.request.pattern, this.request.bpm, this.musicStartedAt, now)
-    return { status: this.status, ...position, cycle: position.cycle + this.cycleOffset, elapsed: position.elapsed + this.elapsedOffset, isCountIn: false }
+    return { status: this.status, ...position, cycle: position.cycle * this.request.pattern.bars + Math.floor(position.step / stepsPerBar(this.request.pattern)) + this.cycleOffset, elapsed: position.elapsed + this.elapsedOffset, isCountIn: false }
   }
 
   getSnapshot(): EngineSnapshot {
@@ -363,10 +363,10 @@ export class WebAudioEngine implements AudioEngine {
       const time = absoluteStepTime(this.musicStartedAt, this.nextAbsoluteStep, request.bpm, request.pattern.subdivision)
       if (time >= horizon) break
       if (this.program?.length && this.nextAbsoluteStep >= 0) {
-        const cycle = this.cycleOffset + Math.floor(this.nextAbsoluteStep / patternSteps)
+        const cycle = this.cycleOffset + Math.floor(this.nextAbsoluteStep / stepsPerBar(request.pattern))
         const phase = this.phaseAtCycle(cycle)
         if (!phase) break
-        if (this.nextAbsoluteStep % patternSteps === 0) this.applyMix(time)
+        if (this.nextAbsoluteStep % stepsPerBar(request.pattern) === 0) this.applyMix(time)
       }
 
       if (this.nextAbsoluteStep < 0) {
@@ -383,7 +383,7 @@ export class WebAudioEngine implements AudioEngine {
               endingAt: this.endingAt, until: boundaryTime,
             }
           }
-          this.cycleOffset += this.nextAbsoluteStep / patternSteps
+          this.cycleOffset += this.nextAbsoluteStep / stepsPerBar(request.pattern)
           request = { ...this.pendingRequest, countIn: false }
           this.request = request
           this.pendingRequest = undefined
@@ -462,7 +462,7 @@ export class WebAudioEngine implements AudioEngine {
   private updateEndingTime() {
     if (this.repeatProgram || !this.program?.length || !this.request) { this.endingAt = undefined; return }
     const bars = this.program.reduce((sum, phase) => sum + phase.bars, 0)
-    this.endingAt = this.musicStartedAt + (bars - this.cycleOffset) * patternDuration(this.request.pattern, this.request.bpm)
+    this.endingAt = this.musicStartedAt + (bars - this.cycleOffset) * patternDuration(this.request.pattern, this.request.bpm) / this.request.pattern.bars
   }
 
   private applyMix(atTime = this.context?.currentTime ?? 0, restoreBoundary = true) {
@@ -473,7 +473,7 @@ export class WebAudioEngine implements AudioEngine {
     const cycleOffset = previous?.cycleOffset ?? this.cycleOffset
     const resumeAt = previous?.resumeAt ?? this.resumeAt
     const programMix = this.program?.length && request
-      ? this.phaseAtCycle(cycleOffset + positionAtTime(request.pattern, request.bpm, musicStartedAt, Math.max(atTime, resumeAt)).cycle)?.mix
+      ? this.phaseAtCycle(cycleOffset + Math.floor((Math.max(atTime, resumeAt) - musicStartedAt + 1e-9) / (patternDuration(request.pattern, request.bpm) / request.pattern.bars)))?.mix
       : undefined
     const trainingMix = this.program?.length && request ? programMix : this.trainingMix
     const gains = resolveDrumGains(this.mixes, trainingMix)
@@ -488,7 +488,7 @@ export class WebAudioEngine implements AudioEngine {
     // Restore an imminent program boundary that the scheduler may already have
     // passed, using the latest targets, without applying that future phase early.
     if (restoreBoundary && request && this.program?.length && this.status === 'playing' && atTime <= this.context.currentTime) {
-      const duration = patternDuration(request.pattern, request.bpm)
+      const duration = patternDuration(request.pattern, request.bpm) / request.pattern.bars
       const cycle = this.getPosition().cycle + 1
       const boundary = musicStartedAt + (cycle - cycleOffset) * duration
       if (boundary > this.context.currentTime && boundary < this.context.currentTime + LOOK_AHEAD_SECONDS && this.phaseAtCycle(cycle)) {
