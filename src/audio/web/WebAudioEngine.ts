@@ -1,3 +1,4 @@
+import { resolveDrumGains } from '../mix'
 import { DRUM_IDS, type DrumId, type Pattern } from '../../core/pattern/types'
 import { absoluteStepTime, patternDuration, positionAtTime, stepsPerPattern, stepsPerBar } from '../../core/timing/musicTime'
 import type {
@@ -299,7 +300,20 @@ export class WebAudioEngine implements AudioEngine {
   }
 
   getSnapshot(): EngineSnapshot {
-    return { ...this.getPosition(), error: this.error, diagnostics: { ...this.diagnostics } }
+    const position = this.getPosition()
+    const previous = this.previousTimeline && this.context && this.context.currentTime < this.previousTimeline.until ? this.previousTimeline : undefined
+    const request = previous?.request ?? this.request
+    const started = this.context && this.context.currentTime >= (previous?.resumeAt ?? this.resumeAt)
+    const ended = this.context && this.context.currentTime >= (previous ? previous.endingAt ?? Infinity : this.endingAt ?? Infinity)
+    const playing = position.status === 'playing' && !position.isCountIn && started && !ended
+    const training = this.program?.length ? this.phaseAtCycle(position.cycle)?.mix : this.trainingMix
+    const gains = resolveDrumGains(this.mixes, training)
+    const drums = Object.fromEntries(DRUM_IDS.map(drum => {
+      const gain = playing ? gains[drum] : 0
+      const hit = gain > 0 && !!request?.pattern.tracks.find(track => track.drum === drum)?.hits.some(hit => hit.step === position.step && hit.velocity > 0)
+      return [drum, { gain, level: gain === 0 ? 'silent' : gain < (this.mixes.get(drum)?.volume ?? 1) ? 'weak' : 'normal', hit }]
+    })) as NonNullable<EngineSnapshot['drums']>
+    return { ...position, drums, error: this.error, diagnostics: { ...this.diagnostics } }
   }
 
   subscribe(listener: () => void) {
@@ -462,24 +476,8 @@ export class WebAudioEngine implements AudioEngine {
       ? this.phaseAtCycle(cycleOffset + positionAtTime(request.pattern, request.bpm, musicStartedAt, Math.max(atTime, resumeAt)).cycle)?.mix
       : undefined
     const trainingMix = this.program?.length && request ? programMix : this.trainingMix
-    const values = [...this.mixes.values()]
-    const hasSolo = values.some(({ solo }) => solo)
-    const hasFocus = values.some(({ focused, muted, solo }) => focused && !muted && (!hasSolo || solo))
-    for (const [drum, mix] of this.mixes) {
-      const isTarget = trainingMix?.targets?.includes(drum) ?? (drum === trainingMix?.target)
-      const trainingAudible = trainingMix?.mode === 'solo'
-        ? isTarget
-        : trainingMix?.mode === 'mute-target'
-          ? !isTarget
-          : true
-      // Arrangement switches remain authoritative; training targets only alter
-      // emphasis and never resurrect a muted track from a saved combination.
-      const manualAudible = !mix.muted && (!hasSolo || mix.solo)
-      const audible = trainingAudible && manualAudible
-      const trainingFocusScale = (trainingMix?.mode === 'focus' && !isTarget) || (trainingMix?.mode === 'weaken' && isTarget) ? 0.18 : 1
-      const manualFocusScale = trainingMix ? 1 : hasFocus && !mix.focused ? 0.18 : 1
-      const focusScale = trainingFocusScale * manualFocusScale
-      const target = audible ? mix.volume * focusScale : 0
+    const gains = resolveDrumGains(this.mixes, trainingMix)
+    for (const [drum, target] of Object.entries(gains) as [DrumId, number][]) {
       const gain = this.gains.get(drum)?.gain
       if (!gain) continue
       if (typeof gain.cancelAndHoldAtTime === 'function') gain.cancelAndHoldAtTime(atTime)

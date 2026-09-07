@@ -723,4 +723,71 @@ describe('WebAudioEngine scheduling and mixing', () => {
     expect(engine.getPosition().elapsed).toBeCloseTo(2.42)
     engine.dispose()
   })
+
+  it('exposes silent drum pads before playback and while paused', async () => {
+    const engine = new WebAudioEngine()
+    expect(engine.getSnapshot().drums).toEqual({
+      kick: { gain: 0, level: 'silent', hit: false },
+      snare: { gain: 0, level: 'silent', hit: false },
+      closedHat: { gain: 0, level: 'silent', hit: false },
+      openHat: { gain: 0, level: 'silent', hit: false },
+    })
+    await engine.prepare(kit)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+    context.currentTime = 0.58
+    engine.pause()
+    expect(Object.values(engine.getSnapshot().drums ?? {}).every(drums => drums.level === 'silent' && !drums.hit && drums.gain === 0)).toBe(true)
+    engine.dispose()
+  })
+
+  it('reports only the current step hit and reflects a muted track', async () => {
+    const engine = new WebAudioEngine()
+    const pattern: Pattern = {
+      ...BOOM_BAP_PATTERNS[0],
+      tracks: [
+        { drum: 'kick', hits: [{ step: 0, velocity: 100 }] },
+        { drum: 'snare', hits: [{ step: 1, velocity: 0 }] },
+      ],
+    }
+    await engine.prepare(kit)
+    await engine.start({ pattern, bpm: 120, countIn: false })
+    context.currentTime = 0.081
+    expect(engine.getSnapshot().drums?.kick).toEqual({ gain: 0.82, level: 'normal', hit: true })
+    context.currentTime = 0.21
+    expect(engine.getSnapshot().drums?.kick).toEqual({ gain: 0.82, level: 'normal', hit: false })
+    engine.setTrackMix('kick', { muted: true, solo: false, focused: false, volume: 0.82 })
+    expect(engine.getSnapshot().drums?.kick).toEqual({ gain: 0, level: 'silent', hit: false })
+    engine.dispose()
+  })
+
+  it('keeps the current phase visible until its audio boundary despite lookahead scheduling', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setProgram([
+      { bars: 1, mix: { mode: 'full', targets: ['kick'] } },
+      { bars: 1, mix: { mode: 'mute-target', targets: ['kick'] } },
+    ])
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 100, countIn: false })
+    context.currentTime = 2.37
+    tick()
+    expect(engine.getSnapshot().drums?.kick).toEqual({ gain: 0.82, level: 'normal', hit: false })
+    context.currentTime = 2.48
+    expect(engine.getSnapshot().drums?.kick).toEqual({ gain: 0, level: 'silent', hit: false })
+    engine.dispose()
+  })
+
+  it('silences drum pads at a finite route ending before the scheduler flips status', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setProgram([{ bars: 1, mix: { mode: 'full' } }])
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+
+    // The route ends at 0.08 + 2 seconds. Do not call tick(): this exercises
+    // the snapshot guard while the transport status is still nominally playing.
+    context.currentTime = 2.08
+    const snapshot = engine.getSnapshot()
+    expect(snapshot.status).toBe('playing')
+    expect(Object.values(snapshot.drums ?? {}).every(drums => drums.level === 'silent' && !drums.hit && drums.gain === 0)).toBe(true)
+    engine.dispose()
+  })
 })

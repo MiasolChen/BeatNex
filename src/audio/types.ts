@@ -42,6 +42,7 @@ export type DrumKit = Record<DrumId, string>
 export type EngineSnapshot = PlaybackPosition & {
   error?: string
   diagnostics: EngineDiagnostics
+  drums?: Record<DrumId, { gain: number; level: 'normal' | 'weak' | 'silent'; hit: boolean }>
 }
 
 export interface AudioEngine {

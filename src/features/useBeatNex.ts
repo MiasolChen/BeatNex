@@ -46,7 +46,7 @@ export function useBeatNex(){
  const switchPage=(next:Page)=>{if(next===page)return;resetAll();setPage(next);if(next!=='machine')setLandscape(false)}
  const changeBpm=(bpm:number)=>patch({bpm})
  const togglePlayback=()=>{if(playing)audio.pause();else{if(settings.routeEnabled&&completed)reset();void audio.play()}}
- const selectDrum=(drum:DrumId,remove:boolean)=>{const next=remove?selectedDrums.filter(d=>d!==drum):Array.from(new Set([...selectedDrums,drum]));patch(settings.routeEnabled?{targets:next}:{freeTargets:next})}
+ const selectDrum=(drum:DrumId,remove:boolean)=>{if(settings.routeEnabled&&(playing||loading))return;const next=remove?selectedDrums.filter(d=>d!==drum):Array.from(new Set([...selectedDrums,drum]));patch(settings.routeEnabled?{targets:next}:{freeTargets:next})}
  const choosePattern=(id:string)=>{const next=BOOM_BAP_PATTERNS.find(p=>p.id===id);if(!next)return;resetAll();meterDrafts.current={};setPattern(next);setSource(next);setActiveId(undefined);setMuted([]);setHistory([]);setFuture([]);patch({bpm:next.recommendedBpm,patternName:next.name,difficulty:next.difficulty});setPage('practice')}
  const changePattern=(next:Pattern)=>{setHistory(h=>[...h.slice(-49),pattern]);setFuture([]);setPattern(next)}
  const toggleStep=(drum:DrumId,step:number)=>changePattern(togglePatternStep(pattern,drum,step))
