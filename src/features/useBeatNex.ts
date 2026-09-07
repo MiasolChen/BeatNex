@@ -36,7 +36,7 @@ export function useBeatNex(){
  const cycle=completed?totalBars:settings.repeat==='infinite'?snapshot.cycle%totalBars:snapshot.cycle
  let boundary=0;const found=settings.phases.findIndex(p=>{boundary+=p.bars;return cycle<boundary});const activeIndex=found<0?settings.phases.length-1:found
  useEffect(()=>{if(settings.routeEnabled&&program&&settings.repeat==='once'&&snapshot.cycle>=totalBars&&!completed){audio.stop();setCompleted(true);setFeedback('')}},[settings.routeEnabled,program,settings.repeat,snapshot.cycle,totalBars,completed,audio.stop])
- useEffect(()=>{DRUM_IDS.forEach(d=>{routeAudio.updateMix(d,{muted:page==='practice'?false:muted.includes(d)});freeAudio.updateMix(d,{muted:!(settings.freeTargets??settings.targets).includes(d)})})},[muted,settings.targets,settings.freeTargets,page,routeAudio.updateMix,freeAudio.updateMix])
+ useEffect(()=>{DRUM_IDS.forEach(d=>{routeAudio.updateMix(d,{muted:page==='practice'?false:muted.includes(d)});freeAudio.updateMix(d,{muted:!(settings.freeTargets??settings.targets).includes(d),volume:0.82*(settings.freeVolumes?.[d]??100)/100})})},[muted,settings.targets,settings.freeTargets,settings.freeVolumes,page,routeAudio.updateMix,freeAudio.updateMix])
  const warned=useRef(false)
  useEffect(()=>{if(!savePractice(settings)&&!warned.current){warned.current=true;notice('设置仅在本次保留：无法写入本机存储')}},[settings])
  useEffect(()=>{const error=combinations.error||favorites.error;if(error)notice(error);return()=>clearTimeout(notifyTimer.current)},[])
@@ -46,6 +46,7 @@ export function useBeatNex(){
  const switchPage=(next:Page)=>{if(next===page)return;resetAll();setPage(next);if(next!=='machine')setLandscape(false)}
  const changeBpm=(bpm:number)=>patch({bpm})
  const togglePlayback=()=>{if(playing)audio.pause();else{if(settings.routeEnabled&&completed)reset();void audio.play()}}
+ const changeFreeVolume=(drum:DrumId,percent:number)=>{if(settings.routeEnabled||!Number.isFinite(percent))return;setSettings(s=>({...s,freeVolumes:{...s.freeVolumes,[drum]:Math.max(0,Math.min(100,Math.round(percent)))}}))}
  const selectDrum=(drum:DrumId,remove:boolean)=>{if(settings.routeEnabled&&(playing||loading))return;const next=remove?selectedDrums.filter(d=>d!==drum):Array.from(new Set([...selectedDrums,drum]));patch(settings.routeEnabled?{targets:next}:{freeTargets:next})}
  const choosePattern=(id:string)=>{const next=BOOM_BAP_PATTERNS.find(p=>p.id===id);if(!next)return;resetAll();meterDrafts.current={};setPattern(next);setSource(next);setActiveId(undefined);setMuted([]);setHistory([]);setFuture([]);patch({bpm:next.recommendedBpm,patternName:next.name,difficulty:next.difficulty});setPage('practice')}
  const changePattern=(next:Pattern)=>{setHistory(h=>[...h.slice(-49),pattern]);setFuture([]);setPattern(next)}
@@ -76,6 +77,6 @@ export function useBeatNex(){
  const endFree=()=>{notice('本次自由练习 '+Math.floor(snapshot.elapsed/60).toString().padStart(2,'0')+':'+Math.floor(snapshot.elapsed%60).toString().padStart(2,'0'));reset()}
  const phases=settings.phases.map(p=>({...p,label:PHASE_LABELS[phaseIds.indexOf(p.id as never)]}))
  const submitFeedback=(value:string)=>{setFeedback(value);try{localStorage.setItem('beatnex:last-training-feedback',value)}catch{notice('反馈仅保留在本次练习')}}
- return {settings,selectedDrums,pattern,source,page,muted,history,future,combinations:combinations.value,favorites:favorites.value,activeId,toast,completed:settings.routeEnabled&&completed,saveOpen,setSaveOpen,feedback,submitFeedback,landscape,setLandscape,follow,setFollow,notice,audio,snapshot,playing,loading,totalBars,cycle,round,changeRepeat,activeIndex,phases,switchPage,changeBpm,togglePlayback,selectDrum,choosePattern,toggleStep,changeMeter,changePatternBars,undo,redo,restore,toggleMute,save,load,toggleFavorite,reorder,removePhase,addPhase,changeBars,toggleRoute,endFree,reset,setCompleted}
+ return {settings,selectedDrums,pattern,source,page,muted,history,future,combinations:combinations.value,favorites:favorites.value,activeId,toast,completed:settings.routeEnabled&&completed,saveOpen,setSaveOpen,feedback,submitFeedback,landscape,setLandscape,follow,setFollow,notice,audio,snapshot,playing,loading,totalBars,cycle,round,changeRepeat,activeIndex,phases,switchPage,changeBpm,togglePlayback,changeFreeVolume,selectDrum,choosePattern,toggleStep,changeMeter,changePatternBars,undo,redo,restore,toggleMute,save,load,toggleFavorite,reorder,removePhase,addPhase,changeBars,toggleRoute,endFree,reset,setCompleted}
 }
 export type BeatNex=ReturnType<typeof useBeatNex>

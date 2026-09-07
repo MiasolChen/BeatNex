@@ -69,6 +69,40 @@ describe('practice settings persistence', () => {
     expect(readPractice()).toEqual(settings)
   })
 
+  it('defaults free drum volumes to 100 and round-trips edited volumes', () => {
+    useStorage()
+    expect(defaultSettings().freeVolumes).toBeUndefined()
+    const settings = { ...defaultSettings(), freeVolumes: { kick: 25, closedHat: 100 } }
+    expect(savePractice(settings)).toBe(true)
+    expect(readPractice().freeVolumes).toEqual(settings.freeVolumes)
+  })
+
+  it.each([
+    { freeVolumes: { kick: -1, snare: 100, closedHat: 100, openHat: 100 } },
+    { freeVolumes: { kick: 101, snare: 100, closedHat: 100, openHat: 100 } },
+    { freeVolumes: { kick: 12.5, snare: 100, closedHat: 100, openHat: 100 } },
+    { freeVolumes: { kick: 100, snare: 100, closedHat: 100, unknown: 50 } },
+  ])('rejects invalid free drum volumes: %j', (invalid) => {
+    const raw = JSON.stringify({ ...defaultSettings(), ...invalid })
+    const { data } = useStorage({ [PRACTICE_KEY]: raw })
+    expect(readPractice()).toEqual(defaultSettings())
+    expect(savePractice(defaultSettings())).toBe(false)
+    expect(data.get(PRACTICE_KEY)).toBe(raw)
+  })
+
+  it('accepts partial free drum volumes and leaves absent drums at the default', () => {
+    const settings = { ...defaultSettings(), freeVolumes: { snare: 0 } }
+    useStorage()
+    expect(savePractice(settings)).toBe(true)
+    expect(readPractice().freeVolumes).toEqual({ snare: 0 })
+  })
+
+  it('keeps older settings valid without adding free drum volumes', () => {
+    const old = defaultSettings()
+    useStorage({ [PRACTICE_KEY]: JSON.stringify(old) })
+    expect(readPractice()).toEqual(old)
+  })
+
   it('migrates a valid v1 target and custom route without changing the old document', () => {
     const old = { ...DEFAULT_TRAINING_CONFIG, targetDrum: 'snare', bpm: 113, difficulty: 'hard', patternName: 'Syncopated Break' }
     const raw = JSON.stringify(old)

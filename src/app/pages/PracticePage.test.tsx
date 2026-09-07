@@ -7,6 +7,7 @@ import type { EngineSnapshot } from '../../audio/types'
 import type { BeatNex } from '../../features/useBeatNex'
 import { defaultSettings } from '../../storage/practice'
 import { PracticePage } from './PracticePage'
+import { volumeFromDrag } from '../usePadVolume'
 
 const snapshot = (status: EngineSnapshot['status'], drums?: EngineSnapshot['drums']): EngineSnapshot => ({
   status, step: 0, cycle: 0, progress: 0, isCountIn: false, elapsed: 0,
@@ -32,6 +33,7 @@ const appFor = (status: EngineSnapshot['status'], options: { routeEnabled?: bool
     toggleStep() {}, changeMeter() {}, changePatternBars() {}, undo() {}, redo() {}, restore() {}, toggleMute() {}, save() { return true },
     load() {}, toggleFavorite() {}, reorder() {}, removePhase() {}, addPhase() {}, changeBars() {}, changeRepeat() {},
     toggleRoute() {}, endFree() {}, reset() {}, setCompleted() {}, setSaveOpen() {}, submitFeedback() {}, setLandscape() {}, setFollow() {},
+    changeFreeVolume() {},
   } as BeatNex
 }
 
@@ -86,5 +88,39 @@ describe('PracticePage drum feedback SSR state', () => {
     const pads = drumButtons(renderToStaticMarkup(<PracticePage app={appFor('playing', { routeEnabled: false })} />))
     expect(pads).toHaveLength(4)
     pads.forEach(button => expect(button).not.toContain('disabled'))
+  })
+
+  it('hides the weak-volume legend and exposes free-practice volume percentages in SSR', () => {
+    const settings = { ...defaultSettings(), freeTargets: [...DRUM_IDS] }
+    settings.routeEnabled = false
+    settings.freeVolumes = { kick: 25, snare: 0, closedHat: 100, openHat: 67 }
+    const app = appFor('playing', { routeEnabled: false })
+    app.settings = settings
+    app.selectedDrums = settings.freeTargets ?? settings.targets
+    const markup = renderToStaticMarkup(<PracticePage app={app} />)
+    expect(markup).not.toContain('弱化')
+    expect(markup).toContain('25%')
+    expect(markup).toContain('0%')
+    expect(markup).toContain('100%')
+    expect(markup).toContain('67%')
+  })
+
+  it('keeps the weak-volume legend for route practice', () => {
+    const markup = renderToStaticMarkup(<PracticePage app={appFor('playing')} />)
+    expect(markup).toContain('鼓垫音量图例')
+    expect(markup).toContain('弱化')
+  })
+})
+
+describe('volumeFromDrag', () => {
+  it.each([
+    [50, 200, 200, 50],
+    [50, 200, 275, 0],
+    [50, 200, 125, 100],
+    [0, 200, 201, 0],
+    [100, 200, 199, 100],
+    [50, 200, 201.5, 49],
+  ])('maps start=%s startY=%s currentY=%s to %s percent', (start, startY, currentY, expected) => {
+    expect(volumeFromDrag(start, startY, currentY)).toBe(expected)
   })
 })

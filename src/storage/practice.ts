@@ -8,6 +8,7 @@ export type PracticeSettings = {
   version: 2
   targets: DrumId[]
   freeTargets?: DrumId[]
+  freeVolumes?: Partial<Record<DrumId, number>>
   phases: RoutePhase[]
   repeat: 'once' | 'infinite'
   routeEnabled: boolean
@@ -62,6 +63,9 @@ function isPracticeSettings(value: unknown): value is PracticeSettings {
     && typeof value.routeEnabled === 'boolean' && Array.isArray(value.targets)
     && value.targets.every((drum) => DRUM_IDS.includes(drum as DrumId))
     && new Set(value.targets).size === value.targets.length
+    && (value.freeVolumes === undefined || (isRecord(value.freeVolumes)
+      && Object.entries(value.freeVolumes).every(([drum, volume]) => DRUM_IDS.includes(drum as DrumId)
+        && typeof volume === 'number' && Number.isInteger(volume) && volume >= 0 && volume <= 100)))
     && (value.freeTargets === undefined || (Array.isArray(value.freeTargets)
       && value.freeTargets.every((drum) => DRUM_IDS.includes(drum as DrumId))
       && new Set(value.freeTargets).size === value.freeTargets.length))
