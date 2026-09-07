@@ -40,6 +40,8 @@ const appFor = (status: EngineSnapshot['status'], options: { routeEnabled?: bool
 const drumButtons = (markup: string) => [...markup.matchAll(/<button\b[^>]*data-drum="\d+"[^>]*>/g)].map(([button]) => button)
 const attribute = (button: string, name: string) => button.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1]
 
+const modePanel = (markup: string) => markup.match(/<article class="bn-card bn-mode-panel"[^>]*>/)?.[0] ?? ''
+
 describe('PracticePage route drum pad locking', () => {
   it.each([
     [true, 'loading'],
@@ -53,6 +55,26 @@ describe('PracticePage route drum pad locking', () => {
     const play = markup.match(/<button\b[^>]*\bid="bn-play"[^>]*>/)?.[0] ?? ''
     expect(play.includes('disabled')).toBe(status === 'loading')
   })
+
+  it.each(['loading', 'playing'] as const)('renders locked pad markers and labels for route %s', status => {
+    const markup = renderToStaticMarkup(<PracticePage app={appFor(status)} />)
+    expect((markup.match(/class="bn-pad-lock"/g) ?? [])).toHaveLength(4)
+    drumButtons(markup).forEach(button => {
+      expect(button).toContain('aria-label="')
+      expect(button).toMatch(/aria-label="[^"]*，已锁定"/)
+    })
+  })
+
+  it('removes locked pad markers and labels when route practice is paused', () => {
+    const markup = renderToStaticMarkup(<PracticePage app={appFor('paused')} />)
+    expect(markup).not.toContain('bn-pad-lock')
+    drumButtons(markup).forEach(button => expect(button).not.toMatch(/aria-label="[^"]*，已锁定"/))
+  })
+
+  it('marks the mode panel as route or free in SSR', () => {
+    expect(modePanel(renderToStaticMarkup(<PracticePage app={appFor('paused')} />))).toContain('data-mode="route"')
+    expect(modePanel(renderToStaticMarkup(<PracticePage app={appFor('paused', { routeEnabled: false })} />))).toContain('data-mode="free"')
+  })
 })
 
 describe('PracticePage drum feedback SSR state', () => {
@@ -62,10 +84,10 @@ describe('PracticePage drum feedback SSR state', () => {
     }])) as NonNullable<EngineSnapshot['drums']>
     const playingPads = drumButtons(renderToStaticMarkup(<PracticePage app={appFor('playing', { drums: playingDrums })} />))
     expect(playingPads.map(button => [attribute(button, 'data-level'), attribute(button, 'aria-label')])).toEqual([
-      ['normal', 'Kick，正常音量，目标鼓件'],
-      ['weak', 'Snare，弱化音量，目标鼓件'],
-      ['silent', 'Closed Hat，静音，目标鼓件'],
-      ['normal', 'Open Hat，正常音量，目标鼓件'],
+      ['normal', 'Kick，正常音量，目标鼓件，已锁定'],
+      ['weak', 'Snare，弱化音量，目标鼓件，已锁定'],
+      ['silent', 'Closed Hat，静音，目标鼓件，已锁定'],
+      ['normal', 'Open Hat，正常音量，目标鼓件，已锁定'],
     ])
 
     const idlePads = drumButtons(renderToStaticMarkup(<PracticePage app={appFor('paused')} />))

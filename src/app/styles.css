@@ -434,3 +434,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-mode-panel .bn-drum[data-free=true] .bn-pad-volume{visibility:visible}
 #bn .bn-pad-percent{display:none}
 #bn .bn-mode-panel .bn-drum[data-adjusting=true] .bn-pad-percent{display:flex;align-items:center;justify-content:center;inset:2px;border-radius:inherit;background:var(--paper);font-size:22px;line-height:1;color:var(--ink)}
+
+/* Free practice uses the lime accent; route colors describe the scheduled mix. */
+#bn{--free-accent:var(--acid);--free-accent-ink:var(--ink)}
+#bn .bn-mode-panel .bn-drum[data-free=true][aria-pressed=true][data-level=idle],
+#bn .bn-mode-panel .bn-drum[data-free=true][data-level=normal],
+#bn .bn-mode-panel .bn-drum[data-free=true][data-level=weak]{background:var(--free-accent);color:var(--free-accent-ink)}
+#bn .bn-mode-panel .bn-drum[data-free=true][data-adjusting=true] .bn-pad-percent{background:var(--free-accent);color:var(--free-accent-ink)}
+#bn .bn-mode-panel[data-mode=free] .bn-volume-key [data-level=normal] i{background:var(--free-accent);border-color:var(--free-accent-ink)}
+#bn .bn-pad-lock{position:absolute;top:5px;right:5px;display:grid;place-items:center;width:12px;height:12px;pointer-events:none}
+#bn .bn-mode-panel .bn-pad-lock svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+/* Pad selection and volume adjustment use fill, never a visible frame. */
+#bn .bn-mode-panel .bn-drum,
+#bn .bn-mode-panel .bn-drum[aria-pressed=true],
+#bn .bn-mode-panel .bn-drum[data-adjusting=true]{border-color:transparent;box-shadow:none}
+#bn .bn-mode-panel .bn-drum[data-free=false][data-level=idle][aria-pressed=true]{background:#e4e5de}
