@@ -531,3 +531,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-management-menu{display:grid;gap:8px}
 #bn .bn-version-panel input:not([type="checkbox"]){display:block;width:100%;box-sizing:border-box;min-height:36px;margin:6px 0;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--paper);font:inherit}
 #bn .bn-backup-restore{display:flex;align-items:flex-start;gap:8px;font-size:13px}
+
+#bn .bn-record:not(.bn-saved-record) :is(.bn-favorite,.bn-record-play,.bn-record-practice){display:grid;place-items:center;align-self:center;line-height:1;box-sizing:border-box}
+#bn .bn-record .bn-favorite svg{display:block;width:20px;height:20px}
+#bn .bn-record .bn-favorite[aria-pressed="true"] svg{fill:currentColor}
+
+/* Saved combinations have separate information and action rows. */
+#bn .bn-saved-record{grid-template-columns:44px minmax(0,1fr) 40px 64px;gap:10px 8px;padding:14px;align-items:center}
+#bn .bn-saved-record .bn-saved-art{grid-column:1;grid-row:1;width:44px;height:44px;min-width:0;box-sizing:border-box}
+#bn .bn-saved-record .bn-record-body{display:block;grid-column:2/4;grid-row:1;min-width:0}
+#bn .bn-saved-record .bn-record-body h3{padding:0;margin:0 0 4px;font-size:15px;line-height:20px;overflow-wrap:anywhere}
+#bn .bn-saved-record .bn-record-body .bn-muted{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:flex-start;gap:2px 6px;font-size:12px;line-height:17px}
+#bn .bn-saved-record .bn-record-body .bn-muted span{white-space:nowrap}
+#bn .bn-saved-record .bn-record-more{grid-column:4;grid-row:1;width:36px;height:36px;min-height:36px;align-self:start}
+#bn .bn-saved-record .bn-record-edit{grid-column:1/3;grid-row:2;justify-self:start;display:flex;align-items:center;justify-content:center;gap:6px;width:auto;height:40px;min-height:40px;padding:0 10px;border-radius:9px;background:var(--paper);font-size:12px;line-height:1}
+#bn .bn-saved-record .bn-record-play{grid-column:3;grid-row:2;width:40px;height:40px;min-height:40px;padding:10px;align-self:center}
+#bn .bn-saved-record .bn-record-practice{grid-column:4;grid-row:2;display:grid;place-items:center;height:40px;min-height:40px;padding:0 8px;font-size:12px;line-height:1;border-radius:10px;white-space:nowrap;align-self:center}
+#bn .bn-saved-record .bn-preview-error{grid-column:1/-1;grid-row:auto}
