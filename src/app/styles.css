@@ -485,3 +485,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-record:not(.bn-saved-record) .bn-favorite{grid-column:3;grid-row:2}
 #bn .bn-record:not(.bn-saved-record) .bn-record-play{grid-column:4}
 #bn .bn-record:not(.bn-saved-record) .bn-record-practice{grid-column:5}
+#bn .bn-record:not(.bn-saved-record) .bn-record-body{display:block;grid-column:2 / -1;grid-row:1}
+#bn .bn-record:not(.bn-saved-record) .bn-record-body .bn-muted{flex-direction:row;gap:8px;white-space:nowrap;margin-top:4px}
+/* Compact curated cards without shrinking their action targets. */
+#bn .bn-record:not(.bn-saved-record){grid-template-columns:32px minmax(0,1fr) 44px 44px 68px;column-gap:8px;row-gap:2px;padding:8px;border-radius:14px}
+#bn .bn-record:not(.bn-saved-record)>.bn-art{width:32px;height:32px;border-radius:9px}
+#bn .bn-record:not(.bn-saved-record) .bn-record-body h3{font-size:14px;line-height:18px}
+#bn .bn-record:not(.bn-saved-record) .bn-record-body .bn-muted{justify-content:flex-start;margin-top:2px;line-height:16px}
+#bn .bn-record:not(.bn-saved-record)>.bn-art{display:grid;place-items:center;padding:0}
+#bn .bn-record:not(.bn-saved-record) .bn-disc{width:28px;height:28px;box-shadow:none}
+#bn .bn-record:not(.bn-saved-record) .bn-disc span{width:22px;height:22px;border-width:3px;font-size:9px}
+/* A single row shares space between rhythm details and compact actions. */
+#bn .bn-record:not(.bn-saved-record){grid-template-columns:28px minmax(0,1fr) 28px 32px 44px;gap:4px;padding:8px}
+#bn .bn-record:not(.bn-saved-record)>.bn-art{grid-row:1;width:28px;height:28px}
+#bn .bn-record:not(.bn-saved-record) .bn-disc{width:24px;height:24px}
+#bn .bn-record:not(.bn-saved-record) .bn-disc span{width:19px;height:19px;font-size:8px}
+#bn .bn-record:not(.bn-saved-record) .bn-record-body{grid-column:2;grid-row:1}
+#bn .bn-record:not(.bn-saved-record) .bn-record-body h3{font-size:13px;line-height:17px}
+#bn .bn-record:not(.bn-saved-record) .bn-record-body .bn-muted{gap:4px;font-size:10px;line-height:14px}
+#bn .bn-record:not(.bn-saved-record) .bn-favorite{grid-column:3;grid-row:1;width:28px;height:32px;min-height:32px;padding:4px;font-size:20px}
+#bn .bn-record:not(.bn-saved-record) .bn-record-play{grid-column:4;grid-row:1;width:32px;height:32px;min-height:32px;padding:7px}
+#bn .bn-record:not(.bn-saved-record) .bn-record-practice{grid-column:5;grid-row:1;width:44px;height:32px;min-height:32px;padding:4px;font-size:11px;border-radius:9px;white-space:nowrap}
