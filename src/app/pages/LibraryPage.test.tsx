@@ -36,6 +36,8 @@ describe('LibraryPage preview controls SSR', () => {
     const markup = renderToStaticMarkup(<LibraryPage app={appFor()} />)
     expect(markup).toContain('试听 Foundation Backbeat')
     expect(markup).toContain('练习 Foundation Backbeat')
+    expect(markup).not.toContain('aria-label="节奏难度"')
+    expect(markup).not.toContain('aria-label="练习方式"')
   })
 
   it('keeps the saved collection count visible', () => {

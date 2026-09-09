@@ -12,6 +12,7 @@ import type {TrainingProgram} from '../audio/types'
 import {useDrumMachine} from './useDrumMachine'
 import {useLibraryPreview} from './useLibraryPreview'
 import {phaseProgram} from '../core/training/phaseProgram'
+import {BOOM_BAP_LESSONS} from '../core/content/boomBap'
 import {usePhasePreview} from './usePhasePreview'
 export type Page='practice'|'library'|'machine'|'metronome'|'calendar'
 export function useBeatNex(){
@@ -63,7 +64,7 @@ export function useBeatNex(){
  const togglePlayback=()=>{phasePreview.stop();if(playing)audio.pause();else{if(currentCompleted)reset();void audio.play()}}
  const changeFreeVolume=(drum:DrumId,percent:number)=>{if(settings.routeEnabled||!Number.isFinite(percent))return;setSettings(s=>({...s,freeVolumes:{...s.freeVolumes,[drum]:Math.max(0,Math.min(100,Math.round(percent)))}}))}
  const selectDrum=(drum:DrumId,remove:boolean)=>{if(settings.routeEnabled&&(playing||loading))return;const next=remove?selectedDrums.filter(d=>d!==drum):Array.from(new Set([...selectedDrums,drum]));patch(settings.routeEnabled?{targets:next}:{freeTargets:next})}
- const choosePattern=(id:string)=>{const next=BOOM_BAP_PATTERNS.find(p=>p.id===id);if(!next)return;resetAll();meterDrafts.current={};setPattern(next);setSource(next);setActiveId(undefined);setMuted([]);setHistory([]);setFuture([]);patch({bpm:next.recommendedBpm,patternName:next.name,difficulty:next.difficulty});setPage('practice')}
+ const choosePattern=(id:string,specialized=false)=>{const next=BOOM_BAP_PATTERNS.find(p=>p.id===id);if(!next)return;resetAll();meterDrafts.current={};setPattern(next);setSource(next);setActiveId(undefined);setMuted([]);setHistory([]);setFuture([]);const lesson=specialized?BOOM_BAP_LESSONS.find(x=>x.name===next.name):undefined;patch({bpm:next.recommendedBpm,patternName:next.name,difficulty:next.difficulty,...(lesson?{targets:[...lesson.targets],routeEnabled:true,repeat:'once' as const,phases:phaseIds.map((id,index)=>({id,instanceId:`phase-${index}`,bars:4}))}:{})});setPage('practice')}
  const changePattern=(next:Pattern)=>{setHistory(h=>[...h.slice(-49),pattern]);setFuture([]);setPattern(next)}
  const toggleStep=(drum:DrumId,step:number)=>changePattern(togglePatternStep(pattern,drum,step))
  const changeSubdivision=(subdivision:Pattern['subdivision'])=>{if(subdivision===pattern.subdivision)return;changePattern(withSubdivision(pattern,subdivision));notice('已切换细分，撤销可恢复原鼓点')}

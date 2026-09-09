@@ -1,7 +1,7 @@
 export const DRUM_IDS = ['kick', 'snare', 'closedHat', 'openHat'] as const
 
 export type DrumId = (typeof DRUM_IDS)[number]
-export type Difficulty = 'simple' | 'hard'
+export type Difficulty = 'simple' | 'medium' | 'hard'
 export const METERS = ['2/4', '3/4', '4/4', '5/4', '6/8', '7/8', '9/8', '12/8'] as const
 export type Meter = (typeof METERS)[number]
 

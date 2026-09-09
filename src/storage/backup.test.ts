@@ -17,11 +17,12 @@ function storage(initial: Record<string, string> = {}) {
 }
 
 const pattern = BOOM_BAP_PATTERNS[1]
+const mediumPattern = BOOM_BAP_PATTERNS.find(item => item.name === 'Foundation Backbeat' && item.difficulty === 'medium')!
 const settings = defaultSettings()
 afterEach(() => vi.unstubAllGlobals())
-function combination(id = 'mix-1', name = 'Pocket'): VersionedCombination {
-  const snapshot = makeSnapshot(pattern, 96, [], settings)
-  return { id, name, sourceId: pattern.id, original: snapshot, currentId: 'revision-1', nextNumber: 2,
+function combination(id = 'mix-1', name = 'Pocket', source = pattern): VersionedCombination {
+  const snapshot = makeSnapshot(source, 96, [], settings)
+  return { id, name, sourceId: source.id, original: snapshot, currentId: 'revision-1', nextNumber: 2,
     versions: [{ id: 'revision-1', number: 1, name, createdAt: null, snapshot }] }
 }
 function backup(items = [combination()], practice = settings, favorites = ['boom-bap-foundation']): Backup {
@@ -31,7 +32,7 @@ function backup(items = [combination()], practice = settings, favorites = ['boom
 describe('JSON backups', () => {
   beforeEach(() => vi.stubGlobal('crypto', { randomUUID: () => `generated-${Math.random()}` }))
   it('round-trips full versions, favorites and practice settings', () => {
-    const value = backup([combination()], { ...settings, workspace: { pattern, source: pattern, muted: [], activeId: 'mix-1' } })
+    const value = backup([combination('mix-1', 'Pocket', mediumPattern)], { ...settings, difficulty: 'medium', workspace: { pattern: mediumPattern, source: mediumPattern, muted: [], activeId: 'mix-1' } })
     const parsed = parseBackup(JSON.stringify(value))
     expect(parsed).toEqual(value)
     expect(backupValues(parsed)[0]).toContain('schemaVersion')

@@ -6,7 +6,7 @@ export function validatePattern(value: unknown): asserts value is Pattern {
   if (pattern.schemaVersion !== 1) throw new Error('不支持的 Pattern schema 版本')
   if (typeof pattern.id !== 'string' || !pattern.id.trim() || typeof pattern.name !== 'string' || !pattern.name.trim()) throw new Error('Pattern 缺少 id 或 name')
   if (pattern.style !== 'boom-bap') throw new Error('Pattern 风格无效')
-  if (!['simple', 'hard'].includes(pattern.difficulty ?? '')) throw new Error('Pattern 难度无效')
+  if (!['simple', 'medium', 'hard'].includes(pattern.difficulty ?? '')) throw new Error('Pattern 难度无效')
   if (!Number.isInteger(pattern.bars) || pattern.bars! < 1 || pattern.bars! > 8) throw new Error('Pattern 小节数无效')
   if (!Number.isInteger(pattern.beatsPerBar)
     || (pattern.beatUnit !== undefined && pattern.beatUnit !== 4 && pattern.beatUnit !== 8)

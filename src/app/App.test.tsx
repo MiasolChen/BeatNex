@@ -58,12 +58,12 @@ describe('confirmed BeatNex initial interface', () => {
     expect(practice.includes('id="bn-add-phase"')).toBe(true)
   })
 
-  it('starts with three curated records and zero saved combinations or favorites', () => {
+  it('starts with eight curated records and zero saved combinations or favorites', () => {
     const library = page('library')
-    expect((library.match(/<article class="bn-record"/g) ?? []).length).toBe(3)
+    expect((library.match(/<article class="bn-record"/g) ?? []).length).toBe(8)
     expect(library.includes('<span id="bn-saved-count">0</span>')).toBe(true)
     const favorites = [...library.matchAll(/<button class="bn-favorite"[^>]*>/g)].map(([button]) => button.includes('aria-pressed="false"'))
-    expect(favorites).toEqual([true, true, true])
+    expect(favorites).toEqual(Array(8).fill(true))
     expect(library.includes('bn-saved-record')).toBe(false)
     expect(library.includes('内容待收录')).toBe(true)
   })

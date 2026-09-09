@@ -12,8 +12,8 @@ describe('practice catalog classification', () => {
     const dancePractices = practicesForCategory('hip-hop')
     const musicPractices = practicesForCategory('boom-bap')
 
-    expect(dancePractices).toHaveLength(3)
-    expect(musicPractices).toHaveLength(3)
+    expect(dancePractices).toHaveLength(8)
+    expect(musicPractices).toHaveLength(8)
     dancePractices.forEach((practice, index) => {
       expect(practice).toBe(PRACTICE_ENTRIES[index])
       expect(musicPractices[index]).toBe(practice)

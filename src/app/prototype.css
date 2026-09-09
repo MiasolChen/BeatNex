@@ -644,7 +644,7 @@
 #bn .bn-count.bn-and.is-current{background:var(--lilac);color:var(--ink)}
 @media(prefers-reduced-motion:reduce){#bn .bn-count{transition:none}}
 
-#bn .bn-library-head{position:sticky;top:0;z-index:4;background:var(--paper);padding:4px 0 10px}
+#bn .bn-library-head{position:sticky;top:0;z-index:4;background:var(--paper);padding:4px 0 2px}
 #bn .bn-source-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;padding:4px;background:#e7e9dd;border-radius:13px}
 #bn .bn-source-tabs button{min-height:44px;border-radius:10px;font-size:14px;font-weight:750;padding:8px 4px;transform:none}
 #bn .bn-source-tabs button[aria-selected=true]{background:var(--ink);color:var(--acid);box-shadow:0 2px 0 #0002}
@@ -654,11 +654,13 @@
 #bn .bn-mode-tabs button{min-height:36px;font-size:12px;border-radius:0;background:transparent!important;color:var(--muted)!important;box-shadow:none!important}
 #bn .bn-mode-tabs button[aria-selected=true]{color:var(--ink)!important;border-bottom:3px solid var(--lilac)}
 #bn .bn-mode-tabs i{display:none}
-#bn .bn-curated-tools{display:flex;align-items:center;justify-content:space-between;margin-top:10px;color:var(--muted);font-size:11px}
-#bn #bn-only-favorites{min-height:36px;border:1px solid var(--line);border-radius:18px;padding:0 10px;font-size:11px;background:var(--white);transform:none}
+#bn .bn-curated-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:4px;padding-top:6px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+#bn .bn-library-list-title{display:flex;align-items:center;gap:7px;margin:0;color:var(--ink);font-size:13px;font-weight:700}
+#bn .bn-library-list-title span{min-width:20px;padding:1px 5px;border-radius:6px;background:var(--line);color:var(--muted);font-size:10px;line-height:16px;text-align:center;font-variant-numeric:tabular-nums}
+#bn #bn-only-favorites{min-height:32px;border:0;border-radius:7px;padding:0 7px;font-size:12px;background:transparent;color:var(--muted);transform:none}
 #bn #bn-only-favorites[aria-pressed=true]{background:var(--lilac);color:var(--ink)}
 #bn .bn-library-head [hidden]{display:none!important}
-#bn #bn-library-content{padding-top:4px}
+#bn #bn-library-content{padding-top:0}
 #bn .bn-record-body h3{margin-top:0}
 #bn .bn-disc span{width:30px;height:30px;border-width:4px}
 #bn .bn-empty{padding:36px 20px;font-size:13px;line-height:1.7}

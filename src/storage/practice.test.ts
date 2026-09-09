@@ -72,10 +72,10 @@ describe('practice settings persistence', () => {
     expect(storage.setItem).not.toHaveBeenCalled()
   })
 
-  it('round-trips an edited route, no selected drums, and free practice', () => {
+  it('round-trips an edited route, no selected drums, and medium practice', () => {
     useStorage()
     const settings: PracticeSettings = {
-      ...defaultSettings(), targets: [], routeEnabled: false, bpm: 140, patternName: 'Pocket Swing', difficulty: 'hard',
+      ...defaultSettings(), targets: [], routeEnabled: false, bpm: 140, patternName: 'Pocket Swing', difficulty: 'medium',
       phases: [{ id: 'solo', instanceId: 'custom-solo', bars: 32 }, { id: 'full', instanceId: 'custom-full', bars: 1 }],
     }
     expect(savePractice(settings)).toBe(true)
@@ -206,7 +206,7 @@ describe('practice settings persistence', () => {
   })
 
   it.each([
-    { patternName: 3 }, { patternName: 'Unknown fixture' }, { difficulty: 'medium' }, { bpm: 88.5 }, { bpm: 141 },
+    { patternName: 3 }, { patternName: 'Unknown fixture' }, { difficulty: 'expert' }, { bpm: 88.5 }, { bpm: 141 },
     { targets: ['kick', 'kick'] }, { targets: ['cymbal'] }, { routeEnabled: 'yes' }, { phases: [] },
     { callEnabled: 'yes' }, { callBars: 0 }, { callBars: 5 }, { callBars: 1.5 },
     { phases: [null] }, { phases: [{ id: 'solo', instanceId: ' ', bars: 4 }] },

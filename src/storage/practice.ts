@@ -19,7 +19,7 @@ export type PracticeSettings = {
   callBars?: number
   bpm: number
   patternName: string
-  difficulty: 'simple' | 'hard'
+  difficulty: 'simple' | 'medium' | 'hard'
 }
 export const PHASE_LABELS = ['完整聆听', '单独听辨', '弱化目标', '正常合奏', '自主保持', '完整检查']
 export const PHASE_CODES = ['FULL', 'SOLO', 'FOCUS', 'NORMAL', 'MUTE', 'CHECK']
@@ -59,7 +59,7 @@ function validCommon(value: Record<string, unknown>) {
   return validPhases(value.phases)
     && typeof value.bpm === 'number' && Number.isInteger(value.bpm) && value.bpm >= 60 && value.bpm <= 140
     && typeof value.patternName === 'string' && PATTERN_NAMES.includes(value.patternName)
-    && (value.difficulty === 'simple' || value.difficulty === 'hard')
+    && (value.difficulty === 'simple' || value.difficulty === 'medium' || value.difficulty === 'hard')
 }
 
 function validWorkspace(value: unknown): boolean {
