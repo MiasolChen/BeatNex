@@ -10,7 +10,7 @@ export type TrackMix = {
 }
 
 export type TrainingMix = {
-  mode: 'full' | 'solo' | 'focus' | 'weaken' | 'mute-target'
+  mode: 'full' | 'solo' | 'focus' | 'weaken' | 'mute-target' | 'silence'
   target?: DrumId
   targets?: DrumId[]
 }

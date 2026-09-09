@@ -2,14 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { BOOM_BAP_PATTERNS } from '../../core/pattern/fixtures'
 import { DRUM_IDS, type DrumId, type Pattern } from '../../core/pattern/types'
+import { callPhrase, callProgram } from '../../core/training/callResponse'
 import type { DrumKit } from '../types'
 import { WebAudioEngine } from './WebAudioEngine'
 
 class FakeAudioParam {
   value = 1
   targets: Array<{ value: number; time: number; constant: number }> = []
+  values: Array<{ value: number; time: number }> = []
   heldAt: number[] = []
   cancelledAt: number[] = []
+  setValueAtTime(value: number, time: number) { this.value = value; this.values.push({ value, time }) }
   cancelAndHoldAtTime(time: number) { this.heldAt.push(time) }
   cancelScheduledValues(time: number) { this.cancelledAt.push(time) }
   setTargetAtTime(value: number, time: number, constant: number) {
@@ -25,7 +28,7 @@ class FakeGain {
   disconnect() {}
 }
 
-type StartRecord = { drum?: DrumId; scheduledAt: number; time: number }
+type StartRecord = { drum?: DrumId; scheduledAt: number; time: number; viaMaster: boolean }
 type StopRecord = { drum?: DrumId; time?: number }
 
 class FakeSource {
@@ -40,6 +43,7 @@ class FakeSource {
       drum: this.target?.target?.drum,
       scheduledAt: this.context.currentTime,
       time,
+      viaMaster: this.target?.target?.drum === undefined,
     })
   }
   stop(time?: number) {
@@ -814,6 +818,136 @@ describe('WebAudioEngine scheduling and mixing', () => {
     const snapshot = engine.getSnapshot()
     expect(snapshot.status).toBe('playing')
     expect(Object.values(snapshot.drums ?? {}).every(drums => drums.level === 'silent' && !drums.hit && drums.gain === 0)).toBe(true)
+    engine.dispose()
+  })
+
+  it('routes count-in clicks through the master even when the selected target excludes hats', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setTrainingMix({ mode: 'solo', targets: ['kick'] })
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: true })
+
+    const musicStart = 0.08 + 2
+    const countIn = context.starts.filter(start => start.time < musicStart)
+    expect(countIn.length).toBeGreaterThan(0)
+    expect(countIn.every(start => start.viaMaster)).toBe(true)
+    expect(context.trackGains.get('closedHat')?.gain.targets.at(-1)?.value).toBe(0)
+    engine.dispose()
+  })
+
+  it('keeps a response phase fully silent', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setProgram([
+      { bars: 1, mix: { mode: 'solo', targets: ['kick'] } },
+      { bars: 1, mix: { mode: 'silence' } as never },
+    ])
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
+
+    context.currentTime = 2.08
+    tick()
+    expect([...context.trackGains.values()].every(gain =>
+      gain.gain.targets.some(target => target.time === 2.08 && target.value === 0)
+      || gain.gain.values.some(target => target.time === 2.08 && target.value === 0),
+    )).toBe(true)
+    engine.dispose()
+  })
+
+  it('preserves a paused count-in position when BPM changes before resume', async () => {
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: true })
+    context.currentTime = 0.83
+    engine.pause()
+    const paused = engine.getPosition()
+    expect(paused).toMatchObject({ status: 'paused', isCountIn: true, elapsed: 0 })
+
+    engine.update({ pattern: BOOM_BAP_PATTERNS[0], bpm: 60 })
+    context.currentTime = 50
+    await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 60, countIn: true })
+    expect(engine.getPosition()).toMatchObject({ status: 'playing', isCountIn: true, step: paused.step })
+    expect(context.starts.filter(start => start.scheduledAt >= 50 && start.time < 52.08)).toHaveLength(0)
+    engine.dispose()
+  })
+
+  it.each([1, 2, 3, 4])('schedules identical Call and Check snippets for %i bars from a 3-bar source', async bars => {
+    const source: Pattern = {
+      ...BOOM_BAP_PATTERNS[0],
+      bars: 3,
+      tracks: [
+        { drum: 'kick', hits: [0, 7, 16, 31, 32, 47].map(step => ({ step, velocity: 100 })) },
+        { drum: 'snare', hits: [] },
+        { drum: 'closedHat', hits: [] },
+        { drum: 'openHat', hits: [] },
+      ],
+    }
+    const pattern = callPhrase(source, bars)
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    engine.setProgram(callProgram(bars, ['kick']))
+    await engine.start({ pattern, bpm: 120, countIn: false })
+
+    const barSeconds = 2
+    const callStart = 0.08
+    const checkStart = callStart + bars * barSeconds * 2
+    for (let time = 0.1; time < checkStart + bars * barSeconds + 0.2; time += 0.025) {
+      context.currentTime = time
+      tick()
+    }
+    const offsets = (start: number) => context.starts
+      .filter(hit => hit.drum === 'kick' && hit.time >= start - 1e-9 && hit.time < start + bars * barSeconds - 1e-9)
+      .map(hit => Number((hit.time - start).toFixed(6)))
+    expect(offsets(checkStart)).toEqual(offsets(callStart))
+    engine.dispose()
+  })
+
+  it('uses the source origin after a true-bar BPM change', async () => {
+    const source: Pattern = {
+      ...BOOM_BAP_PATTERNS[0],
+      bars: 3,
+      tracks: [
+        { drum: 'kick', hits: [{ step: 0, velocity: 100 }, { step: 16, velocity: 100 }, { step: 32, velocity: 100 }] },
+        { drum: 'snare', hits: [] }, { drum: 'closedHat', hits: [] }, { drum: 'openHat', hits: [] },
+      ],
+    }
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern: source, bpm: 100, countIn: false })
+    engine.update({ pattern: source, bpm: 120 })
+    context.currentTime = 2.41
+    tick()
+    expect(context.starts.some(start => start.drum === 'kick' && Math.abs(start.time - 2.48) < 1e-9)).toBe(true)
+    context.currentTime = 2.49
+    expect(engine.getPosition()).toMatchObject({ cycle: 1, step: 0 })
+    engine.dispose()
+  })
+
+  it('clicks six times at eighth-meter beat intervals during a 6/8 count-in', async () => {
+    const pattern: Pattern = { ...BOOM_BAP_PATTERNS[0], beatsPerBar: 6, beatUnit: 8 }
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern, bpm: 120, countIn: true })
+    for (let time = 0.1; time <= 1.5; time += 0.05) {
+      context.currentTime = time
+      tick()
+    }
+    const clicks = context.starts.filter(start => start.viaMaster)
+    expect(clicks).toHaveLength(6)
+    expect(clicks.slice(1).map((click, index) => click.time - clicks[index].time).every(interval => Math.abs(interval - 0.25) < 1e-9)).toBe(true)
+    engine.dispose()
+  })
+
+  it('preserves 6/8 count-in progress while paused through a BPM update', async () => {
+    const pattern: Pattern = { ...BOOM_BAP_PATTERNS[0], beatsPerBar: 6, beatUnit: 8 }
+    const engine = new WebAudioEngine()
+    await engine.prepare(kit)
+    await engine.start({ pattern, bpm: 120, countIn: true })
+    context.currentTime = 0.83
+    engine.pause()
+    const paused = engine.getPosition()
+    engine.update({ pattern, bpm: 60 })
+    expect(engine.getPosition()).toMatchObject({ status: 'paused', isCountIn: true, step: paused.step, elapsed: 0 })
+    expect(engine.getPosition().progress).toBeCloseTo(paused.progress)
     engine.dispose()
   })
 })

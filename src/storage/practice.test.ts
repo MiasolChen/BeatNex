@@ -71,6 +71,23 @@ describe('practice settings persistence', () => {
     expect(readPractice()).toEqual(settings)
   })
 
+  it.each([1, 2, 3, 4])('round-trips call practice with %s bars', (callBars) => {
+    useStorage()
+    const settings = { ...defaultSettings(), callEnabled: true, callBars }
+    expect(savePractice(settings)).toBe(true)
+    expect(readPractice()).toEqual(settings)
+  })
+
+  it('keeps older route settings unchanged when call fields are absent', () => {
+    const settings = { ...defaultSettings(), routeEnabled: false, workspace: {
+      pattern: BOOM_BAP_PATTERNS[0], source: BOOM_BAP_PATTERNS[0], muted: ['snare'] as const, activeId: 'draft-1',
+    }}
+    useStorage({ [PRACTICE_KEY]: JSON.stringify(settings) })
+    expect(readPractice()).toEqual(settings)
+    expect(readPractice()).not.toHaveProperty('callEnabled')
+    expect(readPractice()).not.toHaveProperty('callBars')
+  })
+
   it('defaults free drum volumes to 100 and round-trips edited volumes', () => {
     useStorage()
     expect(defaultSettings().freeVolumes).toBeUndefined()
@@ -169,6 +186,7 @@ describe('practice settings persistence', () => {
   it.each([
     { patternName: 3 }, { patternName: 'Unknown fixture' }, { difficulty: 'medium' }, { bpm: 88.5 }, { bpm: 141 },
     { targets: ['kick', 'kick'] }, { targets: ['cymbal'] }, { routeEnabled: 'yes' }, { phases: [] },
+    { callEnabled: 'yes' }, { callBars: 0 }, { callBars: 5 }, { callBars: 1.5 },
     { phases: [null] }, { phases: [{ id: 'solo', instanceId: ' ', bars: 4 }] },
     { phases: [{ id: 'solo', instanceId: 'a', bars: 0 }] }, { phases: [{ id: 'solo', instanceId: 'a', bars: 33 }] },
     { phases: [{ id: 'solo', instanceId: 'same', bars: 4 }, { id: 'full', instanceId: 'same', bars: 4 }] },

@@ -232,7 +232,8 @@ export class WebAudioEngine implements AudioEngine {
         this.pausedMusicOffset *= this.request.bpm / request.bpm
         this.elapsedOffset += Math.max(0, previousOffset) - Math.max(0, this.pausedMusicOffset)
       }
-      this.request = { ...request, countIn: false }
+      this.request = { ...request, countIn: this.request.countIn }
+      if (this.request.countIn) this.countInStartedAt = this.musicStartedAt - patternDuration(request.pattern, request.bpm) / request.pattern.bars
       this.updateEndingTime()
       this.emit()
       return
@@ -310,7 +311,8 @@ export class WebAudioEngine implements AudioEngine {
     const gains = resolveDrumGains(this.mixes, training)
     const drums = Object.fromEntries(DRUM_IDS.map(drum => {
       const gain = playing ? gains[drum] : 0
-      const hit = gain > 0 && !!request?.pattern.tracks.find(track => track.drum === drum)?.hits.some(hit => hit.step === position.step && hit.velocity > 0)
+      const patternStep = request ? (position.cycle % request.pattern.bars) * stepsPerBar(request.pattern) + position.step % stepsPerBar(request.pattern) : 0
+      const hit = gain > 0 && !!request?.pattern.tracks.find(track => track.drum === drum)?.hits.some(hit => hit.step === patternStep && hit.velocity > 0)
       return [drum, { gain, level: gain === 0 ? 'silent' : gain < (this.mixes.get(drum)?.volume ?? 1) ? 'weak' : 'normal', hit }]
     })) as NonNullable<EngineSnapshot['drums']>
     return { ...position, drums, error: this.error, diagnostics: { ...this.diagnostics } }
@@ -370,10 +372,9 @@ export class WebAudioEngine implements AudioEngine {
       }
 
       if (this.nextAbsoluteStep < 0) {
-        if (this.nextAbsoluteStep % request.pattern.subdivision === 0) this.play('closedHat', 72, time)
+        if (this.nextAbsoluteStep % (request.pattern.subdivision * 4 / (request.pattern.beatUnit ?? 4)) === 0) this.play('closedHat', 72, time, true)
       } else {
-        const step = this.nextAbsoluteStep % patternSteps
-        const isBarBoundary = step === 0 && this.nextAbsoluteStep > 0
+        const isBarBoundary = this.nextAbsoluteStep % stepsPerBar(request.pattern) === 0 && this.nextAbsoluteStep > 0
         if (isBarBoundary && this.pendingRequest) {
           const boundaryTime = time
           if (boundaryTime > context.currentTime) {
@@ -400,7 +401,7 @@ export class WebAudioEngine implements AudioEngine {
           this.hasPendingTrainingMix = false
           this.applyMix(time)
         }
-        this.schedulePatternStep(request.pattern, this.nextAbsoluteStep % patternSteps, time)
+        this.schedulePatternStep(request.pattern, (this.cycleOffset * stepsPerBar(request.pattern) + this.nextAbsoluteStep) % patternSteps, time)
       }
       this.nextAbsoluteStep += 1
     }
@@ -413,7 +414,7 @@ export class WebAudioEngine implements AudioEngine {
     }
   }
 
-  private play(drum: DrumId, velocity: number, time: number) {
+  private play(drum: DrumId, velocity: number, time: number, countIn = false) {
     const context = this.context
     const buffer = this.buffers.get(drum)
     const trackGain = this.gains.get(drum)
@@ -429,7 +430,7 @@ export class WebAudioEngine implements AudioEngine {
     const velocityGain = context.createGain()
     velocityGain.gain.value = velocity / 100
     source.buffer = buffer
-    source.connect(velocityGain).connect(trackGain)
+    source.connect(velocityGain).connect(countIn ? this.master! : trackGain)
     source.onended = () => {
       this.activeSources.delete(source)
       this.openHatSources.delete(source)
@@ -449,7 +450,8 @@ export class WebAudioEngine implements AudioEngine {
     source.start(time)
     // Queue the cutoff in Web Audio itself so a throttled UI timer cannot leave
     // the final sample ringing beyond the route's exact musical boundary.
-    if (this.endingAt !== undefined) source.stop(this.endingAt)
+    if (countIn) source.stop(this.musicStartedAt)
+    else if (this.endingAt !== undefined) source.stop(this.endingAt)
   }
 
   private phaseAtCycle(cycle: number) {
@@ -482,7 +484,8 @@ export class WebAudioEngine implements AudioEngine {
       if (!gain) continue
       if (typeof gain.cancelAndHoldAtTime === 'function') gain.cancelAndHoldAtTime(atTime)
       else gain.cancelScheduledValues(atTime)
-      gain.setTargetAtTime(target, atTime, 0.012)
+      if (trainingMix?.mode === 'silence' || this.program?.some(phase => phase.mix.mode === 'silence')) gain.setValueAtTime(target, atTime)
+      else gain.setTargetAtTime(target, atTime, 0.012)
     }
     // A live target/arrangement change cancels gain automation from now onward.
     // Restore an imminent program boundary that the scheduler may already have

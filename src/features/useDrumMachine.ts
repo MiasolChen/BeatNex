@@ -8,7 +8,7 @@ const defaultMixes = () => Object.fromEntries(DRUM_IDS.map(drum => [drum, {
   muted: false, solo: false, focused: false, volume: 0.82,
 }])) as Record<DrumId, TrackMix>
 
-export function useDrumMachine(pattern: Pattern, bpm: number, program?: TrainingProgram, repeat = false) {
+export function useDrumMachine(pattern: Pattern, bpm: number, program?: TrainingProgram, repeat = false, countIn = false) {
   const [engine] = useState(() => new WebAudioEngine())
   const [snapshot, setSnapshot] = useState<EngineSnapshot>(() => engine.getSnapshot())
   const [mixes, setMixes] = useState(defaultMixes)
@@ -17,6 +17,8 @@ export function useDrumMachine(pattern: Pattern, bpm: number, program?: Training
   const generation = useRef(0)
   const mounted = useRef(false)
   const request = useRef({ pattern, bpm })
+  const countInRef = useRef(countIn)
+  countInRef.current = countIn
 
   useEffect(() => {
     mounted.current = true
@@ -57,7 +59,8 @@ export function useDrumMachine(pattern: Pattern, bpm: number, program?: Training
   }, [engine, pattern, bpm])
   useEffect(() => { engine.setProgram(program, repeat) }, [engine, program, repeat])
 
-  const play = useCallback(async () => {
+  const play = useCallback(async (next?: { pattern: Pattern; bpm: number }) => {
+    if (next) request.current = next
     const token = ++generation.current
     // Invalidate an older resume before awaiting shared preparation; otherwise
     // it could resolve in this microtask gap and start the superseded request.
@@ -67,7 +70,7 @@ export function useDrumMachine(pattern: Pattern, bpm: number, program?: Training
       // Every request shares preparation work while the newest request wins.
       await engine.prepare(PROTOTYPE_KIT)
       if (token !== generation.current || !mounted.current || document.hidden) return
-      await engine.start({ ...request.current, countIn: false })
+      await engine.start({ ...request.current, countIn: countInRef.current })
       // The engine also invalidates resume on stop/pause. An older completion
       // must never pause a newer successfully started request.
     } catch {

@@ -14,6 +14,8 @@ export type PracticeSettings = {
   phases: RoutePhase[]
   repeat: 'once' | 'infinite'
   routeEnabled: boolean
+  callEnabled?: boolean
+  callBars?: number
   bpm: number
   patternName: string
   difficulty: 'simple' | 'hard'
@@ -76,6 +78,8 @@ function validWorkspace(value: unknown): boolean {
 function isPracticeSettings(value: unknown): value is PracticeSettings {
   return isRecord(value) && value.version === 2 && validCommon(value) && validWorkspace(value.workspace)
     && (value.repeat === undefined || value.repeat === 'once' || value.repeat === 'infinite')
+    && (value.callEnabled === undefined || typeof value.callEnabled === 'boolean')
+    && (value.callBars === undefined || (typeof value.callBars === 'number' && Number.isInteger(value.callBars) && value.callBars >= 1 && value.callBars <= 4))
     && typeof value.routeEnabled === 'boolean' && Array.isArray(value.targets)
     && value.targets.every((drum) => DRUM_IDS.includes(drum as DrumId))
     && new Set(value.targets).size === value.targets.length

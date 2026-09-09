@@ -10,7 +10,7 @@ export function resolveDrumGains(mixes: ReadonlyMap<DrumId, TrackMix>, training?
     const mix = mixes.get(drum)
     if (!mix) return [drum, 0]
     const target = training?.targets?.includes(drum) ?? drum === training?.target
-    const audible = !mix.muted && (!solo || mix.solo)
+    const audible = training?.mode !== 'silence' && !mix.muted && (!solo || mix.solo)
       && (training?.mode !== 'solo' || target) && (training?.mode !== 'mute-target' || !target)
     const reduced = training
       ? (training.mode === 'focus' && !target) || (training.mode === 'weaken' && target)
