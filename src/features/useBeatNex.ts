@@ -7,15 +7,16 @@ import {createBackup,mergeBackup,backupValues,type Backup} from '../storage/back
 import {recoverImport,commitImport,assertNoImport} from '../storage/transaction'
 import {PRACTICE_KEY,isPracticeSettings} from '../storage/practice'
 import {readFavorites,writeFavorites} from '../storage/favorites'
-import {readPractice,savePractice,PHASE_LABELS,phaseIds,type PracticeSettings} from '../storage/practice'
-import type {TrainingProgram,TrainingMix} from '../audio/types'
+import {readPractice,savePractice,PHASE_LABELS,phaseIds,type PracticeSettings,normalizePracticeMode} from '../storage/practice'
+import type {TrainingProgram} from '../audio/types'
 import {useDrumMachine} from './useDrumMachine'
 import {useLibraryPreview} from './useLibraryPreview'
-import {callPhrase,callProgram,callStage} from '../core/training/callResponse'
+import {phaseProgram} from '../core/training/phaseProgram'
+import {usePhasePreview} from './usePhasePreview'
 export type Page='practice'|'library'|'machine'|'metronome'|'calendar'
 export function useBeatNex(){
  const [startupError]=useState(()=>typeof window==='undefined'?null:recoverImport())
- const [settings,setSettings]=useState(()=>{const saved=readPractice();return {...saved,freeTargets:saved.freeTargets??[...saved.targets]}})
+ const [settings,setSettings]=useState(()=>{return normalizePracticeMode(readPractice())})
  const [pattern,setPattern]=useState(()=>settings.workspace?.pattern??findPattern(settings.patternName,settings.difficulty))
  const meterDrafts=useRef<Partial<Record<Meter,Pattern>>>({})
  const [source,setSource]=useState<Pattern>(()=>settings.workspace?.source??pattern)
@@ -33,40 +34,35 @@ export function useBeatNex(){
  const [landscape,setLandscape]=useState(false),[follow,setFollow]=useState(false)
  const notifyTimer=useRef<ReturnType<typeof setTimeout>>()
  const notice=(text:string)=>{setToast(text);clearTimeout(notifyTimer.current);notifyTimer.current=setTimeout(()=>setToast(''),2800)}
- const isCall=!!settings.callEnabled
- const callBars=settings.callBars??1
- const mode=isCall?'call':settings.routeEnabled?'route':'free'
- const [callCompleted,setCallCompleted]=useState(false)
- const currentCompleted=isCall?callCompleted:completed
- const totalBars=isCall?callBars*3:settings.phases.reduce((n,p)=>n+p.bars,0)
- const program=useMemo<TrainingProgram|undefined>(()=>page==='practice'?settings.phases.map(p=>({bars:p.bars,mix:{mode:({full:'full',solo:'solo',focus:'weaken',normal:'full',muteTarget:'mute-target',check:'full'} as Record<string,TrainingMix['mode']>)[p.id],targets:settings.targets}})):undefined,[page,settings.phases,settings.targets])
+ const mode=settings.routeEnabled?'route':'free'
+ const currentCompleted=completed
+ const totalBars=settings.phases.reduce((n,p)=>n+p.bars,0)
+ const program=useMemo<TrainingProgram|undefined>(()=>page==='practice'?phaseProgram(settings.phases,settings.targets):undefined,[page,settings.phases,settings.targets])
  // Independent transports retain exact pause positions while only the active mode plays.
  const routeAudio=useDrumMachine(pattern,settings.bpm,program,settings.repeat==='infinite')
  const freeAudio=useDrumMachine(pattern,settings.bpm)
- const phrase=useMemo(()=>callPhrase(pattern,callBars),[pattern,callBars])
- const responseProgram=useMemo(()=>callProgram(callBars,settings.targets),[callBars,settings.targets])
- const callAudio=useDrumMachine(phrase,settings.bpm,responseProgram,false,true)
- const preview=useLibraryPreview(page==='library',()=>{routeAudio.pause();freeAudio.pause();callAudio.pause()})
- const audio=page==='practice'?(isCall?callAudio:settings.routeEnabled?routeAudio:freeAudio):routeAudio
- const selectedDrums=(isCall||settings.routeEnabled)?settings.targets:(settings.freeTargets??settings.targets)
+ const phasePreview=usePhasePreview(page==='practice'&&settings.routeEnabled,pattern,settings.bpm,settings.phases,settings.targets,()=>{routeAudio.pause();freeAudio.pause()})
+ const preview=useLibraryPreview(page==='library',()=>{routeAudio.pause();freeAudio.pause();phasePreview.stop()})
+ const audio=page==='practice'?(settings.routeEnabled?routeAudio:freeAudio):routeAudio
+ const selectedDrums=settings.routeEnabled?settings.targets:(settings.freeTargets??settings.targets)
  const {snapshot}=audio
  const playing=snapshot.status==='playing',loading=audio.loading||snapshot.status==='loading'
- const round=!isCall&&settings.repeat==='infinite'?Math.floor(snapshot.cycle/totalBars)+1:1
- const cycle=currentCompleted?totalBars:!isCall&&settings.repeat==='infinite'?snapshot.cycle%totalBars:snapshot.cycle
+ const round=settings.repeat==='infinite'?Math.floor(snapshot.cycle/totalBars)+1:1
+ const cycle=currentCompleted?totalBars:settings.repeat==='infinite'?snapshot.cycle%totalBars:snapshot.cycle
  let boundary=0;const found=settings.phases.findIndex(p=>{boundary+=p.bars;return cycle<boundary});const activeIndex=found<0?settings.phases.length-1:found
- useEffect(()=>{if(page==='practice'&&(isCall||settings.routeEnabled)&&program&&(isCall||settings.repeat==='once')&&snapshot.cycle>=totalBars&&!currentCompleted){audio.stop();if(isCall)setCallCompleted(true);else setCompleted(true);setFeedback('')}},[page,isCall,settings.routeEnabled,program,settings.repeat,snapshot.cycle,totalBars,currentCompleted,audio.stop])
+ useEffect(()=>{if(page==='practice'&&settings.routeEnabled&&program&&(settings.repeat==='once')&&snapshot.cycle>=totalBars&&!currentCompleted){audio.stop();setCompleted(true);setFeedback('')}},[page,settings.routeEnabled,program,settings.repeat,snapshot.cycle,totalBars,currentCompleted,audio.stop])
  useEffect(()=>{DRUM_IDS.forEach(d=>{routeAudio.updateMix(d,{muted:page==='practice'?false:muted.includes(d)});freeAudio.updateMix(d,{muted:!(settings.freeTargets??settings.targets).includes(d),volume:0.82*(settings.freeVolumes?.[d]??100)/100})})},[muted,settings.targets,settings.freeTargets,settings.freeVolumes,page,routeAudio.updateMix,freeAudio.updateMix])
  const warned=useRef(false)
  useEffect(()=>{if(!savePractice({...settings,workspace:{pattern,source,muted,activeId}})&&!warned.current){warned.current=true;notice('设置和鼓机修改仅在本次保留：无法写入本机存储')}},[settings,pattern,source,muted,activeId])
  useEffect(()=>{const error=startupError||combinations.error||favorites.error;if(error)notice(error);return()=>clearTimeout(notifyTimer.current)},[])
  const patch=(values:Partial<PracticeSettings>)=>setSettings(s=>({...s,...values}))
- const reset=()=>{audio.stop();if(isCall)setCallCompleted(false);else setCompleted(false);setFeedback('')}
- const resetAll=()=>{routeAudio.stop();freeAudio.stop();callAudio.stop();preview.stop();setCallCompleted(false);setCompleted(false);setFeedback('')}
+ const reset=()=>{phasePreview.stop();audio.stop();setCompleted(false);setFeedback('')}
+ const resetAll=()=>{routeAudio.stop();freeAudio.stop();phasePreview.stop();preview.stop();setCompleted(false);setFeedback('')}
  const switchPage=(next:Page)=>{if(next===page)return;resetAll();setPage(next);if(next!=='machine')setLandscape(false)}
  const changeBpm=(bpm:number)=>patch({bpm})
- const togglePlayback=()=>{if(playing)audio.pause();else{if(currentCompleted)reset();void audio.play()}}
- const changeFreeVolume=(drum:DrumId,percent:number)=>{if(isCall||settings.routeEnabled||!Number.isFinite(percent))return;setSettings(s=>({...s,freeVolumes:{...s.freeVolumes,[drum]:Math.max(0,Math.min(100,Math.round(percent)))}}))}
- const selectDrum=(drum:DrumId,remove:boolean)=>{if((isCall||settings.routeEnabled)&&(playing||loading))return;const next=remove?selectedDrums.filter(d=>d!==drum):Array.from(new Set([...selectedDrums,drum]));if(isCall||settings.routeEnabled){callAudio.stop();setCallCompleted(false)}patch((isCall||settings.routeEnabled)?{targets:next}:{freeTargets:next})}
+ const togglePlayback=()=>{phasePreview.stop();if(playing)audio.pause();else{if(currentCompleted)reset();void audio.play()}}
+ const changeFreeVolume=(drum:DrumId,percent:number)=>{if(settings.routeEnabled||!Number.isFinite(percent))return;setSettings(s=>({...s,freeVolumes:{...s.freeVolumes,[drum]:Math.max(0,Math.min(100,Math.round(percent)))}}))}
+ const selectDrum=(drum:DrumId,remove:boolean)=>{if(settings.routeEnabled&&(playing||loading))return;const next=remove?selectedDrums.filter(d=>d!==drum):Array.from(new Set([...selectedDrums,drum]));patch(settings.routeEnabled?{targets:next}:{freeTargets:next})}
  const choosePattern=(id:string)=>{const next=BOOM_BAP_PATTERNS.find(p=>p.id===id);if(!next)return;resetAll();meterDrafts.current={};setPattern(next);setSource(next);setActiveId(undefined);setMuted([]);setHistory([]);setFuture([]);patch({bpm:next.recommendedBpm,patternName:next.name,difficulty:next.difficulty});setPage('practice')}
  const changePattern=(next:Pattern)=>{setHistory(h=>[...h.slice(-49),pattern]);setFuture([]);setPattern(next)}
  const toggleStep=(drum:DrumId,step:number)=>changePattern(togglePatternStep(pattern,drum,step))
@@ -93,7 +89,7 @@ export function useBeatNex(){
  }
  const applySnapshot=(value:Snapshot,id:string)=>{
   resetAll();meterDrafts.current={};setPattern(value.pattern);setSource(value.pattern);setActiveId(id);setMuted(value.muted)
-  setSettings({...value.training,freeTargets:value.training.freeTargets??[...value.training.targets]})
+  setSettings(normalizePracticeMode(value.training))
  }
  const load=(id:string,destination:Page)=>{const item=library.value.find(x=>x.id===id&&!x.deletedAt);if(!item)return
   const value=item.versions.find(v=>v.id===item.currentId)!.snapshot
@@ -105,7 +101,7 @@ export function useBeatNex(){
   if(!value)return
   const previous=pattern,next=structuredClone(value.pattern)
   restoreStates.current.set(previous,{settings,source,muted,activeId})
-  restoreStates.current.set(next,{settings:{...value.training,freeTargets:value.training.freeTargets??[...value.training.targets]},source:next,muted:value.muted,activeId:id})
+  restoreStates.current.set(next,{settings:normalizePracticeMode(value.training),source:next,muted:value.muted,activeId:id})
   changePattern(next);applySnapshot({...value,pattern:next},id);setPage('machine');notice('已恢复到草稿，保存后生成新版本；可撤销')
  }
  const manageVersion=(id:string,action:VersionAction,revisionId?:string,name?:string)=>{
@@ -135,7 +131,7 @@ export function useBeatNex(){
    resetAll();setLibrary({value:merged.combinations,error:null});setFavorites({value:merged.favorites,error:null})
    if(restorePractice){
     const next=merged.practice,w=next.workspace,p=w?.pattern??findPattern(next.patternName,next.difficulty)
-    setSettings({...next,freeTargets:next.freeTargets??[...next.targets]});setPattern(p);setSource(w?.source??p);setMuted(w?.muted??[]);setActiveId(w?.activeId);setHistory([]);setFuture([]);meterDrafts.current={}
+    setSettings(normalizePracticeMode(next));setPattern(p);setSource(w?.source??p);setMuted(w?.muted??[]);setActiveId(w?.activeId);setHistory([]);setFuture([]);meterDrafts.current={}
    }
    notice('备份已导入');return true
   }catch(error){notice(error instanceof Error?error.message:'导入失败');return false}
@@ -147,13 +143,11 @@ export function useBeatNex(){
  const addPhase=(index:number)=>{if(settings.phases.length>=16){notice('这份路线最多 16 个阶段');return}changeRoute([...settings.phases,{id:phaseIds[index],instanceId:crypto.randomUUID(),bars:4}])}
  const changeBars=(id:string,bars:number)=>changeRoute(settings.phases.map(p=>p.instanceId===id?{...p,bars}:p))
  const changeRepeat=(repeat:PracticeSettings['repeat'])=>{if(playing||loading||!settings.routeEnabled||repeat===settings.repeat)return;reset();patch({repeat})}
- const changeMode=(next:'free'|'route'|'call')=>{if(next===mode)return;audio.pause();patch({callEnabled:next==='call',routeEnabled:next!=='free',freeTargets:settings.freeTargets??[...settings.targets]});setFeedback('')}
+ const changeMode=(next:'free'|'route')=>{if(next===mode)return;phasePreview.stop();audio.pause();patch({routeEnabled:next==='route',freeTargets:settings.freeTargets??[...settings.targets]});setFeedback('')}
  const toggleRoute=()=>changeMode(mode==='route'?'free':'route')
- const changeCallBars=(bars:number)=>{if(playing||loading||!Number.isInteger(bars)||bars<1||bars>4)return;callAudio.stop();setCallCompleted(false);patch({callBars:bars})}
- const dismissComplete=(value:boolean)=>{if(isCall)setCallCompleted(value);else setCompleted(value)}
  const endFree=()=>{notice('本次自由练习 '+Math.floor(snapshot.elapsed/60).toString().padStart(2,'0')+':'+Math.floor(snapshot.elapsed%60).toString().padStart(2,'0'));reset()}
  const phases=settings.phases.map(p=>({...p,label:PHASE_LABELS[phaseIds.indexOf(p.id as never)]}))
  const submitFeedback=(value:string)=>{setFeedback(value);try{localStorage.setItem('beatnex:last-training-feedback',value)}catch{notice('反馈仅保留在本次练习')}}
- return {versionPanel,setVersionPanel,library:library.value,restoreVersion,manageVersion,exportBackup,importBackup,settings,mode,isCall,callBars,callStage:callStage(cycle,callBars,snapshot.isCountIn),changeMode,changeCallBars,preview,selectedDrums,pattern,source,page,muted,history,future,combinations:combinations.value,favorites:favorites.value,activeId,toast,completed:page==='practice'&&(isCall||settings.routeEnabled)&&currentCompleted,saveOpen,setSaveOpen,feedback,submitFeedback,landscape,setLandscape,follow,setFollow,notice,audio,snapshot,playing,loading,totalBars,cycle,round,changeRepeat,activeIndex,phases,switchPage,changeBpm,togglePlayback,changeFreeVolume,selectDrum,choosePattern,toggleStep,changeMeter,changePatternBars,changeSubdivision,undo,redo,restore,toggleMute,save,load,toggleFavorite,reorder,removePhase,addPhase,changeBars,toggleRoute,endFree,reset,setCompleted:dismissComplete}
+ return {versionPanel,setVersionPanel,library:library.value,restoreVersion,manageVersion,exportBackup,importBackup,settings,mode,changeMode,phasePreview,preview,selectedDrums,pattern,source,page,muted,history,future,combinations:combinations.value,favorites:favorites.value,activeId,toast,completed:page==='practice'&&settings.routeEnabled&&currentCompleted,saveOpen,setSaveOpen,feedback,submitFeedback,landscape,setLandscape,follow,setFollow,notice,audio,snapshot,playing,loading,totalBars,cycle,round,changeRepeat,activeIndex,phases,switchPage,changeBpm,togglePlayback,changeFreeVolume,selectDrum,choosePattern,toggleStep,changeMeter,changePatternBars,changeSubdivision,undo,redo,restore,toggleMute,save,load,toggleFavorite,reorder,removePhase,addPhase,changeBars,toggleRoute,endFree,reset,setCompleted}
 }
 export type BeatNex=ReturnType<typeof useBeatNex>

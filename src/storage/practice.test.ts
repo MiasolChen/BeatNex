@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { resizePatternBars, togglePatternStep, withMeter, withSubdivision } from '../core/pattern/editor'
 import { BOOM_BAP_PATTERNS } from '../core/pattern/fixtures'
 import { DEFAULT_TRAINING_CONFIG } from '../core/training/session'
-import { PRACTICE_KEY, defaultSettings, readPractice, savePractice, type PracticeSettings } from './practice'
+import { PRACTICE_KEY, defaultSettings, normalizePracticeMode, readPractice, savePractice, type PracticeSettings } from './practice'
 import { TRAINING_CONFIG_KEY } from './trainingConfig'
 
 function useStorage(initial: Record<string, string> = {}) {
@@ -18,6 +18,17 @@ function useStorage(initial: Record<string, string> = {}) {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('practice settings persistence', () => {
+  it('normalizes legacy call settings into a route without mutating the input', () => {
+    const settings = { ...defaultSettings(), routeEnabled: false, callEnabled: true, callBars: 3 }
+    settings.targets = ['snare']
+    const before = structuredClone(settings)
+    const normalized = normalizePracticeMode(settings)
+    expect(normalized).toMatchObject({ routeEnabled: true, targets: ['snare'], freeTargets: ['snare'] })
+    expect(normalized).not.toHaveProperty('callEnabled')
+    expect(normalized).not.toHaveProperty('callBars')
+    expect(settings).toEqual(before)
+  })
+
   it('keeps route targets and free playback drums independent across reloads', () => {
     useStorage()
     expect(savePractice({ ...defaultSettings(), targets: ['kick'], freeTargets: ['snare'] })).toBe(true)

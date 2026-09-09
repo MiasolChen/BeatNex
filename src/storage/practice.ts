@@ -139,3 +139,10 @@ export function savePractice(value: PracticeSettings): boolean {
     return true
   } catch { return false }
 }
+
+/** Apply legacy settings without reintroducing the retired call mode. */
+export function normalizePracticeMode(value: PracticeSettings) {
+  const { callEnabled, callBars: _callBars, ...settings } = value
+  return { ...settings, routeEnabled: callEnabled || settings.routeEnabled,
+    freeTargets: settings.freeTargets ?? [...settings.targets] }
+}

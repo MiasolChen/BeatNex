@@ -12,6 +12,9 @@ const PHASE_TYPES = [
 type Phase = { instanceId: string; id: string; label: string; bars: number }
 type Props = {
   phases: readonly Phase[]
+  onPreview?: (id: string) => void
+  previewKey?: string
+  previewPlaying?: boolean
   locked: boolean
   activeIndex: number
   onBarsChange: (id: string, bars: number) => void
@@ -328,6 +331,7 @@ export function PhaseChipEditor(props: Props) {
       {ordered.map((phase, index) => <div key={phase.instanceId} ref={(node) => { if (node) nodes.current.set(phase.instanceId, node); else nodes.current.delete(phase.instanceId) }} data-route-id={phase.instanceId} className={`bn-phase${phases.indexOf(phase) === activeIndex ? ' active' : ''}${phase.instanceId === selected ? ' selected' : ''}${phase.instanceId === drag?.id ? ' bn-placeholder' : ''}`}>
         <button className="bn-phase-face" disabled={locked} data-select-phase={phase.instanceId} aria-pressed={phase.instanceId === selected} aria-current={phases.indexOf(phase) === activeIndex ? 'step' : undefined} aria-label={`${phase.label}，第 ${index + 1} 位，长按拖动，方向键排序`} onPointerDown={(event) => begin(event, phase, index)} onContextMenu={(event) => event.preventDefault()} onClick={() => { if (performance.now() >= suppressClickUntil.current) setSelected(phase.instanceId) }} onKeyDown={(event) => keyboard(event, phase, index)}><strong>{phase.label}</strong></button>
         <label className="bn-inline-bars"><input type="text" inputMode="numeric" pattern="(3[0-2]|[12][0-9]|[1-9])" maxLength={2} required disabled={locked} aria-label={`${phase.label} 第 ${index + 1} 项小节数`} value={barsDrafts[phase.instanceId] ?? phase.bars} onFocus={(event) => event.currentTarget.select()} onChange={(event) => setBarsDrafts((drafts) => ({ ...drafts, [phase.instanceId]: event.target.value }))} onBlur={(event) => saveBars(phase, event.currentTarget)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); event.currentTarget.blur() } else if (event.key === 'Escape') { event.preventDefault(); event.currentTarget.value = String(phase.bars); event.currentTarget.blur() } }} /><span>小节</span></label>
+        {props.onPreview && <button type="button" className="bn-phase-preview" aria-label={`${props.previewKey === phase.instanceId && props.previewPlaying ? '停止试听' : '试听'}${phase.label}，第 ${index + 1} 项`} aria-pressed={props.previewKey === phase.instanceId && !!props.previewPlaying} disabled={!!drag} onClick={() => props.onPreview?.(phase.instanceId)}><Icon name={props.previewKey === phase.instanceId && props.previewPlaying ? 'pause' : 'play'}/></button>}
       </div>)}
       <button ref={addButton} id="bn-add-phase" className="bn-add-phase" disabled={locked || phases.length >= 16} aria-expanded={trayState === 'open'} aria-controls="bn-add-tray" onClick={() => { if (performance.now() >= suppressClickUntil.current) setTrayState('open') }}><span>＋</span>添加阶段</button>
     </div>

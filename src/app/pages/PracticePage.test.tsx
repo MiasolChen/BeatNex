@@ -16,14 +16,12 @@ const snapshot = (status: EngineSnapshot['status'], drums?: EngineSnapshot['drum
 })
 
 const appFor = (status: EngineSnapshot['status'], options: {
-  routeEnabled?: boolean, callEnabled?: boolean, callBars?: number, callStage?: { label: string, task: string },
+  routeEnabled?: boolean,
   drums?: EngineSnapshot['drums'], cycle?: number, isCountIn?: boolean, completed?: boolean,
 } = {}): BeatNex => {
   const settings = defaultSettings()
   settings.routeEnabled = options.routeEnabled ?? true
-  settings.callEnabled = options.callEnabled
-  settings.callBars = options.callBars
-  const mode = options.callEnabled ? 'call' : settings.routeEnabled ? 'route' : 'free'
+  const mode = settings.routeEnabled ? 'route' : 'free'
   return {
     settings,
     selectedDrums: settings.targets,
@@ -31,8 +29,7 @@ const appFor = (status: EngineSnapshot['status'], options: {
     source: BOOM_BAP_PATTERNS[0],
     page: 'practice', muted: [], history: [], future: [], combinations: [], favorites: [], library: [], versionPanel: null,
     toast: '', activeId: undefined, saveOpen: false, feedback: '', landscape: false, follow: false,
-    mode, isCall: mode === 'call', callBars: options.callBars ?? 1,
-    callStage: options.callStage ?? { label: '示范', task: '听目标鼓件，记住每次落点' },
+    mode,
     completed: options.completed ?? false, snapshot: snapshot(status, options.drums, options), playing: status === 'playing', loading: status === 'loading',
     totalBars: 24, cycle: 0, round: 1, activeIndex: 0,
     phases: settings.phases.map((phase, index) => ({ ...phase, label: ['完整聆听', '单独听辨', '弱化目标', '正常合奏', '自主保持', '完整检查'][index] })),
@@ -40,8 +37,9 @@ const appFor = (status: EngineSnapshot['status'], options: {
     notice() {}, switchPage() {}, changeBpm() {}, togglePlayback() {}, selectDrum() {}, choosePattern() {},
     toggleStep() {}, changeMeter() {}, changeSubdivision() {}, changePatternBars() {}, undo() {}, redo() {}, restore() {}, toggleMute() {}, save() { return true },
     load() {}, toggleFavorite() {}, reorder() {}, removePhase() {}, addPhase() {}, changeBars() {}, changeRepeat() {},
-    toggleRoute() {}, changeMode() {}, changeCallBars() {}, endFree() {}, reset() {}, setCompleted() {}, setSaveOpen() {}, submitFeedback() {}, setLandscape() {}, setFollow() {},
+    toggleRoute() {}, changeMode() {}, endFree() {}, reset() {}, setCompleted() {}, setSaveOpen() {}, submitFeedback() {}, setLandscape() {}, setFollow() {},
     setVersionPanel() {}, restoreVersion() {}, manageVersion() { return true }, exportBackup() { throw new Error('unused') }, importBackup() { return true },
+    phasePreview: { key: undefined, loading: false, snapshot: snapshot('idle'), toggle() {}, stop() {} },
     preview: { key: undefined, loading: false, snapshot: snapshot('idle'), toggle() {}, stop() {} },
     changeFreeVolume() {},
   } as BeatNex
@@ -87,35 +85,32 @@ describe('PracticePage route drum pad locking', () => {
   })
 })
 
-describe('PracticePage call-and-response SSR', () => {
-  it('renders the third practice mode and selected call length', () => {
-    const markup = renderToStaticMarkup(<PracticePage app={appFor('paused', { callEnabled: true, callBars: 3 })} />)
-    expect(markup).toContain('data-mode="call"')
-    expect(markup).toContain('听与回应')
-    expect(markup).toContain('目标鼓件')
-    expect(markup).toContain('回应长度（小节）')
-    const callLength = markup.match(/<div class="bn-call-length"[^>]*>(.*?)<\/div>/)?.[1] ?? ''
-    const controls = [...callLength.matchAll(/<button\b[^>]*>([^<]*)<\/button>/g)]
-    expect(controls.map(match => match[1])).toEqual(['1', '2', '3', '4'])
-    expect(controls.map(match => attribute(match[0], 'aria-label'))).toEqual(['回应 1 小节', '回应 2 小节', '回应 3 小节', '回应 4 小节'])
-    expect(controls[2][0]).toContain('aria-pressed="true"')
-    expect(markup).toContain('预备 → 示范 → 回应 → 检查')
+describe('PracticePage practice modes and phase previews SSR', () => {
+  it('renders only route and free practice modes', () => {
+    const route = renderToStaticMarkup(<PracticePage app={appFor('paused')} />)
+    const free = renderToStaticMarkup(<PracticePage app={appFor('paused', { routeEnabled: false })} />)
+    expect(modePanel(route)).toContain('data-mode="route"')
+    expect(modePanel(free)).toContain('data-mode="free"')
+    expect(route).not.toContain('data-mode="call"')
+    expect(route).not.toContain('听与回应')
+    expect(free).not.toContain('data-mode="call"')
   })
 
-  it.each(['loading', 'playing'] as const)('locks call length while %s', status => {
-    const markup = renderToStaticMarkup(<PracticePage app={appFor(status, { callEnabled: true, callBars: 2 })} />)
-    const controls = [...markup.matchAll(/<div class="bn-call-length"[^>]*>(.*?)<\/div>/g)].flatMap(match => [...match[1].matchAll(/<button\b[^>]*>/g)])
-    expect(controls).toHaveLength(4)
-    controls.forEach(button => expect(button[0]).toContain('disabled'))
+  it('renders one preview button for every route phase', () => {
+    const markup = renderToStaticMarkup(<PracticePage app={appFor('paused')} />)
+    const buttons = [...markup.matchAll(/<button\b[^>]*class="bn-phase-preview"[^>]*>/g)]
+    expect(buttons).toHaveLength(6)
+    expect(buttons.map(button => attribute(button[0], 'aria-label'))).toEqual([
+      '试听完整聆听，第 1 项', '试听单独听辨，第 2 项', '试听弱化目标，第 3 项',
+      '试听正常合奏，第 4 项', '试听自主保持，第 5 项', '试听完整检查，第 6 项',
+    ])
   })
 
-  it('shows the current call stage task and completion action', () => {
-    const markup = renderToStaticMarkup(<PracticePage app={appFor('paused', {
-      callEnabled: true, callBars: 1, completed: true, callStage: { label: '回应', task: '鼓声暂时静音，在心中保持刚才的节奏' },
-    })} />)
-    expect(markup).toContain('回应')
-    expect(markup).toContain('鼓声暂时静音，在心中保持刚才的节奏')
-    expect(markup).toContain('练习完成 · 回应')
+  it('keeps route phase controls available while route playback is playing', () => {
+    const markup = renderToStaticMarkup(<PracticePage app={appFor('playing')} />)
+    const buttons = [...markup.matchAll(/<button\b[^>]*class="bn-phase-preview"[^>]*>/g)]
+    expect(buttons).toHaveLength(6)
+    buttons.forEach(button => expect(button[0]).not.toContain('disabled'))
   })
 })
 

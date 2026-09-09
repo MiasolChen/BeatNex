@@ -59,7 +59,7 @@ export function useDrumMachine(pattern: Pattern, bpm: number, program?: Training
   }, [engine, pattern, bpm])
   useEffect(() => { engine.setProgram(program, repeat) }, [engine, program, repeat])
 
-  const play = useCallback(async (next?: { pattern: Pattern; bpm: number }) => {
+  const play = useCallback(async (next?: { pattern: Pattern; bpm: number; program?: TrainingProgram }) => {
     if (next) request.current = next
     const token = ++generation.current
     // Invalidate an older resume before awaiting shared preparation; otherwise
@@ -70,6 +70,7 @@ export function useDrumMachine(pattern: Pattern, bpm: number, program?: Training
       // Every request shares preparation work while the newest request wins.
       await engine.prepare(PROTOTYPE_KIT)
       if (token !== generation.current || !mounted.current || document.hidden) return
+      if (next) engine.setProgram(next.program, false)
       await engine.start({ ...request.current, countIn: countInRef.current })
       // The engine also invalidates resume on stop/pause. An older completion
       // must never pause a newer successfully started request.
