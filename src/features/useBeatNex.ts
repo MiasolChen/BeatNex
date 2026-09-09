@@ -10,15 +10,15 @@ import {useDrumMachine} from './useDrumMachine'
 export type Page='practice'|'library'|'machine'|'metronome'|'calendar'
 export function useBeatNex(){
  const [settings,setSettings]=useState(()=>{const saved=readPractice();return {...saved,freeTargets:saved.freeTargets??[...saved.targets]}})
- const [pattern,setPattern]=useState(()=>findPattern(settings.patternName,settings.difficulty))
+ const [pattern,setPattern]=useState(()=>settings.workspace?.pattern??findPattern(settings.patternName,settings.difficulty))
  const meterDrafts=useRef<Partial<Record<Meter,Pattern>>>({})
- const [source,setSource]=useState<Pattern>(pattern)
+ const [source,setSource]=useState<Pattern>(()=>settings.workspace?.source??pattern)
  const [page,setPage]=useState<Page>('practice')
- const [muted,setMuted]=useState<DrumId[]>([])
+ const [muted,setMuted]=useState<DrumId[]>(()=>settings.workspace?.muted??[])
  const [history,setHistory]=useState<Pattern[]>([]),[future,setFuture]=useState<Pattern[]>([])
  const [combinations,setCombinations]=useState(()=>readCombinations())
  const [favorites,setFavorites]=useState(()=>readFavorites())
- const [activeId,setActiveId]=useState<string>()
+ const [activeId,setActiveId]=useState<string|undefined>(()=>settings.workspace?.activeId)
  const [toast,setToast]=useState(''),[completed,setCompleted]=useState(false),[saveOpen,setSaveOpen]=useState(false),[feedback,setFeedback]=useState('')
  const [landscape,setLandscape]=useState(false),[follow,setFollow]=useState(false)
  const notifyTimer=useRef<ReturnType<typeof setTimeout>>()
@@ -38,7 +38,7 @@ export function useBeatNex(){
  useEffect(()=>{if(settings.routeEnabled&&program&&settings.repeat==='once'&&snapshot.cycle>=totalBars&&!completed){audio.stop();setCompleted(true);setFeedback('')}},[settings.routeEnabled,program,settings.repeat,snapshot.cycle,totalBars,completed,audio.stop])
  useEffect(()=>{DRUM_IDS.forEach(d=>{routeAudio.updateMix(d,{muted:page==='practice'?false:muted.includes(d)});freeAudio.updateMix(d,{muted:!(settings.freeTargets??settings.targets).includes(d),volume:0.82*(settings.freeVolumes?.[d]??100)/100})})},[muted,settings.targets,settings.freeTargets,settings.freeVolumes,page,routeAudio.updateMix,freeAudio.updateMix])
  const warned=useRef(false)
- useEffect(()=>{if(!savePractice(settings)&&!warned.current){warned.current=true;notice('设置仅在本次保留：无法写入本机存储')}},[settings])
+ useEffect(()=>{if(!savePractice({...settings,workspace:{pattern,source,muted,activeId}})&&!warned.current){warned.current=true;notice('设置和鼓机修改仅在本次保留：无法写入本机存储')}},[settings,pattern,source,muted,activeId])
  useEffect(()=>{const error=combinations.error||favorites.error;if(error)notice(error);return()=>clearTimeout(notifyTimer.current)},[])
  const patch=(values:Partial<PracticeSettings>)=>setSettings(s=>({...s,...values}))
  const reset=()=>{audio.stop();if(settings.routeEnabled){setCompleted(false);setFeedback('')}}

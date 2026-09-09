@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { resizePatternBars, togglePatternStep, withMeter } from '../core/pattern/editor'
+import { BOOM_BAP_PATTERNS } from '../core/pattern/fixtures'
 import { DEFAULT_TRAINING_CONFIG } from '../core/training/session'
 import { PRACTICE_KEY, defaultSettings, readPractice, savePractice, type PracticeSettings } from './practice'
 import { TRAINING_CONFIG_KEY } from './trainingConfig'
@@ -100,6 +102,46 @@ describe('practice settings persistence', () => {
   it('keeps older settings valid without adding free drum volumes', () => {
     const old = defaultSettings()
     useStorage({ [PRACTICE_KEY]: JSON.stringify(old) })
+    expect(readPractice()).toEqual(old)
+  })
+
+  it('round-trips an edited multi-bar workspace with its source, mutes, and active combination', () => {
+    const source = resizePatternBars(withMeter(BOOM_BAP_PATTERNS[1], '3/4'), 2)
+    const settings: PracticeSettings = {
+      ...defaultSettings(),
+      workspace: {
+        pattern: togglePatternStep(source, 'kick', 1),
+        source,
+        muted: ['snare', 'openHat'],
+        activeId: 'saved-combination-3-4',
+      },
+    }
+    useStorage()
+    expect(savePractice(settings)).toBe(true)
+    expect(readPractice()).toEqual(settings)
+  })
+
+  it.each([
+    null,
+    { pattern: { ...BOOM_BAP_PATTERNS[0], bars: 0 }, source: BOOM_BAP_PATTERNS[0], muted: [] },
+    { pattern: BOOM_BAP_PATTERNS[0], source: { ...BOOM_BAP_PATTERNS[0], tracks: [] }, muted: [] },
+    { pattern: BOOM_BAP_PATTERNS[0], source: BOOM_BAP_PATTERNS[0], muted: ['snare', 'snare'] },
+    { pattern: BOOM_BAP_PATTERNS[0], source: BOOM_BAP_PATTERNS[0], muted: ['cymbal'] },
+    { pattern: BOOM_BAP_PATTERNS[0], source: BOOM_BAP_PATTERNS[0], muted: [], activeId: ' ' },
+    { pattern: BOOM_BAP_PATTERNS[0], source: BOOM_BAP_PATTERNS[0], muted: [], activeId: 'x'.repeat(201) },
+  ])('rejects malformed workspace and preserves its bytes during automatic save: %j', (workspace) => {
+    const raw = JSON.stringify({ ...defaultSettings(), workspace })
+    const { data } = useStorage({ [PRACTICE_KEY]: raw })
+    expect(readPractice()).toEqual(defaultSettings())
+    expect(savePractice(defaultSettings())).toBe(false)
+    expect(data.get(PRACTICE_KEY)).toBe(raw)
+  })
+
+  it('keeps settings without a workspace compatible', () => {
+    const old = defaultSettings()
+    useStorage({ [PRACTICE_KEY]: JSON.stringify(old) })
+    expect(readPractice()).toEqual(old)
+    expect(savePractice(old)).toBe(true)
     expect(readPractice()).toEqual(old)
   })
 

@@ -1,11 +1,13 @@
 import { PATTERN_NAMES } from '../core/pattern/fixtures'
-import { DRUM_IDS, type DrumId } from '../core/pattern/types'
+import { validatePattern } from '../core/pattern/validate'
+import { DRUM_IDS, type Pattern, type DrumId } from '../core/pattern/types'
 import { TRAINING_PHASE_DEFINITIONS } from '../core/training/session'
 import { TRAINING_CONFIG_KEY } from './trainingConfig'
 
 export type RoutePhase = { id: string; instanceId: string; bars: number }
 export type PracticeSettings = {
   version: 2
+  workspace?: { pattern: Pattern; source: Pattern; muted: DrumId[]; activeId?: string }
   targets: DrumId[]
   freeTargets?: DrumId[]
   freeVolumes?: Partial<Record<DrumId, number>>
@@ -57,8 +59,22 @@ function validCommon(value: Record<string, unknown>) {
     && (value.difficulty === 'simple' || value.difficulty === 'hard')
 }
 
+function validWorkspace(value: unknown): boolean {
+  if (value === undefined) return true
+  if (!isRecord(value) || !Array.isArray(value.muted)
+    || !value.muted.every(drum => DRUM_IDS.includes(drum as DrumId))
+    || new Set(value.muted).size !== value.muted.length
+    || (value.activeId !== undefined && (typeof value.activeId !== 'string'
+      || !value.activeId.trim() || value.activeId.length > 200))) return false
+  try {
+    validatePattern(value.pattern)
+    validatePattern(value.source)
+    return true
+  } catch { return false }
+}
+
 function isPracticeSettings(value: unknown): value is PracticeSettings {
-  return isRecord(value) && value.version === 2 && validCommon(value)
+  return isRecord(value) && value.version === 2 && validCommon(value) && validWorkspace(value.workspace)
     && (value.repeat === undefined || value.repeat === 'once' || value.repeat === 'infinite')
     && typeof value.routeEnabled === 'boolean' && Array.isArray(value.targets)
     && value.targets.every((drum) => DRUM_IDS.includes(drum as DrumId))
