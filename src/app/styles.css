@@ -348,7 +348,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 
 /* Meter and bar count share a compact, aligned listbox. */
 #bn .bn-select-menu{border-radius:12px;padding:4px;max-height:232px;overscroll-behavior:contain}
-#bn .bn-select-menu button{height:44px;min-height:44px;padding:0 10px;font-size:13px;font-weight:500}
+#bn .bn-select-menu button{height:36px;min-height:36px;padding:0 8px;font-size:13px;font-weight:500}
 #bn .bn-editor-toolbar .bn-select-trigger{font-size:13px;font-weight:650;border-radius:9px;line-height:1}
 
 /* Parameters, edit history and view controls have separate visual groups. */
@@ -365,8 +365,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-machine-transport #bn-machine-play{flex:1;min-width:0}
 #bn .bn-machine-transport #bn-save{width:44px;height:44px;min-height:44px;flex:0 0 44px;padding:10px;display:grid;place-items:center;border-radius:12px;background:var(--ink);color:var(--acid)}
 #bn .bn-machine-transport .bn-tool-icon,#bn .bn-machine-transport .bn-tool-icon svg{display:block;width:20px;height:20px;line-height:0}
-#bn .bn-select-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:6px}
-#bn .bn-select-menu button{padding:0 10px}
+#bn .bn-select-menu{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;padding:4px}
+#bn .bn-select-menu button{padding:0 8px}
 
 /* Equal control surfaces, with an explicit drag affordance for tempo. */
 #bn .bn-editor-toolbar .bn-wheel-compact{height:44px;min-height:44px;border:1px solid var(--line);border-radius:9px;background:var(--paper);margin:0;box-sizing:border-box}

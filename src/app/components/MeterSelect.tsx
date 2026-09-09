@@ -58,8 +58,8 @@ export function EditorSelect<T extends string | number>({ value, onChange, optio
       return cancelAnimations
     }
     popup.inert = false
-    const r = button.getBoundingClientRect(), p = root.getBoundingClientRect()
-    const width = Math.min(Math.max(r.width, 184), p.width - 24)
+    const r = (button.closest('label') ?? button).getBoundingClientRect(), p = root.getBoundingClientRect()
+    const width = Math.min(Math.max(r.width, 136), p.width - 24)
     popup.style.width = `${width}px`
     popup.style.left = `${Math.max(12, Math.min(r.left - p.left, p.width - width - 12))}px`
     const below = r.bottom - p.top + 6
@@ -103,7 +103,7 @@ export function EditorSelect<T extends string | number>({ value, onChange, optio
     event.preventDefault()
     const items = Array.from(menu.current?.querySelectorAll<HTMLButtonElement>('[role="option"]') ?? [])
     const index = items.indexOf(document.activeElement as HTMLButtonElement)
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : (index + (event.key === 'ArrowDown' ? 2 : event.key === 'ArrowUp' ? -2 : event.key === 'ArrowRight' ? 1 : -1) + options.length) % options.length
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : (index + (event.key === 'ArrowDown' || event.key === 'ArrowRight' ? 1 : -1) + options.length) % options.length
     focusOption(next)
   }
 
