@@ -8,7 +8,7 @@ type Phase = 'closed' | 'open' | 'closing'
 const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /** The prototype's local listbox, portalled inside #bn to retain its visual tokens. */
-export function EditorSelect<T extends string | number>({ value, onChange, options, label }: { value: T; onChange: (value: T) => void; options: readonly T[]; label: string }) {
+export function EditorSelect<T extends string | number>({ value, onChange, options, label, format = String, optionLabel = format }: { value: T; onChange: (value: T) => void; options: readonly T[]; label: string; format?: (value: T) => string; optionLabel?: (value: T) => string }) {
   const id = useId()
   const trigger = useRef<HTMLButtonElement>(null)
   const menu = useRef<HTMLDivElement>(null)
@@ -110,8 +110,8 @@ export function EditorSelect<T extends string | number>({ value, onChange, optio
   return <>
     <button type="button" ref={trigger} className="bn-select-trigger"  aria-label={label} aria-haspopup="listbox" aria-expanded={phase === 'open'} aria-controls={phase !== 'closed' ? id : undefined} onClick={() => { if (phaseRef.current === 'open') close(); else open() }} onKeyDown={event => {
       if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) { event.preventDefault(); open(event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : options.indexOf(value)) }
-    }}><span>{value}</span><i className="bn-select-arrow" aria-hidden="true" /></button>
-    {root && phase !== 'closed' && createPortal(<div id={id} ref={menu} className="bn-select-menu" role="listbox" aria-label={label} aria-hidden={phase === 'closing' || undefined} onKeyDown={menuKeyDown}>{options.map(meter => <button key={meter} type="button" role="option" tabIndex={-1} aria-selected={value === meter} data-value={meter} onClick={() => { onChange(meter); close(true) }}>{meter}</button>)}</div>, root)}
+    }}><span>{format(value)}</span><i className="bn-select-arrow" aria-hidden="true" /></button>
+    {root && phase !== 'closed' && createPortal(<div id={id} ref={menu} className="bn-select-menu" role="listbox" aria-label={label} aria-hidden={phase === 'closing' || undefined} onKeyDown={menuKeyDown}>{options.map(meter => <button key={meter} type="button" role="option" tabIndex={-1} aria-selected={value === meter} data-value={meter} onClick={() => { onChange(meter); close(true) }}>{optionLabel(meter)}</button>)}</div>, root)}
   </>
 }
 

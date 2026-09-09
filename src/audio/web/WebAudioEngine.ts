@@ -279,7 +279,7 @@ export class WebAudioEngine implements AudioEngine {
         }
       }
       const position = positionAtTime(this.request.pattern, this.request.bpm, 0, this.pausedMusicOffset)
-      return { status: this.status, ...position, cycle: position.cycle * this.request.pattern.bars + Math.floor(position.step / stepsPerBar(this.request.pattern)) + this.cycleOffset, elapsed: position.elapsed + this.elapsedOffset, isCountIn: false }
+      return { status: this.status, ...position, ...this.patternPosition(position, this.request.pattern, this.cycleOffset), cycle: position.cycle * this.request.pattern.bars + Math.floor(position.step / stepsPerBar(this.request.pattern)) + this.cycleOffset, elapsed: position.elapsed + this.elapsedOffset, isCountIn: false }
     }
     // Scheduling can commit the next bar's audio up to 120 ms early. The UI and
     // recording clock continue reading the old timeline until that audio starts.
@@ -287,7 +287,7 @@ export class WebAudioEngine implements AudioEngine {
     if (previous && this.context.currentTime < previous.until) {
       const now = Math.min(Math.max(this.context.currentTime, previous.resumeAt), previous.endingAt ?? Infinity)
       const position = positionAtTime(previous.request.pattern, previous.request.bpm, previous.musicStartedAt, now)
-      return { status: this.status, ...position, cycle: position.cycle * previous.request.pattern.bars + Math.floor(position.step / stepsPerBar(previous.request.pattern)) + previous.cycleOffset, elapsed: position.elapsed + previous.elapsedOffset, isCountIn: false }
+      return { status: this.status, ...position, ...this.patternPosition(position, previous.request.pattern, previous.cycleOffset), cycle: position.cycle * previous.request.pattern.bars + Math.floor(position.step / stepsPerBar(previous.request.pattern)) + previous.cycleOffset, elapsed: position.elapsed + previous.elapsedOffset, isCountIn: false }
     }
     const now = Math.min(Math.max(this.context.currentTime, this.resumeAt), this.endingAt ?? Infinity)
     if (now < this.musicStartedAt) {
@@ -297,7 +297,14 @@ export class WebAudioEngine implements AudioEngine {
       return { status: this.status, step, cycle: 0, progress, isCountIn: true, elapsed: 0 }
     }
     const position = positionAtTime(this.request.pattern, this.request.bpm, this.musicStartedAt, now)
-    return { status: this.status, ...position, cycle: position.cycle * this.request.pattern.bars + Math.floor(position.step / stepsPerBar(this.request.pattern)) + this.cycleOffset, elapsed: position.elapsed + this.elapsedOffset, isCountIn: false }
+    return { status: this.status, ...position, ...this.patternPosition(position, this.request.pattern, this.cycleOffset), cycle: position.cycle * this.request.pattern.bars + Math.floor(position.step / stepsPerBar(this.request.pattern)) + this.cycleOffset, elapsed: position.elapsed + this.elapsedOffset, isCountIn: false }
+  }
+
+  private patternPosition(position: { step: number; progress: number }, pattern: Pattern, cycleOffset: number) {
+    return {
+      step: (position.step + cycleOffset * stepsPerBar(pattern)) % stepsPerPattern(pattern),
+      progress: (position.progress + (cycleOffset % pattern.bars) / pattern.bars) % 1,
+    }
   }
 
   getSnapshot(): EngineSnapshot {

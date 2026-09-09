@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { resizePatternBars, togglePatternStep, withMeter } from '../core/pattern/editor'
+import { resizePatternBars, togglePatternStep, withMeter, withSubdivision } from '../core/pattern/editor'
 import { BOOM_BAP_PATTERNS } from '../core/pattern/fixtures'
 import { DEFAULT_TRAINING_CONFIG } from '../core/training/session'
 import { PRACTICE_KEY, defaultSettings, readPractice, savePractice, type PracticeSettings } from './practice'
@@ -136,6 +136,17 @@ describe('practice settings persistence', () => {
     useStorage()
     expect(savePractice(settings)).toBe(true)
     expect(readPractice()).toEqual(settings)
+  })
+
+  it('round-trips a six-step workspace for restore after refresh', () => {
+    const source = withSubdivision(BOOM_BAP_PATTERNS[1], 6)
+    const settings: PracticeSettings = {
+      ...defaultSettings(),
+      workspace: { pattern: source, source, muted: [], activeId: 'saved-triplet-6' },
+    }
+    useStorage()
+    expect(savePractice(settings)).toBe(true)
+    expect(readPractice().workspace).toEqual(settings.workspace)
   })
 
   it.each([

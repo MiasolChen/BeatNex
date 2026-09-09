@@ -22,6 +22,13 @@ describe('saved combinations', () => {
     expect(JSON.parse(storage.getItem(COMBINATIONS_KEY)!)).toMatchObject({ schemaVersion: 1 })
   })
 
+  it('round-trips an eighth-note triplet subdivision of 6', () => {
+    const storage = memoryStorage()
+    const entry = { ...combination, pattern: { ...combination.pattern, subdivision: 6 as const } }
+    expect(writeCombinations([entry], storage)).toEqual({ ok: true, error: null })
+    expect(readCombinations(storage)).toEqual({ value: [entry], error: null })
+  })
+
   it('starts empty and never reads prototype data', () => {
     const storage = memoryStorage({ 'beatnex-touch-prototype': JSON.stringify([combination]) })
     expect(readCombinations(storage)).toEqual({ value: [], error: null })

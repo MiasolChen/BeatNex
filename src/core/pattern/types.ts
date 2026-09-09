@@ -26,7 +26,7 @@ export type Pattern = {
   /** Missing in the original v1 fixtures; those patterns use quarter-note beats. */
   beatUnit?: 4 | 8
   /** Steps per quarter note, independent of the meter denominator. */
-  subdivision: 2 | 3 | 4
+  subdivision: 2 | 3 | 4 | 6
   recommendedBpm: number
   tracks: PatternTrack[]
 }

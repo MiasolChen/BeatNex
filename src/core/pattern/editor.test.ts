@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { patternDuration, stepsPerBar, stepsPerPattern } from '../timing/musicTime'
-import { meterForPattern, patternFromGrid, patternGrid, resizePatternBars, togglePatternStep, withMeter } from './editor'
+import { meterForPattern, patternFromGrid, patternGrid, resizePatternBars, togglePatternStep, withMeter, withSubdivision } from './editor'
 import { BOOM_BAP_PATTERNS } from './fixtures'
 import { METERS, type Pattern } from './types'
 import { validatePattern } from './validate'
@@ -20,6 +20,18 @@ describe('pattern editor and meters', () => {
     expect(patternGrid(pattern).every((row) => row.length === beats * 16 / unit)).toBe(true)
     expect(patternDuration(pattern, 120)).toBeCloseTo(beats * 4 / unit * 0.5)
     expect(patternFromGrid(pattern, patternGrid(pattern))).toEqual(pattern)
+  })
+
+  it.each(METERS.flatMap(meter => [1, 8].map(bars => [meter, bars] as const)))('supports every approved subdivision in %s across %i bars', (meter, bars) => {
+    const [_, unit] = meter.split('/').map(Number)
+    for (const selected of [2, 3, 4] as const) {
+      const meterPattern = withMeter({ ...BOOM_BAP_PATTERNS[1], bars }, meter)
+      const subdivision = selected === 3 && unit === 8 ? 6 : selected
+      const pattern = withSubdivision(meterPattern, subdivision)
+      validatePattern(pattern)
+      expect(stepsPerBar(pattern)).toBe(Math.floor(stepsPerBar(pattern)))
+      expect(patternGrid(pattern).every(row => row.length === stepsPerPattern(pattern))).toBe(true)
+    }
   })
 
   it('edits a step without flattening existing ghost or accent velocities', () => {
@@ -42,6 +54,48 @@ describe('pattern editor and meters', () => {
     expect(stepsPerPattern(resized)).toBe(24)
     expect(resized.tracks[0].hits.map((hit) => hit.step)).toEqual([0, 4, 8, 12, 16, 20])
     expect(original.tracks[0].hits.map((hit) => hit.step)).toContain(28)
+  })
+
+  it('quantizes each bar when changing subdivision, clamps the last step, and keeps the stronger collision', () => {
+    const original: Pattern = {
+      ...BOOM_BAP_PATTERNS[0], bars: 2, subdivision: 4,
+      tracks: BOOM_BAP_PATTERNS[0].tracks.map((track) => track.drum === 'kick' ? ({ drum: 'kick' as const, hits: [
+        { step: 1, velocity: 52 }, { step: 2, velocity: 61 }, { step: 15, velocity: 70 },
+        { step: 16, velocity: 80 }, { step: 17, velocity: 91 }, { step: 31, velocity: 63 },
+      ] }) : ({ ...track, hits: [] })),
+    }
+    const before = structuredClone(original)
+    const changed = withSubdivision(original, 2)
+
+    expect(changed.subdivision).toBe(2)
+    expect(changed.tracks[0].hits).toEqual([
+      { step: 1, velocity: 61 }, { step: 7, velocity: 70 },
+      { step: 8, velocity: 80 }, { step: 9, velocity: 91 }, { step: 15, velocity: 63 },
+    ])
+    expect(changed.tracks[0].hits.every(hit => hit.step < 16 * 2)).toBe(true)
+    expect(original).toEqual(before)
+  })
+
+  it('maps triplet subdivision to the matching denominator when changing meter', () => {
+    const original: Pattern = {
+      ...BOOM_BAP_PATTERNS[0], subdivision: 3,
+      tracks: BOOM_BAP_PATTERNS[0].tracks.map((track) => track.drum === 'kick' ? ({ drum: 'kick' as const, hits: [{ step: 2, velocity: 90 }, { step: 8, velocity: 80 }] }) : ({ ...track, hits: [] })),
+    }
+    const inEighths = withMeter(original, '6/8')
+    expect(inEighths.subdivision).toBe(6)
+    expect(inEighths.tracks[0].hits).toEqual([{ step: 4, velocity: 90 }, { step: 16, velocity: 80 }])
+
+    const backInQuarters = withMeter(inEighths, '4/4')
+    expect(backInQuarters.subdivision).toBe(3)
+    expect(backInQuarters.tracks[0].hits).toEqual(original.tracks[0].hits)
+  })
+
+  it('crops converted odd-meter bars without leaking hits across the new boundary', () => {
+    const source = withSubdivision(withMeter(BOOM_BAP_PATTERNS[1], '7/8'), 6)
+    const converted = withMeter(source, '4/4')
+    expect(converted.subdivision).toBe(3)
+    expect(meterForPattern(converted)).toBe('4/4')
+    expect(converted.tracks.flatMap(track => track.hits).every(hit => hit.step < stepsPerBar(converted))).toBe(true)
   })
 
   it.each([1, 2, 3, 4, 5, 6, 7, 8] as Pattern['bars'][])('resizes to %s bars without mutating or inventing hits', (bars) => {

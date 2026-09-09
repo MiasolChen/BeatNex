@@ -11,7 +11,7 @@ export function validatePattern(value: unknown): asserts value is Pattern {
   if (!Number.isInteger(pattern.beatsPerBar)
     || (pattern.beatUnit !== undefined && pattern.beatUnit !== 4 && pattern.beatUnit !== 8)
     || !METERS.includes(`${pattern.beatsPerBar}/${pattern.beatUnit ?? 4}` as Meter)
-    || ![2, 3, 4].includes(pattern.subdivision ?? 0)) {
+    || ![2, 3, 4, 6].includes(pattern.subdivision ?? 0)) {
     throw new Error('Pattern 拍号或细分无效')
   }
   if (!Number.isFinite(pattern.recommendedBpm) || (pattern.recommendedBpm ?? 0) <= 0) {

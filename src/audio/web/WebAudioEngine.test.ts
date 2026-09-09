@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { BOOM_BAP_PATTERNS } from '../../core/pattern/fixtures'
+import { withSubdivision } from '../../core/pattern/editor'
 import { DRUM_IDS, type DrumId, type Pattern } from '../../core/pattern/types'
 import { callPhrase, callProgram } from '../../core/training/callResponse'
 import type { DrumKit } from '../types'
@@ -362,6 +363,41 @@ describe('WebAudioEngine scheduling and mixing', () => {
     await engine.start({ pattern: BOOM_BAP_PATTERNS[0], bpm: 120, countIn: false })
     context.currentTime = 50.58
     expect(engine.getPosition().elapsed).toBeCloseTo(3)
+    engine.dispose()
+  })
+
+  it('commits a subdivision and BPM change at a real bar, then preserves position through pause', async () => {
+    const engine = new WebAudioEngine()
+    const original = { ...BOOM_BAP_PATTERNS[0], bars: 2,
+      tracks: BOOM_BAP_PATTERNS[0].tracks.map(track => ({ ...track,
+        hits: [...track.hits, ...track.hits.map(hit => ({ ...hit, step: hit.step + 16 }))],
+      })),
+    }
+    const changed = withSubdivision(original, 6)
+    await engine.prepare(kit)
+    await engine.start({ pattern: original, bpm: 120, countIn: false })
+
+    context.currentTime = 1.6
+    engine.update({ pattern: changed, bpm: 90 })
+    context.currentTime = 1.98
+    tick()
+    expect(engine.getPosition().step).toBeGreaterThan(0)
+    expect(engine.getPosition().progress).toBeCloseTo((1.98 - 0.08) / 4, 2)
+
+    context.currentTime = 2.1
+    tick()
+    expect(engine.getPosition()).toMatchObject({ status: 'playing', cycle: 1, step: 24 })
+    expect(context.starts.some(start => Math.abs(start.time - 2.08) < 1e-8)).toBe(true)
+
+    context.currentTime = 2.5
+    engine.pause()
+    const paused = engine.getPosition()
+    engine.update({ pattern: changed, bpm: 60 })
+    expect(engine.getPosition().progress).toBeCloseTo(paused.progress)
+
+    context.currentTime = 100
+    await engine.start({ pattern: changed, bpm: 60, countIn: false })
+    expect(engine.getPosition().progress).toBeCloseTo(paused.progress)
     engine.dispose()
   })
 
@@ -918,7 +954,8 @@ describe('WebAudioEngine scheduling and mixing', () => {
     tick()
     expect(context.starts.some(start => start.drum === 'kick' && Math.abs(start.time - 2.48) < 1e-9)).toBe(true)
     context.currentTime = 2.49
-    expect(engine.getPosition()).toMatchObject({ cycle: 1, step: 0 })
+    expect(engine.getPosition()).toMatchObject({ cycle: 1, step: 16 })
+    expect(engine.getPosition().progress).toBeCloseTo(1 / 3, 2)
     engine.dispose()
   })
 

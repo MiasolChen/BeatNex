@@ -10,22 +10,41 @@ export function meterForPattern(pattern: Pattern): Meter {
 export function withMeter(pattern: Pattern, meter: Meter): Pattern {
   if (!METERS.includes(meter)) throw new Error('拍号无效')
   const [beatsPerBar, beatUnit] = meter.split('/').map(Number)
+  const subdivision = pattern.subdivision === 3 && beatUnit === 8 ? 6
+    : pattern.subdivision === 6 && beatUnit === 4 ? 3 : pattern.subdivision
   const next = {
     ...pattern,
+    subdivision,
     beatsPerBar: beatsPerBar as Pattern['beatsPerBar'],
     beatUnit: beatUnit as Pattern['beatUnit'],
   }
-  const oldWidth = stepsPerBar(pattern)
-  const newWidth = stepsPerBar(next)
-  next.tracks = pattern.tracks.map((track) => ({
-    ...track,
-    hits: track.hits.flatMap((hit) => {
-      const offset = hit.step % oldWidth
-      return offset < newWidth ? [{ ...hit, step: Math.floor(hit.step / oldWidth) * newWidth + offset }] : []
-    }),
-  }))
+  next.tracks = remapHits(pattern, next, true)
   validatePattern(next)
   return next
+}
+
+/** Quantize within each bar; collisions retain the stronger hit. */
+export function withSubdivision(pattern: Pattern, subdivision: Pattern['subdivision']): Pattern {
+  const next = { ...pattern, subdivision }
+  // Check the destination before allocating grids or converting untrusted values.
+  validatePattern({ ...next, tracks: next.tracks.map(track => ({ ...track, hits: [] })) })
+  next.tracks = remapHits(pattern, next)
+  validatePattern(next)
+  return next
+}
+
+function remapHits(pattern: Pattern, next: Pattern, crop = false): Pattern['tracks'] {
+  const oldWidth = stepsPerBar(pattern), newWidth = stepsPerBar(next)
+  return pattern.tracks.map(track => {
+    const hits = new Map<number, number>()
+    for (const hit of track.hits) {
+      const mapped = Math.round((hit.step % oldWidth) * next.subdivision / pattern.subdivision)
+      if (crop && mapped >= newWidth) continue
+      const step = Math.floor(hit.step / oldWidth) * newWidth + Math.min(newWidth - 1, mapped)
+      hits.set(step, Math.max(hits.get(step) ?? 0, hit.velocity))
+    }
+    return { ...track, hits: [...hits].sort(([a], [b]) => a - b).map(([step, velocity]) => ({ step, velocity })) }
+  })
 }
 
 /** A UI grid is deliberately boolean; the Pattern remains the velocity source. */
