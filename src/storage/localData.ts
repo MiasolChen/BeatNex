@@ -1,3 +1,4 @@
+import { assertNoImport } from './transaction'
 export type StorageReadResult<T> = { value: T; error: string | null }
 export type StorageWriteResult = { ok: boolean; error: string | null }
 export type LocalDataStorage = Pick<Storage, 'getItem' | 'setItem'>
@@ -31,6 +32,7 @@ export function writeLocalList<T>(key: string, items: T[], validate: (value: unk
   try {
     validate(items)
     const target = storage ?? browserStorage()
+    assertNoImport(target)
     const previous = readLocalList(key, validate, target)
     if (previous.error) return { ok: false, error: `无法覆盖现有数据：${previous.error}` }
     target.setItem(key, JSON.stringify({ schemaVersion: 1, items }))

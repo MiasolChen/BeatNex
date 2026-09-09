@@ -2,7 +2,7 @@ import { readLocalList, writeLocalList, type LocalDataStorage } from './localDat
 
 export const FAVORITES_KEY = 'beatnex:favorites:v1'
 
-function validateFavorites(value: unknown): asserts value is string[] {
+export function validateFavorites(value: unknown): asserts value is string[] {
   if (!Array.isArray(value) || value.some((id) => typeof id !== 'string' || !id.trim() || id.length > 200)
     || new Set(value).size !== value.length) throw new Error('收藏数据无效，原数据已保留')
 }

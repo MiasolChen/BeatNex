@@ -1,3 +1,4 @@
+import { assertNoImport } from './transaction'
 import { PATTERN_NAMES } from '../core/pattern/fixtures'
 import { validatePattern } from '../core/pattern/validate'
 import { DRUM_IDS, type Pattern, type DrumId } from '../core/pattern/types'
@@ -75,7 +76,7 @@ function validWorkspace(value: unknown): boolean {
   } catch { return false }
 }
 
-function isPracticeSettings(value: unknown): value is PracticeSettings {
+export function isPracticeSettings(value: unknown): value is PracticeSettings {
   return isRecord(value) && value.version === 2 && validCommon(value) && validWorkspace(value.workspace)
     && (value.repeat === undefined || value.repeat === 'once' || value.repeat === 'infinite')
     && (value.callEnabled === undefined || typeof value.callEnabled === 'boolean')
@@ -124,6 +125,7 @@ export function savePractice(value: PracticeSettings): boolean {
   try {
     if (!isPracticeSettings(value) || typeof window === 'undefined') return false
     const storage = window.localStorage
+    assertNoImport(storage)
     const existing = storage.getItem(PRACTICE_KEY)
     if (existing !== null) {
       // Automatic saves must not destroy a recoverable or newer settings document.

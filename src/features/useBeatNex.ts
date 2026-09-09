@@ -2,7 +2,10 @@ import {useEffect,useMemo,useRef,useState} from 'react'
 import {BOOM_BAP_PATTERNS,findPattern} from '../core/pattern/fixtures'
 import {DRUM_IDS,type DrumId,type Pattern,type Meter} from '../core/pattern/types'
 import {withMeter,withSubdivision,togglePatternStep,meterForPattern,resizePatternBars} from '../core/pattern/editor'
-import {readCombinations,writeCombinations,type Combination} from '../storage/combinations'
+import {appendRevision,changeVersion,currentCombination,decodeVersions,VERSIONS_KEY,makeSnapshot,readVersions,writeVersions,type VersionAction,type Snapshot,type VersionedCombination} from '../storage/versions'
+import {createBackup,mergeBackup,backupValues,type Backup} from '../storage/backup'
+import {recoverImport,commitImport,assertNoImport} from '../storage/transaction'
+import {PRACTICE_KEY,isPracticeSettings} from '../storage/practice'
 import {readFavorites,writeFavorites} from '../storage/favorites'
 import {readPractice,savePractice,PHASE_LABELS,phaseIds,type PracticeSettings} from '../storage/practice'
 import type {TrainingProgram,TrainingMix} from '../audio/types'
@@ -11,17 +14,22 @@ import {useLibraryPreview} from './useLibraryPreview'
 import {callPhrase,callProgram,callStage} from '../core/training/callResponse'
 export type Page='practice'|'library'|'machine'|'metronome'|'calendar'
 export function useBeatNex(){
+ const [startupError]=useState(()=>typeof window==='undefined'?null:recoverImport())
  const [settings,setSettings]=useState(()=>{const saved=readPractice();return {...saved,freeTargets:saved.freeTargets??[...saved.targets]}})
  const [pattern,setPattern]=useState(()=>settings.workspace?.pattern??findPattern(settings.patternName,settings.difficulty))
  const meterDrafts=useRef<Partial<Record<Meter,Pattern>>>({})
  const [source,setSource]=useState<Pattern>(()=>settings.workspace?.source??pattern)
  const [page,setPage]=useState<Page>('practice')
  const [muted,setMuted]=useState<DrumId[]>(()=>settings.workspace?.muted??[])
+ const restoreStates=useRef(new WeakMap<Pattern,{settings:typeof settings;source:Pattern;muted:DrumId[];activeId?:string}>())
+ const restoreState=(p:Pattern)=>{const value=restoreStates.current.get(p);if(value){resetAll();setSettings(value.settings);setSource(value.source);setMuted(value.muted);setActiveId(library.value.some(item=>item.id===value.activeId&&!item.deletedAt)?value.activeId:undefined)}}
  const [history,setHistory]=useState<Pattern[]>([]),[future,setFuture]=useState<Pattern[]>([])
- const [combinations,setCombinations]=useState(()=>readCombinations())
+ const [library,setLibrary]=useState(()=>readVersions(settings))
+ const combinations={value:library.value.filter(item=>!item.deletedAt).map(currentCombination),error:library.error}
  const [favorites,setFavorites]=useState(()=>readFavorites())
  const [activeId,setActiveId]=useState<string|undefined>(()=>settings.workspace?.activeId)
  const [toast,setToast]=useState(''),[completed,setCompleted]=useState(false),[saveOpen,setSaveOpen]=useState(false),[feedback,setFeedback]=useState('')
+ const [versionPanel,setVersionPanel]=useState<{id?:string;trash?:boolean}|null>(null)
  const [landscape,setLandscape]=useState(false),[follow,setFollow]=useState(false)
  const notifyTimer=useRef<ReturnType<typeof setTimeout>>()
  const notice=(text:string)=>{setToast(text);clearTimeout(notifyTimer.current);notifyTimer.current=setTimeout(()=>setToast(''),2800)}
@@ -50,7 +58,7 @@ export function useBeatNex(){
  useEffect(()=>{DRUM_IDS.forEach(d=>{routeAudio.updateMix(d,{muted:page==='practice'?false:muted.includes(d)});freeAudio.updateMix(d,{muted:!(settings.freeTargets??settings.targets).includes(d),volume:0.82*(settings.freeVolumes?.[d]??100)/100})})},[muted,settings.targets,settings.freeTargets,settings.freeVolumes,page,routeAudio.updateMix,freeAudio.updateMix])
  const warned=useRef(false)
  useEffect(()=>{if(!savePractice({...settings,workspace:{pattern,source,muted,activeId}})&&!warned.current){warned.current=true;notice('设置和鼓机修改仅在本次保留：无法写入本机存储')}},[settings,pattern,source,muted,activeId])
- useEffect(()=>{const error=combinations.error||favorites.error;if(error)notice(error);return()=>clearTimeout(notifyTimer.current)},[])
+ useEffect(()=>{const error=startupError||combinations.error||favorites.error;if(error)notice(error);return()=>clearTimeout(notifyTimer.current)},[])
  const patch=(values:Partial<PracticeSettings>)=>setSettings(s=>({...s,...values}))
  const reset=()=>{audio.stop();if(isCall)setCallCompleted(false);else setCompleted(false);setFeedback('')}
  const resetAll=()=>{routeAudio.stop();freeAudio.stop();callAudio.stop();preview.stop();setCallCompleted(false);setCompleted(false);setFeedback('')}
@@ -65,19 +73,73 @@ export function useBeatNex(){
  const changeSubdivision=(subdivision:Pattern['subdivision'])=>{if(subdivision===pattern.subdivision)return;changePattern(withSubdivision(pattern,subdivision));notice('已切换细分，撤销可恢复原鼓点')}
  const changePatternBars=(bars:number)=>{if(bars===pattern.bars)return;const next=resizePatternBars(pattern,bars);resetAll();meterDrafts.current={};changePattern(next);notice(bars<pattern.bars?'已缩短小节，撤销可恢复鼓点':'已添加空白小节')}
  const changeMeter=(meter:Meter)=>{if(meter===meterForPattern(pattern))return;resetAll();meterDrafts.current[meterForPattern(pattern)]=pattern;changePattern((meterDrafts.current[meter]?.bars===pattern.bars?meterDrafts.current[meter]:undefined)??withMeter(pattern,meter))}
- const undo=()=>{const next=history.at(-1);if(next){setFuture(f=>[...f,pattern]);setHistory(h=>h.slice(0,-1));setPattern(next)}}
- const redo=()=>{const next=future.at(-1);if(next){setHistory(h=>[...h,pattern]);setFuture(f=>f.slice(0,-1));setPattern(next)}}
+ const undo=()=>{const next=history.at(-1);if(next){setFuture(f=>[...f,pattern]);setHistory(h=>h.slice(0,-1));setPattern(next);restoreState(next)}}
+ const redo=()=>{const next=future.at(-1);if(next){setHistory(h=>[...h,pattern]);setFuture(f=>f.slice(0,-1));setPattern(next);restoreState(next)}}
  const restore=()=>{changePattern(withMeter(source,`${pattern.beatsPerBar}/${pattern.beatUnit??4}` as Meter));notice('已恢复来源组合，仍可撤销')}
  const toggleMute=(drum:DrumId)=>setMuted(s=>s.includes(drum)?s.filter(d=>d!==drum):[...s,drum])
- const save=(name:string,practice:boolean)=>{
-  const id=activeId??crypto.randomUUID()
-  const entry:Combination={id,name:name.trim(),bpm:settings.bpm,pattern:{...pattern,name:name.trim(),id},muted,sourceId:source.id}
-  const entries=[entry,...combinations.value.filter(x=>x.id!==entry.id)]
-  const result=writeCombinations(entries)
-  if(!result.ok){notice(result.error??'保存失败');return false}
-  setCombinations({value:entries,error:null});setActiveId(entry.id);setPattern(entry.pattern);setSource(entry.pattern);setSaveOpen(false);notice('已保存到节奏库');if(practice){resetAll();patch({targets:DRUM_IDS.filter(d=>!muted.includes(d)),freeTargets:DRUM_IDS.filter(d=>!muted.includes(d))});setPage('practice')}return true
+ const persistLibrary=(items:VersionedCombination[])=>{
+  if(library.error){notice(library.error);return false}
+  const result=writeVersions(items);if(!result.ok){notice(result.error??'保存失败');return false}
+  setLibrary({value:items,error:null});return true
  }
- const load=(id:string,destination:Page)=>{const entry=combinations.value.find(x=>x.id===id);if(!entry)return;resetAll();meterDrafts.current={};setPattern(entry.pattern);setSource(entry.pattern);setActiveId(id);setMuted(entry.muted);setHistory([]);setFuture([]);patch({bpm:entry.bpm,targets:DRUM_IDS.filter(d=>!entry.muted.includes(d)),freeTargets:DRUM_IDS.filter(d=>!entry.muted.includes(d))});setPage(destination);notice(destination==='practice'?'已使用 '+entry.name:'已打开 '+entry.name)}
+ const save=(name:string,practice:boolean)=>{
+  try {
+   const id=activeId??crypto.randomUUID(),nextPattern={...pattern,name:name.trim(),id}
+   const entries=appendRevision(library.value,id,name,source.id,makeSnapshot(nextPattern,settings.bpm,muted,settings))
+   if(!persistLibrary(entries))return false
+   setActiveId(id);setPattern(nextPattern);setSource(nextPattern);setSaveOpen(false);notice(activeId?'已保存新版本':'已保存到节奏库')
+   if(practice){resetAll();setPage('practice')}return true
+  }catch(error){notice(error instanceof Error?error.message:'保存失败');return false}
+ }
+ const applySnapshot=(value:Snapshot,id:string)=>{
+  resetAll();meterDrafts.current={};setPattern(value.pattern);setSource(value.pattern);setActiveId(id);setMuted(value.muted)
+  setSettings({...value.training,freeTargets:value.training.freeTargets??[...value.training.targets]})
+ }
+ const load=(id:string,destination:Page)=>{const item=library.value.find(x=>x.id===id&&!x.deletedAt);if(!item)return
+  const value=item.versions.find(v=>v.id===item.currentId)!.snapshot
+  applySnapshot({...value,pattern:{...value.pattern,name:item.name}},id);setHistory([]);setFuture([]);setPage(destination);notice(destination==='practice'?'已使用 '+item.name:'已打开 '+item.name)
+ }
+ const restoreVersion=(id:string,revisionId?:string)=>{
+  const item=library.value.find(x=>x.id===id&&!x.deletedAt);if(!item)return
+  const value=revisionId?item.versions.find(v=>v.id===revisionId&&!v.deletedAt)?.snapshot:item.original
+  if(!value)return
+  const previous=pattern,next=structuredClone(value.pattern)
+  restoreStates.current.set(previous,{settings,source,muted,activeId})
+  restoreStates.current.set(next,{settings:{...value.training,freeTargets:value.training.freeTargets??[...value.training.targets]},source:next,muted:value.muted,activeId:id})
+  changePattern(next);applySnapshot({...value,pattern:next},id);setPage('machine');notice('已恢复到草稿，保存后生成新版本；可撤销')
+ }
+ const manageVersion=(id:string,action:VersionAction,revisionId?:string,name?:string)=>{
+  try{
+   const entries=changeVersion(library.value,id,action,revisionId,name)
+   if(!persistLibrary(entries))return false
+   if(action==='trash'||action==='purge'){preview.stop();if(!revisionId&&activeId===id)setActiveId(undefined)}
+   notice(action==='rename'?'名称已更新':action==='trash'?'已移入回收站':action==='restore'?'已移出回收站':'已永久删除');return true
+  }catch(error){notice(error instanceof Error?error.message:'操作失败');return false}
+ }
+ const exportBackup=()=>{
+  if(library.error||favorites.error)throw new Error(library.error||favorites.error!)
+  assertNoImport(window.localStorage)
+  const stored=localStorage.getItem(VERSIONS_KEY)
+  if(stored!==null)decodeVersions(stored)
+  const favoriteError=readFavorites().error
+  if(favoriteError)throw new Error(favoriteError)
+  const raw=localStorage.getItem(PRACTICE_KEY)
+  if(raw!==null&&!isPracticeSettings(JSON.parse(raw)))throw new Error('练习存储无效，请先保留原数据')
+  return createBackup(library.value,favorites.value,{...settings,workspace:{pattern,source,muted,activeId}})
+ }
+ const importBackup=(incoming:Backup,restorePractice:boolean)=>{
+  try{
+   const merged=mergeBackup(exportBackup(),incoming,restorePractice)
+   const result=commitImport(backupValues(merged))
+   if(!result.ok){notice(result.error??'导入失败');return false}
+   resetAll();setLibrary({value:merged.combinations,error:null});setFavorites({value:merged.favorites,error:null})
+   if(restorePractice){
+    const next=merged.practice,w=next.workspace,p=w?.pattern??findPattern(next.patternName,next.difficulty)
+    setSettings({...next,freeTargets:next.freeTargets??[...next.targets]});setPattern(p);setSource(w?.source??p);setMuted(w?.muted??[]);setActiveId(w?.activeId);setHistory([]);setFuture([]);meterDrafts.current={}
+   }
+   notice('备份已导入');return true
+  }catch(error){notice(error instanceof Error?error.message:'导入失败');return false}
+ }
  const toggleFavorite=(id:string)=>{const value=favorites.value.includes(id)?favorites.value.filter(x=>x!==id):[...favorites.value,id];const result=writeFavorites(value);if(!result.ok){notice(result.error??'收藏未能保存');return}setFavorites({value,error:null})}
  const changeRoute=(phases:PracticeSettings['phases'])=>{reset();patch({phases})}
  const reorder=(from:number,to:number)=>{if(to<0||to>=settings.phases.length)return;const next=[...settings.phases];next.splice(to,0,next.splice(from,1)[0]);changeRoute(next)}
@@ -92,6 +154,6 @@ export function useBeatNex(){
  const endFree=()=>{notice('本次自由练习 '+Math.floor(snapshot.elapsed/60).toString().padStart(2,'0')+':'+Math.floor(snapshot.elapsed%60).toString().padStart(2,'0'));reset()}
  const phases=settings.phases.map(p=>({...p,label:PHASE_LABELS[phaseIds.indexOf(p.id as never)]}))
  const submitFeedback=(value:string)=>{setFeedback(value);try{localStorage.setItem('beatnex:last-training-feedback',value)}catch{notice('反馈仅保留在本次练习')}}
- return {settings,mode,isCall,callBars,callStage:callStage(cycle,callBars,snapshot.isCountIn),changeMode,changeCallBars,preview,selectedDrums,pattern,source,page,muted,history,future,combinations:combinations.value,favorites:favorites.value,activeId,toast,completed:page==='practice'&&(isCall||settings.routeEnabled)&&currentCompleted,saveOpen,setSaveOpen,feedback,submitFeedback,landscape,setLandscape,follow,setFollow,notice,audio,snapshot,playing,loading,totalBars,cycle,round,changeRepeat,activeIndex,phases,switchPage,changeBpm,togglePlayback,changeFreeVolume,selectDrum,choosePattern,toggleStep,changeMeter,changePatternBars,changeSubdivision,undo,redo,restore,toggleMute,save,load,toggleFavorite,reorder,removePhase,addPhase,changeBars,toggleRoute,endFree,reset,setCompleted:dismissComplete}
+ return {versionPanel,setVersionPanel,library:library.value,restoreVersion,manageVersion,exportBackup,importBackup,settings,mode,isCall,callBars,callStage:callStage(cycle,callBars,snapshot.isCountIn),changeMode,changeCallBars,preview,selectedDrums,pattern,source,page,muted,history,future,combinations:combinations.value,favorites:favorites.value,activeId,toast,completed:page==='practice'&&(isCall||settings.routeEnabled)&&currentCompleted,saveOpen,setSaveOpen,feedback,submitFeedback,landscape,setLandscape,follow,setFollow,notice,audio,snapshot,playing,loading,totalBars,cycle,round,changeRepeat,activeIndex,phases,switchPage,changeBpm,togglePlayback,changeFreeVolume,selectDrum,choosePattern,toggleStep,changeMeter,changePatternBars,changeSubdivision,undo,redo,restore,toggleMute,save,load,toggleFavorite,reorder,removePhase,addPhase,changeBars,toggleRoute,endFree,reset,setCompleted:dismissComplete}
 }
 export type BeatNex=ReturnType<typeof useBeatNex>

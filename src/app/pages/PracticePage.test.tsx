@@ -29,7 +29,7 @@ const appFor = (status: EngineSnapshot['status'], options: {
     selectedDrums: settings.targets,
     pattern: BOOM_BAP_PATTERNS[0],
     source: BOOM_BAP_PATTERNS[0],
-    page: 'practice', muted: [], history: [], future: [], combinations: [], favorites: [],
+    page: 'practice', muted: [], history: [], future: [], combinations: [], favorites: [], library: [], versionPanel: null,
     toast: '', activeId: undefined, saveOpen: false, feedback: '', landscape: false, follow: false,
     mode, isCall: mode === 'call', callBars: options.callBars ?? 1,
     callStage: options.callStage ?? { label: '示范', task: '听目标鼓件，记住每次落点' },
@@ -41,6 +41,7 @@ const appFor = (status: EngineSnapshot['status'], options: {
     toggleStep() {}, changeMeter() {}, changeSubdivision() {}, changePatternBars() {}, undo() {}, redo() {}, restore() {}, toggleMute() {}, save() { return true },
     load() {}, toggleFavorite() {}, reorder() {}, removePhase() {}, addPhase() {}, changeBars() {}, changeRepeat() {},
     toggleRoute() {}, changeMode() {}, changeCallBars() {}, endFree() {}, reset() {}, setCompleted() {}, setSaveOpen() {}, submitFeedback() {}, setLandscape() {}, setFollow() {},
+    setVersionPanel() {}, restoreVersion() {}, manageVersion() { return true }, exportBackup() { throw new Error('unused') }, importBackup() { return true },
     preview: { key: undefined, loading: false, snapshot: snapshot('idle'), toggle() {}, stop() {} },
     changeFreeVolume() {},
   } as BeatNex
