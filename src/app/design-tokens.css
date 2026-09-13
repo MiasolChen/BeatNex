@@ -1,9 +1,9 @@
-/* BeatNex: original coral / pool blue / warm paper. Legacy aliases keep callers shared. */
+/* BeatNex: original coral / pool blue / neutral paper. Legacy aliases keep callers shared. */
 :root {
-  --bn-paper:#f5eedf; --bn-surface:#fffcf5; --bn-ink:#202735;
+  --bn-paper:#f2f2f0; --bn-surface:#fdfdfc; --bn-ink:#222222;
   --bn-primary:#ff715b; --bn-secondary:#53c8d6; --bn-accent:#f4ca62;
-  --bn-muted:#62636a; --bn-line:#d6cfc2; --bn-soft:#eae3d6;
-  --bn-dark-surface:#303c4b; --bn-dark-hover:#415268; --bn-dark-muted:#c5ced8; --bn-dark-line:#7d8b9b;
+  --bn-muted:#636363; --bn-line:#d2d2d0; --bn-soft:#e7e7e5;
+  --bn-dark-surface:#363636; --bn-dark-hover:#484848; --bn-dark-muted:#cecece; --bn-dark-line:#858585;
   --bn-focus:#006b7b; --bn-danger:#a33132; --bn-danger-soft:#ffe1d9;
   --bn-heat-1:#def1ee; --bn-heat-2:#aedbda; --bn-heat-3:#75c3c8; --bn-heat-4:#3c929d;
   --bn-success:#276956; --bn-success-soft:#d5ece2;
