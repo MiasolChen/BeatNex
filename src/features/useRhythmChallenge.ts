@@ -16,7 +16,7 @@ export function useRhythmChallenge(active: boolean, beforeStart: () => void) {
   const before = useRef(beforeStart); before.current = beforeStart
   const challenge = CHALLENGES.find(c => c.id === data.settings.id) ?? CHALLENGES[0]
   useEffect(() => {
-    const instance = new ChallengeEngine(undefined, () => { setPosition(instance.position); setStatus('paused'); setError('声音已中断，点击继续练习。') })
+    const instance = new ChallengeEngine(undefined, () => { setPosition(instance.position); setStatus('paused'); setError('声音已中断，点击继续播放。') })
     engine.current = instance
     const background = () => { if (document.hidden) { request.current++; if (instance.running) { instance.pause(); setPosition(instance.position); setStatus('paused') } else setStatus(s => s === 'loading' ? 'paused' : s); instance.pause() } }
     document.addEventListener('visibilitychange', background)
@@ -64,7 +64,8 @@ export function useRhythmChallenge(active: boolean, beforeStart: () => void) {
     if (patch.rounds !== undefined) reset()
     setData(d => ({...d, settings: {...d.settings, ...patch}}))
   }
+  const setDisplay = (display: 'grid' | 'staff') => setData(d => ({...d, settings: {...d.settings, display}}))
   const feedback = (value: string) => setData(d => d.last ? {...d, last: {...d.last, feedback: value}} : d)
-  return {data, challenge, status, position, storageError, error, play, pause, reset, update, feedback}
+  return {data, challenge, status, position, storageError, error, play, pause, reset, update, feedback, setDisplay}
 }
 export type RhythmChallenge = ReturnType<typeof useRhythmChallenge>

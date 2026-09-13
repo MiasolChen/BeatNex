@@ -32,9 +32,8 @@ describe('confirmed BeatNex initial interface', () => {
   it('provides an enabled direct challenge action at the default tempo', () => {
     const practice = page('practice')
     const start = practice.match(/<button\b[^>]*aria-label="开始挑战：[^"]+"[^>]*>[\s\S]*?<\/button>/)?.[0] ?? ''
-    expect(start.includes('练这段')).toBe(true)
+    expect(start.includes('播放')).toBe(true)
     expect(/\bdisabled(?:=|\s|>)/.test(start)).toBe(false)
-    expect(practice.includes('节奏模仿练习')).toBe(true)
     expect(practice.includes('90 BPM')).toBe(true)
     expect((practice.match(/class="rc-card"/g) ?? []).length).toBe(4)
     expect(practice.includes('Foundation Backbeat')).toBe(true) // retained drum practice is still mounted

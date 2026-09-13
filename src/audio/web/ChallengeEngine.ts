@@ -29,7 +29,7 @@ export class ChallengeEngine {
     await context.resume()
     if (generation !== this.generation) return false
     if (context.state !== 'running') throw new Error('声音未能开启，请点击重试')
-    if (this.offset >= 16 + options.rounds * 128) this.offset = 0
+    if (this.offset >= options.rounds * 32) this.offset = 0
     this.origin = context.currentTime + 0.03 - this.offset * 15 / options.bpm
     this.nextStep = Math.ceil(this.offset - 1e-7)
     this.running = true
@@ -82,14 +82,13 @@ export class ChallengeEngine {
     if (!this.running || !this.context || !this.options) return
     const {bpm, rounds, sound, reference} = this.options
     const duration = 15 / bpm
-    const total = 16 + rounds * 128
+    const total = rounds * 32
     if (this.position.complete) { this.offset = total; this.halt(); return }
     // Keep the absolute musical position after stalls, never replay missed hits.
     this.nextStep = Math.max(this.nextStep, Math.ceil((this.context.currentTime - this.origin) / duration - 1e-7))
     while (this.nextStep < total && this.origin + this.nextStep * duration < this.context.currentTime + .12) {
       const at = this.origin + this.nextStep * duration
       const events = challengeEvents(this.nextStep, rounds, this.hits, reference)
-      if (events.reference) this.sound(at, 'click', .16)
       if (events.target) this.sound(at, sound, sound === 'drum' ? .45 : sound === 'click' ? .16 : .23)
       this.nextStep++
     }
