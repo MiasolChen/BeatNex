@@ -72,6 +72,22 @@ describe('ChallengeEngine audio clock and lifecycle', () => {
     expect(engine.position.countIn).toBe(false)
   })
 
+  it('does not play a legacy reference click on chart two’s empty opening beat', async () => {
+    await engine.start(options({ challenge: CHALLENGES[1], bpm: 180, reference: true }))
+    const musicStart = 0.03 + 16 * (15 / 180)
+    const before = context.sources.length
+
+    context.currentTime = musicStart
+    vi.advanceTimersByTime(25)
+    context.currentTime = musicStart + 0.28
+    vi.advanceTimersByTime(25)
+
+    expect(context.sources.filter(source => source.startAt === musicStart)).toHaveLength(0)
+    expect(context.sources.length).toBeGreaterThan(before)
+    expect(engine.position.countIn).toBe(false)
+    expect(engine.position.step).toBeGreaterThanOrEqual(16)
+  })
+
   it('pauses and resumes from the exact musical position', async () => {
     await engine.start(options({ bpm: 90 }))
     context.currentTime = 0.03 + 23 * (15 / 90) + 0.01
@@ -101,7 +117,7 @@ describe('ChallengeEngine audio clock and lifecycle', () => {
     await engine.start(options({ bpm: 180 }))
     context.currentTime = 10
     vi.advanceTimersByTime(25)
-    expect(context.sources.filter(source => source.startAt >= 9.9)).toHaveLength(2)
+    expect(context.sources.filter(source => source.startAt >= 9.9)).toHaveLength(1)
     engine.reset()
     expect(context.sources.every(source => source.cancelled && source.disconnected)).toBe(true)
     expect(vi.getTimerCount()).toBe(0)

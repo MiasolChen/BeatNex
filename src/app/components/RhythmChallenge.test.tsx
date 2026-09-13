@@ -28,7 +28,9 @@ describe('RhythmChallenge SSR controls', () => {
   it('locks settings and challenge cards while loading or playing', () => {
     for (const status of ['loading', 'playing'] as const) {
       const markup = renderToStaticMarkup(<RhythmChallengeView state={stateFor(status)} />)
-      expect(markup.match(/<fieldset disabled="">/g)).toHaveLength(3)
+      expect(markup.match(/<fieldset disabled="">/g)).toHaveLength(2)
+      expect(markup).not.toContain('辅助打拍声')
+      expect(markup).not.toContain('参考拍音量')
       expect(markup.match(/<button[^>]*disabled=""[^>]*aria-label="开始挑战：[^\"]*"/g)).toHaveLength(4)
       expect(markup).toContain(status === 'loading' ? '取消开启' : '暂停练习')
     }
@@ -47,13 +49,14 @@ describe('RhythmChallenge SSR controls', () => {
     const expected = [
       ['先听，不用拍', '记住这段节奏，下一遍再跟着拍。'],
       ['跟着声音拍手', '每听到一下，就拍一下手或轻敲桌面。'],
-      ['声音停了，自己继续', '按刚才的节奏拍手。轻声滴答只是帮你保持速度。'],
+      ['声音停了，自己继续', '按刚才记住的节奏继续拍手；屏幕上的拍点会继续走。'],
       ['继续拍，听听是否合上', '示范声回来了，听听你的拍手是否和它重合。'],
     ]
     expected.forEach(([title, description], phase) => {
       const markup = renderToStaticMarkup(<RhythmChallengeView state={stateFor('playing', phase)} />)
       expect(markup).toContain(`<strong>${title}</strong>`)
       expect(markup).toContain(`<span>${description}</span>`)
+      if (phase === 2) expect(markup).toContain('data-current="true"')
     })
   })
 

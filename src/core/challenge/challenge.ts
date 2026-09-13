@@ -27,11 +27,11 @@ export function challengePosition(step: number, rounds: number) {
     step: bounded, total,
   }
 }
-export function challengeEvents(step: number, rounds: number, hits: readonly number[], reference: boolean) {
+export function challengeEvents(step: number, rounds: number, hits: readonly number[], _legacyReference: boolean) {
   const position = challengePosition(step, rounds)
   if (position.complete) return { target: false, reference: false }
   return {
     target: !position.countIn && position.phase !== 2 && hits.includes((step - 16) % 32),
-    reference: step % 4 === 0 && (position.countIn || reference),
+    reference: step % 4 === 0 && position.countIn,
   }
 }

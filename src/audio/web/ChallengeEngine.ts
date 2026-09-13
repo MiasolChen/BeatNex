@@ -80,7 +80,7 @@ export class ChallengeEngine {
   }
   private schedule = () => {
     if (!this.running || !this.context || !this.options) return
-    const {bpm, rounds, sound, reference, volume} = this.options
+    const {bpm, rounds, sound, reference} = this.options
     const duration = 15 / bpm
     const total = 16 + rounds * 128
     if (this.position.complete) { this.offset = total; this.halt(); return }
@@ -89,7 +89,7 @@ export class ChallengeEngine {
     while (this.nextStep < total && this.origin + this.nextStep * duration < this.context.currentTime + .12) {
       const at = this.origin + this.nextStep * duration
       const events = challengeEvents(this.nextStep, rounds, this.hits, reference)
-      if (events.reference) this.sound(at, 'click', this.nextStep < 16 ? .16 : .08 * volume / 100)
+      if (events.reference) this.sound(at, 'click', .16)
       if (events.target) this.sound(at, sound, sound === 'drum' ? .45 : sound === 'click' ? .16 : .23)
       this.nextStep++
     }

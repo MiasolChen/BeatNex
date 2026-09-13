@@ -24,13 +24,22 @@ describe('rhythm challenge content and timeline', () => {
     expect(challengePosition(272, 2)).toMatchObject({ complete: true, step: 272 })
   })
 
-  it('always clicks the count-in and suppresses target hits only in the user phase', () => {
-    const hits = [0, 4, 8]
-    expect(challengeEvents(0, 1, hits, false)).toEqual({ target: false, reference: true })
-    expect(challengeEvents(16, 1, hits, false)).toEqual({ target: true, reference: false })
-    expect(challengeEvents(80, 1, hits, true)).toEqual({ target: false, reference: true })
-    expect(challengeEvents(80, 1, hits, false)).toEqual({ target: false, reference: false })
-    expect(challengeEvents(144, 2, hits, true)).toEqual({ target: true, reference: true })
-    expect(challengeEvents(272, 2, hits, true)).toEqual({ target: false, reference: false })
+  it('plays only count-in reference clicks and keeps every empty chart position silent', () => {
+    expect(challengeEvents(0, 1, hitSteps(CHALLENGES[0].tokens), true)).toEqual({ target: false, reference: true })
+    expect(challengeEvents(15, 1, hitSteps(CHALLENGES[0].tokens), true)).toEqual({ target: false, reference: false })
+
+    for (const challenge of CHALLENGES) {
+      const hits = hitSteps(challenge.tokens)
+      for (const phase of [0, 1, 2, 3]) {
+        for (let phraseStep = 0; phraseStep < 32; phraseStep++) {
+          const events = challengeEvents(16 + phase * 32 + phraseStep, 1, hits, true)
+          expect(events.reference).toBe(false)
+          expect(events.target).toBe(phase !== 2 && hits.includes(phraseStep))
+        }
+      }
+    }
+
+    expect(challengeEvents(144, 2, [0, 4, 8], true)).toEqual({ target: true, reference: false })
+    expect(challengeEvents(272, 2, [0, 4, 8], true)).toEqual({ target: false, reference: false })
   })
 })
