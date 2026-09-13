@@ -1,0 +1,9 @@
+/* Shared type scale: use semantic roles instead of page-specific sizes. */
+#bn{--bn-text-micro:10px;--bn-text-caption:12px;--bn-text-body:14px;--bn-text-label:16px;--bn-text-title:20px;--bn-text-display:24px;--bn-text-hero:32px;--bn-text-metric:48px;--bn-control-size:44px;--bn-icon-size:18px;--bn-card-padding:14px}
+#bn .bn-heading h1,#bn .rc-player h1,#bn .bn-session h2{font-size:var(--bn-text-title);line-height:1.3;letter-spacing:-.025em}
+#bn .rc-player h1{margin:8px 0 12px}
+#bn .rc-console{padding:var(--bn-card-padding)}
+#bn .rc-transport button{height:var(--bn-control-size)}
+#bn .rc-transport .rc-primary{width:var(--bn-control-size)}
+#bn .rc-transport .rc-primary svg,#bn .rc-toolbar svg{width:var(--bn-icon-size);height:var(--bn-icon-size)}
+#bn .bn-bpm-rail button{font-size:var(--bn-text-title)}

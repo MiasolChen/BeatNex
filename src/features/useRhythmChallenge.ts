@@ -9,7 +9,7 @@ export function useRhythmChallenge(active: boolean, beforeStart: () => void) {
   const [storageError, setStorageError] = useState(initial.error)
   const [error, setError] = useState('')
   const [status, setStatus] = useState<'ready'|'loading'|'playing'|'paused'|'complete'>('ready')
-  const [position, setPosition] = useState(() => challengePosition(0, data.settings.rounds))
+  const [position, setPosition] = useState(() => challengePosition(0, data.settings.repeat ? Infinity : 1, data.settings.countIn))
   const engine = useRef<ChallengeEngine | null>(null)
   const request = useRef(0), completed = useRef(false), activeRef = useRef(active)
   activeRef.current = active
@@ -22,7 +22,7 @@ export function useRhythmChallenge(active: boolean, beforeStart: () => void) {
     document.addEventListener('visibilitychange', background)
     return () => { request.current++; instance.dispose(); engine.current = null; document.removeEventListener('visibilitychange', background) }
   }, [])
-  const reset = () => { request.current++; engine.current?.reset(); completed.current = false; setStatus('ready'); setPosition(challengePosition(0, dataRef.current.settings.rounds)); setError('') }
+  const reset = () => { request.current++; engine.current?.reset(); completed.current = false; setStatus('ready'); setPosition(challengePosition(0, dataRef.current.settings.repeat ? Infinity : 1, dataRef.current.settings.countIn)); setError('') }
   useEffect(() => { if (!active) reset() }, [active])
   useEffect(() => { if (!initial.error) setStorageError(writeChallenge(data)) }, [data, initial.error])
   useEffect(() => {
@@ -52,7 +52,7 @@ export function useRhythmChallenge(active: boolean, beforeStart: () => void) {
     const current = ++request.current
     setError(''); setStatus('loading')
     try {
-      const result = await engine.current?.start({...settings, challenge: CHALLENGES.find(c => c.id === settings.id) ?? CHALLENGES[0]})
+      const result = await engine.current?.start({...settings, rounds: 1, challenge: CHALLENGES.find(c => c.id === settings.id) ?? CHALLENGES[0]})
       if (current !== request.current) return
       if (!result || !activeRef.current || document.hidden) { engine.current?.pause(); setStatus('paused'); return }
       setStatus('playing')
@@ -61,7 +61,7 @@ export function useRhythmChallenge(active: boolean, beforeStart: () => void) {
   const pause = () => { request.current++; engine.current?.pause(); setPosition(engine.current?.position ?? position); setStatus('paused') }
   const update = (patch: Partial<ChallengeSettings>) => {
     if (status === 'playing' || status === 'loading') return
-    if (patch.rounds !== undefined) reset()
+    if (patch.rounds !== undefined || patch.repeat !== undefined || patch.countIn !== undefined) reset()
     setData(d => ({...d, settings: {...d.settings, ...patch}}))
   }
   const setDisplay = (display: 'grid' | 'staff') => setData(d => ({...d, settings: {...d.settings, display}}))

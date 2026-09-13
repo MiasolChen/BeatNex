@@ -16,7 +16,7 @@ export function RhythmStaff({challenge, step, active}: {challenge: Challenge; st
         if (previous && previous.at+previous.length===note.at && Math.floor(previous.at/4)===Math.floor(note.at/4)) group.push(note)
         else groups.push([note])
       }
-      return <svg className="rc-staff" key={bar} viewBox="0 0 390 122" role="img" aria-label={label}>
+      return <svg className="rc-staff" key={bar} viewBox="0 0 390 96" role="img" aria-label={label}>
         <title>{label}</title>
         <text x="8" y="15" className="rc-staff-label">第 {bar+1} 小节</text>
         {[0,1,2,3,4].map(line=><line key={line} className="rc-staff-line" x1="8" x2="381" y1={44+line*10} y2={44+line*10}/>)}

@@ -7,7 +7,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn>main{overscroll-behavior:contain}
 #bn>.bn-nav,#bn>.bn-calendar-launch{bottom:max(16px,env(safe-area-inset-bottom))}
 #bn .bn-route-dock.bn-floating-delete{bottom:max(100px,calc(env(safe-area-inset-bottom) + 80px))}
-#bn .bn-error{background:#f6e6df;padding:12px;border-radius:12px;color:#843b2c;font-size:12px;margin-bottom:14px}
+#bn .bn-error{background:#f6e6df;padding:12px;border-radius:12px;color:#843b2c;font-size:var(--bn-text-caption);margin-bottom:14px}
 #bn .bn-error button{text-decoration:underline;margin-left:10px}
 #bn .bn-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 #bn .bn-select-trigger select{width:100%;height:44px;border:0;background:transparent;font:inherit;color:inherit}
@@ -23,8 +23,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn>.bn-nav .bn-nav-slider{transition:transform 280ms cubic-bezier(.82,.01,.28,.99),opacity 180ms}
 #bn .bn-grid-head{will-change:transform;left:6px}
 #bn .bn-editor-toolbar label{min-width:0}
-@container bn-preview (min-width:700px){#bn .bn-library-grid{grid-template-columns:repeat(3,minmax(0,1fr))}#bn .bn-layout{display:grid;grid-template-columns:1.1fr 1fr}#bn .bn-phase-face strong{font-size:13px}}
-@media(max-width:360px){#bn .bn-course{padding:14px}#bn .bn-phase-face{padding-left:7px}#bn .bn-phase-face strong{font-size:11px}#bn .bn-inline-bars span{font-size:8px}#bn .bn-phase{padding-right:4px}#bn .bn-inline-bars input{width:26px;min-width:26px;max-width:26px}#bn .bn-course #bn-route-hint{font-size:10px}#bn .bn-route-status{font-size:10px}}
+@container bn-preview (min-width:700px){#bn .bn-library-grid{grid-template-columns:repeat(3,minmax(0,1fr))}#bn .bn-layout{display:grid;grid-template-columns:1.1fr 1fr}#bn .bn-phase-face strong{font-size:var(--bn-text-body)}}
+@media(max-width:360px){#bn .bn-course{padding:14px}#bn .bn-phase-face{padding-left:7px}#bn .bn-phase-face strong{font-size:var(--bn-text-caption)}#bn .bn-inline-bars span{font-size:var(--bn-text-micro)}#bn .bn-phase{padding-right:4px}#bn .bn-inline-bars input{width:26px;min-width:26px;max-width:26px}#bn .bn-course #bn-route-hint{font-size:var(--bn-text-micro)}#bn .bn-route-status{font-size:var(--bn-text-micro)}}
 @media(prefers-reduced-motion:reduce){#bn *,#bn *:before,#bn *:after{animation:none!important;transition:none!important}}
 
 #bn .bn-beats{position:relative}#bn .bn-count-marker{transition:transform 140ms ease-out,background 140ms ease-out}
@@ -36,13 +36,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-practice-progress{padding:14px 18px;margin:0;min-width:0}
 #bn .bn-practice-progress[hidden]{display:none!important}
 #bn .bn-progress-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
-#bn .bn-progress-heading strong{font-size:15px;line-height:20px}
-#bn .bn-progress-heading>span{font-size:10px;color:var(--muted);white-space:nowrap}
+#bn .bn-progress-heading strong{font-size:var(--bn-text-label);line-height:20px}
+#bn .bn-progress-heading>span{font-size:var(--bn-text-micro);color:var(--muted);white-space:nowrap}
 #bn .bn-bar-track{display:flex;gap:4px;height:6px;margin:0 0 9px}
 #bn .bn-bar-track i{flex:1;min-width:0;border-radius:4px;background:var(--line);transition:background 120ms ease-out}
 #bn .bn-bar-track i.done{background:var(--ink)}
 #bn .bn-bar-track i.current{background:var(--acid);box-shadow:0 0 0 1px #98a54b}
-#bn .bn-practice-progress #bn-guide{height:32px;font-size:11px;line-height:16px;color:var(--muted)}
+#bn .bn-practice-progress #bn-guide{height:32px;font-size:var(--bn-text-caption);line-height:16px;color:var(--muted)}
 #bn .bn-course{position:relative}
 #bn .bn-repeat-control{position:relative;display:flex;width:88px;height:32px;padding:3px;margin:0;flex-shrink:0;border-radius:10px;background:var(--paper);border:1px solid var(--line);box-sizing:border-box}
 #bn .bn-repeat-control[hidden]{display:none}
@@ -62,66 +62,66 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-practice-modes{--mode-inset:6px;--mode-gap:4px;--mode-radius:14px;position:relative;isolation:isolate;display:flex;gap:var(--mode-gap);padding:var(--mode-inset);background:var(--paper);border-bottom:1px solid var(--line);border-radius:20px 20px 0 0}
 #bn .bn-practice-modes:before{content:'';position:absolute;left:var(--mode-inset);top:var(--mode-inset);bottom:var(--mode-inset);width:calc((100% - 2 * var(--mode-inset) - var(--mode-gap))/2);border-radius:var(--mode-radius);background:var(--ink);pointer-events:none;transition:transform 260ms cubic-bezier(.22,1,.36,1)}
 #bn .bn-practice-modes:has(button:nth-child(2)[aria-pressed="true"]):before{transform:translateX(calc(100% + var(--mode-gap)))}
-#bn .bn-practice-modes button{position:relative;z-index:1;flex:1;min-width:0;min-height:44px;border:0;border-radius:var(--mode-radius);background:transparent;font-size:15px;font-weight:700;color:var(--ink);transform:none;transition:color 160ms ease-out}
+#bn .bn-practice-modes button{position:relative;z-index:1;flex:1;min-width:0;min-height:44px;border:0;border-radius:var(--mode-radius);background:transparent;font-size:var(--bn-text-label);font-weight:700;color:var(--ink);transform:none;transition:color 160ms ease-out}
 #bn .bn-practice-modes button[aria-pressed="true"]{color:var(--white)}
 #bn .bn-practice-modes button:active{opacity:.8}
 #bn .bn-mode-content{padding:18px}
 #bn .bn-target-heading{display:flex;justify-content:space-between;align-items:center;min-height:44px;gap:8px}
 #bn .bn-target-heading h3{font-size:17px;margin:0}
 #bn .bn-target-heading button{min-height:44px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:0 12px}
-#bn .bn-mode-help{font-size:12px;line-height:1.6;color:var(--muted);margin:4px 0 14px}
+#bn .bn-mode-help{font-size:var(--bn-text-caption);line-height:1.6;color:var(--muted);margin:4px 0 14px}
 #bn .bn-mode-panel .bn-instruments{padding:0;background:none;border:0}
 #bn .bn-mode-panel .bn-drums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 #bn .bn-mode-panel .bn-drum{min-width:0;min-height:70px;touch-action:manipulation}
 #bn .bn-mode-panel .bn-drum:disabled{opacity:.65;cursor:default}
-#bn .bn-mode-panel #bn-drum-help{font-size:11px;color:var(--muted);margin-top:8px;text-align:center}
+#bn .bn-mode-panel #bn-drum-help{font-size:var(--bn-text-caption);color:var(--muted);margin-top:8px;text-align:center}
 #bn .bn-mode-panel .bn-practice-progress{padding:16px 0;margin-top:16px;border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;background:transparent}
 #bn .bn-mode-panel .bn-course{padding:18px 0 0;margin:0;min-height:0;width:100%;background:transparent;border:0;box-shadow:none}
 #bn .bn-mode-panel .bn-course>.bn-row{display:flex;align-items:center}
-#bn .bn-mode-panel .bn-course h3{font-size:16px}
+#bn .bn-mode-panel .bn-course h3{font-size:var(--bn-text-label)}
 #bn .bn-mode-panel .bn-course #bn-route-hint{margin-top:4px;white-space:normal}
 #bn .bn-mode-panel .bn-repeat-control{height:44px;width:90px;padding:0;border:0;background:transparent}
 #bn .bn-mode-panel .bn-repeat-control:before{content:'';position:absolute;inset:6px 0;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
 #bn .bn-mode-panel .bn-repeat-control i{left:1px;top:7px;width:44px;height:30px;border-radius:8px}
-#bn .bn-mode-panel .bn-repeat-control button{height:44px;min-height:44px;font-size:14px}
+#bn .bn-mode-panel .bn-repeat-control button{height:44px;min-height:44px;font-size:var(--bn-text-body)}
 #bn .bn-session .bn-player-tempo{display:block}
 #bn .bn-session .bn-player-tempo .bn-tempo{width:100%;margin:0}
 #bn .bn-session .bn-sub{min-height:18px}
 @container bn-preview (min-width:700px){#bn .bn-layout>.bn-mode-panel{grid-column:2;grid-row:1}#bn .bn-layout>.bn-session{grid-column:1;grid-row:1}}
 #bn .bn-mode-panel{width:100%;box-sizing:border-box}
-#bn .bn-mode-panel .bn-drum{transform:none;font-size:11px}
+#bn .bn-mode-panel .bn-drum{transform:none;font-size:var(--bn-text-caption)}
 #bn .bn-mode-panel .bn-drum:active{filter:brightness(.94)}
 
-#bn .bn-current-phase{font-size:12px;font-weight:700;margin:10px 0 5px;color:var(--ink)}
+#bn .bn-current-phase{font-size:var(--bn-text-caption);font-weight:700;margin:10px 0 5px;color:var(--ink)}
 #bn .bn-mode-panel .bn-practice-progress #bn-guide{height:auto;min-height:32px;margin-bottom:0}
 
 /* Compact practice layout on phones, without shrinking primary touch targets. */
 @container bn-preview (max-width:699px){
  #bn [data-view="practice"] .bn-layout{gap:10px}
  #bn [data-view="practice"] .bn-session{padding:14px;border-radius:18px}
- #bn [data-view="practice"] .bn-session h2{font-size:22px;line-height:1.15;letter-spacing:-.6px;margin:10px 0 5px}
+ #bn [data-view="practice"] .bn-session h2{font-size:var(--bn-text-title);line-height:1.15;letter-spacing:-.6px;margin:10px 0 5px}
  #bn [data-view="practice"] .bn-session .bn-beats{margin:10px 0}
- #bn [data-view="practice"] .bn-count{font-size:14px;height:24px}
+ #bn [data-view="practice"] .bn-count{font-size:var(--bn-text-body);height:24px}
  #bn [data-view="practice"] .bn-session .bn-in-player{margin-top:10px;padding-top:8px}
- #bn [data-view="practice"] .bn-session .bn-primary{font-size:13px;min-height:44px;height:44px}
+ #bn [data-view="practice"] .bn-session .bn-primary{font-size:var(--bn-text-body);min-height:44px;height:44px}
  #bn [data-view="practice"] .bn-session #bn-reset,#bn [data-view="practice"] .bn-session #bn-free-end{height:44px;min-height:44px;width:44px;min-width:44px}
  #bn .bn-mode-panel{border-radius:16px}
  #bn .bn-practice-modes{--mode-inset:3px;--mode-gap:3px;--mode-radius:12px;border-radius:16px 16px 0 0}
- #bn .bn-practice-modes button{font-size:13px;border-radius:12px}
+ #bn .bn-practice-modes button{font-size:var(--bn-text-body);border-radius:12px}
  #bn .bn-mode-content{padding:12px}
  #bn .bn-target-heading{min-height:28px}
- #bn .bn-target-heading h3,#bn .bn-mode-panel .bn-course h3{font-size:14px;line-height:22px}
- #bn .bn-target-heading button{font-size:12px}
- #bn .bn-mode-help{margin:2px 0 8px;font-size:12px;line-height:1.5}
+ #bn .bn-target-heading h3,#bn .bn-mode-panel .bn-course h3{font-size:var(--bn-text-body);line-height:22px}
+ #bn .bn-target-heading button{font-size:var(--bn-text-caption)}
+ #bn .bn-mode-help{margin:2px 0 8px;font-size:var(--bn-text-caption);line-height:1.5}
  #bn .bn-mode-panel .bn-drums{margin-top:8px;gap:7px}
  #bn .bn-mode-panel .bn-drum{min-height:56px;padding:6px 2px;gap:4px;line-height:1.2;border-radius:10px}
  #bn .bn-mode-panel .bn-drum svg{width:23px;height:23px}
  #bn .bn-mode-panel #bn-drum-help{margin-top:6px}
  #bn .bn-mode-panel .bn-practice-progress{padding:10px 0;margin-top:10px}
  #bn .bn-progress-heading{margin-bottom:8px}
- #bn .bn-progress-heading strong{font-size:13px;line-height:18px}
- #bn .bn-current-phase{margin-top:8px;font-size:12px}
- #bn .bn-mode-panel .bn-practice-progress #bn-guide{min-height:0;line-height:1.5;margin-top:4px;font-size:12px}
+ #bn .bn-progress-heading strong{font-size:var(--bn-text-body);line-height:18px}
+ #bn .bn-current-phase{margin-top:8px;font-size:var(--bn-text-caption)}
+ #bn .bn-mode-panel .bn-practice-progress #bn-guide{min-height:0;line-height:1.5;margin-top:4px;font-size:var(--bn-text-caption)}
  #bn .bn-mode-panel .bn-course{padding-top:10px}
  #bn .bn-mode-panel .bn-course #bn-route-hint{margin-top:2px}
  #bn .bn-mode-panel #bn-phases{margin-top:10px;gap:8px}
@@ -130,31 +130,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn [data-view="practice"] .bn-bpm-wheel{height:56px}
  #bn [data-view="practice"] .bn-bpm-wheel:before{top:2px;height:40px;border-radius:10px}
  #bn [data-view="practice"] .bn-bpm-rail,#bn [data-view="practice"] .bn-bpm-rail button{height:44px;min-height:44px}
- #bn [data-view="practice"] .bn-bpm-rail button{font-size:16px}
+ #bn [data-view="practice"] .bn-bpm-rail button{font-size:var(--bn-text-label)}
  #bn [data-view="practice"] .bn-bpm-rail button[aria-pressed=true]{transform:scale(1.05)}
  #bn [data-view="practice"] .bn-bpm-wheel>small{top:42px}
- #bn [data-view="practice"] .bn-wheel-input{top:2px;height:40px;font-size:18px}
+ #bn [data-view="practice"] .bn-wheel-input{top:2px;height:40px;font-size:var(--bn-text-title)}
  #bn .bn-mode-panel #bn-phases{grid-auto-rows:46px}
  #bn .bn-mode-panel .bn-phase{height:46px;min-height:46px;border-radius:10px}
  #bn .bn-mode-panel .bn-phase-face{height:44px;min-height:44px;padding-left:8px;border-radius:9px}
- #bn .bn-mode-panel .bn-phase-face strong{font-size:12px}
- #bn .bn-mode-panel .bn-inline-bars input{font-size:16px}
- #bn .bn-mode-panel #bn-add-phase{height:46px;min-height:46px;font-size:12px;border-radius:10px}
+ #bn .bn-mode-panel .bn-phase-face strong{font-size:var(--bn-text-caption)}
+ #bn .bn-mode-panel .bn-inline-bars input{font-size:var(--bn-text-label)}
+ #bn .bn-mode-panel #bn-add-phase{height:46px;min-height:46px;font-size:var(--bn-text-caption);border-radius:10px}
 }
 
 /* Both practice modes share geometry; only the content below the tabs changes. */
 @container bn-preview (max-width:699px){
- #bn [data-view="practice"] .bn-session h2{font-size:18px;line-height:1.2;margin:10px 0 6px;overflow-wrap:anywhere}
- #bn .bn-session .bn-tag{padding:2px 6px;font-size:12px}
- #bn .bn-session .bn-live{font-size:12px}
+ #bn [data-view="practice"] .bn-session h2{font-size:var(--bn-text-title);line-height:1.2;margin:10px 0 6px;overflow-wrap:anywhere}
+ #bn .bn-session .bn-tag{padding:2px 6px;font-size:var(--bn-text-caption)}
+ #bn .bn-session .bn-live{font-size:var(--bn-text-caption)}
  #bn .bn-session .bn-beat{height:30px;min-height:30px}
  #bn [data-view="practice"] .bn-bpm-rail button{transform:none}
  #bn .bn-target-heading{min-height:22px}
  #bn .bn-mode-help{margin:2px 0 6px}
  #bn .bn-mode-panel .bn-drums{gap:8px;margin-top:6px}
- #bn .bn-mode-panel .bn-drum{height:56px;min-height:56px;font-size:12px;padding:4px 0;gap:2px}
+ #bn .bn-mode-panel .bn-drum{height:56px;min-height:56px;font-size:var(--bn-text-caption);padding:4px 0;gap:2px}
  #bn .bn-mode-panel .bn-drum svg{width:20px;height:20px;flex-shrink:0}
- #bn .bn-mode-panel #bn-drum-help{font-size:12px;line-height:18px;margin-top:4px}
+ #bn .bn-mode-panel #bn-drum-help{font-size:var(--bn-text-caption);line-height:18px;margin-top:4px}
  #bn [data-view="practice"] .bn-layout{gap:8px}
  #bn [data-view="practice"] .bn-session{padding:14px 16px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);column-gap:8px;align-items:center}
  #bn .bn-session>div:first-child{grid-column:1 / -1}
@@ -169,77 +169,77 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 
 /* Shared phone scale across all five pages. Preserve native input and touch sizes. */
 @container bn-preview (max-width:699px){
- #bn{font-size:13px}
+ #bn{font-size:var(--bn-text-body)}
  #bn>.bn-top{height:44px;min-height:44px;padding:6px 12px;gap:8px}
- #bn .bn-brand{font-size:20px;gap:6px;letter-spacing:-.8px}
- #bn .bn-mark{width:24px;height:24px;font-size:18px;border-radius:7px}
- #bn .bn-brand small{font-size:9px}
- #bn .bn-local{font-size:9px;letter-spacing:1px}
+ #bn .bn-brand{font-size:var(--bn-text-title);gap:6px;letter-spacing:-.8px}
+ #bn .bn-mark{width:24px;height:24px;font-size:var(--bn-text-title);border-radius:7px}
+ #bn .bn-brand small{font-size:var(--bn-text-micro)}
+ #bn .bn-local{font-size:var(--bn-text-micro);letter-spacing:1px}
  #bn>main,#bn.bn-library-screen>main,#bn.bn-calendar-screen>main{padding:12px 16px calc(78px + max(0px,env(safe-area-inset-bottom) - 16px));scroll-padding-bottom:94px}
  #bn .bn-heading,#bn [data-view=calendar]>.bn-heading{margin:4px 0 16px;gap:8px}
- #bn h1,#bn [data-view=calendar] h1{font-size:20px;line-height:1.25;letter-spacing:-.5px;margin:0}
- #bn .bn-heading h2,#bn .bn-dialog h2{font-size:18px;line-height:1.3}
- #bn .bn-eyebrow{font-size:10px;letter-spacing:1px}
- #bn .bn-primary,#bn .bn-save{font-size:13px;min-height:44px}
- #bn .bn-muted,#bn .bn-mode-help{font-size:12px}
- #bn .bn-session .bn-sub{font-size:12px}
+ #bn h1,#bn [data-view=calendar] h1{font-size:var(--bn-text-title);line-height:1.25;letter-spacing:-.5px;margin:0}
+ #bn .bn-heading h2,#bn .bn-dialog h2{font-size:var(--bn-text-title);line-height:1.3}
+ #bn .bn-eyebrow{font-size:var(--bn-text-micro);letter-spacing:1px}
+ #bn .bn-primary,#bn .bn-save{font-size:var(--bn-text-body);min-height:44px}
+ #bn .bn-muted,#bn .bn-mode-help{font-size:var(--bn-text-caption)}
+ #bn .bn-session .bn-sub{font-size:var(--bn-text-caption)}
  #bn .bn-session #bn-free-end,#bn .bn-session #bn-reset{flex:none;width:44px;min-width:44px}
  #bn .bn-layout{gap:8px}
  #bn .bn-source-tabs{width:240px;max-width:100%;margin:0 0 16px;padding:3px;border-radius:13px}
- #bn .bn-source-tabs button{font-size:12px;min-height:38px;height:38px;padding:0 10px}
+ #bn .bn-source-tabs button{font-size:var(--bn-text-caption);min-height:38px;height:38px;padding:0 10px}
  #bn .bn-categories{padding:10px;border-radius:14px}
  #bn .bn-category-window,#bn .bn-category-window>.bn-category-rail{height:100px;min-height:100px;max-height:100px}
  #bn .bn-category-window .bn-category{height:92px;min-height:92px;max-height:92px;flex-basis:104px;padding:8px}
- #bn .bn-category strong{font-size:14px}
- #bn .bn-category em{font-size:12px}
+ #bn .bn-category strong{font-size:var(--bn-text-body)}
+ #bn .bn-category em{font-size:var(--bn-text-caption)}
  #bn .bn-category-art{height:32px;width:40px;margin-bottom:4px}
- #bn .bn-rail-footer{font-size:12px;margin-top:4px}
- #bn .bn-curated-tools{margin:8px 0;font-size:12px}
+ #bn .bn-rail-footer{font-size:var(--bn-text-caption);margin-top:4px}
+ #bn .bn-curated-tools{margin:8px 0;font-size:var(--bn-text-caption)}
  #bn .bn-library-grid{gap:8px}
  #bn .bn-record{padding:12px;gap:6px;border-radius:16px}
- #bn .bn-record-body h3{font-size:14px;margin:0 0 4px;overflow-wrap:anywhere}
+ #bn .bn-record-body h3{font-size:var(--bn-text-body);margin:0 0 4px;overflow-wrap:anywhere}
  #bn .bn-record-body button{margin-top:6px;min-height:44px;padding:6px 8px}
- #bn .bn-record-body .bn-muted{font-size:12px}
- #bn .bn-favorite{height:44px;width:44px;min-height:44px;font-size:18px}
+ #bn .bn-record-body .bn-muted{font-size:var(--bn-text-caption)}
+ #bn .bn-favorite{height:44px;width:44px;min-height:44px;font-size:var(--bn-text-title)}
  #bn .bn-empty{padding:20px 12px;min-height:160px}
- #bn .bn-empty h3{font-size:16px}
- #bn .bn-empty p{font-size:12px}
+ #bn .bn-empty h3{font-size:var(--bn-text-label)}
+ #bn .bn-empty p{font-size:var(--bn-text-caption)}
  #bn .bn-machine{padding:16px;border-radius:18px}
  #bn .bn-editor-toolbar{padding:12px;gap:12px;border-radius:14px}
- #bn .bn-editor-toolbar label{font-size:12px}
- #bn .bn-editor-toolbar #bn-save{padding:0 6px;gap:4px;font-size:12px;white-space:nowrap}
+ #bn .bn-editor-toolbar label{font-size:var(--bn-text-caption)}
+ #bn .bn-editor-toolbar #bn-save{padding:0 6px;gap:4px;font-size:var(--bn-text-caption);white-space:nowrap}
  #bn .bn-editor-toolbar #bn-save svg{width:18px;height:18px}
  #bn .bn-editor-toolbar .bn-editor-options>label{gap:6px}
- #bn .bn-editor-toolbar .bn-tool-label{font-size:12px}
- #bn .bn-daw-hint{font-size:12px;margin:6px 0}
+ #bn .bn-editor-toolbar .bn-tool-label{font-size:var(--bn-text-caption)}
+ #bn .bn-daw-hint{font-size:var(--bn-text-caption);margin:6px 0}
  #bn .bn-machine-foot{padding-top:8px;margin-top:8px}
  #bn .bn-metronome{padding:16px;border-radius:18px}
  #bn .bn-metro-stage{height:300px}
  #bn .bn-metronome>.bn-bpm-wheel{height:64px;margin:8px 0 12px}
  #bn .bn-metronome .bn-bpm-rail,#bn .bn-metronome .bn-bpm-rail button{height:44px;min-height:44px}
- #bn .bn-metronome .bn-bpm-rail button{font-size:18px;transform:none}
+ #bn .bn-metronome .bn-bpm-rail button{font-size:var(--bn-text-title);transform:none}
  #bn .bn-metronome .bn-bpm-wheel:before{top:2px;height:40px}
- #bn .bn-metronome .bn-bpm-wheel>small{top:46px;font-size:12px}
- #bn .bn-metronome .bn-wheel-input{top:2px;height:40px;font-size:18px}
+ #bn .bn-metronome .bn-bpm-wheel>small{top:46px;font-size:var(--bn-text-caption)}
+ #bn .bn-metronome .bn-wheel-input{top:2px;height:40px;font-size:var(--bn-text-title)}
  #bn .bn-dance-timer{padding:20px;gap:8px 16px;grid-template-columns:minmax(0,1fr) 112px;min-height:132px;border-radius:18px}
- #bn #bn-dance-clock b{font-size:30px;letter-spacing:-1px}
- #bn #bn-dance-clock.bn-hours b{font-size:24px}
+ #bn #bn-dance-clock b{font-size:var(--bn-text-hero);letter-spacing:-1px}
+ #bn #bn-dance-clock.bn-hours b{font-size:var(--bn-text-display)}
  #bn .bn-dance-actions{gap:10px}
  #bn .bn-dance-actions button{min-height:44px;height:44px}
  #bn .bn-calendar-sheet{margin-top:20px;padding:16px;min-height:0;border-radius:18px}
  #bn .bn-calendar-tabs{margin-bottom:16px}
- #bn .bn-calendar-tabs button{font-size:13px}
- #bn .bn-calendar-top strong{font-size:14px}
- #bn .bn-dance-stats b{font-size:16px}
- #bn .bn-dance-stats span,#bn .bn-diary-caption{font-size:12px}
+ #bn .bn-calendar-tabs button{font-size:var(--bn-text-body)}
+ #bn .bn-calendar-top strong{font-size:var(--bn-text-body)}
+ #bn .bn-dance-stats b{font-size:var(--bn-text-label)}
+ #bn .bn-dance-stats span,#bn .bn-diary-caption{font-size:var(--bn-text-caption)}
  #bn [data-calendar-mode=day] .bn-calendar-sheet{min-height:0}
  #bn [data-calendar-mode=day] .bn-training-list{min-height:180px;max-height:280px}
  #bn #bn-year-grid button{height:64px;min-height:64px}
  #bn .bn-dialog{padding:16px;border-radius:16px;max-height:calc(100svh - 32px);overflow:auto}
- #bn .bn-dialog input{font-size:16px}
- #bn .bn-complete-number{font-size:48px}
- #bn .bn-save-name{font-size:13px;margin-top:12px}
- #bn .bn-save-meta{font-size:12px;margin:8px 0}
+ #bn .bn-dialog input{font-size:var(--bn-text-label)}
+ #bn .bn-complete-number{font-size:var(--bn-text-metric)}
+ #bn .bn-save-name{font-size:var(--bn-text-body);margin-top:12px}
+ #bn .bn-save-meta{font-size:var(--bn-text-caption);margin:8px 0}
  #bn .bn-feedback{gap:8px;margin:12px 0}
  #bn>.bn-nav button svg,#bn>.bn-calendar-launch svg{width:19px;height:19px}
 }
@@ -248,7 +248,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-record{grid-template-columns:48px minmax(0,1fr) 44px 44px;align-items:center}
 #bn .bn-record .bn-art,#bn .bn-record .bn-saved-art{height:48px;width:48px;padding:4px}
 #bn .bn-record .bn-disc{width:40px;height:40px}
-#bn .bn-record .bn-favorite,#bn .bn-record-play,#bn .bn-record-edit{position:static;width:44px;height:44px;min-height:44px;padding:10px;display:grid;place-items:center;border:0;border-radius:50%;margin:0;background:transparent;font-size:20px}
+#bn .bn-record .bn-favorite,#bn .bn-record-play,#bn .bn-record-edit{position:static;width:44px;height:44px;min-height:44px;padding:10px;display:grid;place-items:center;border:0;border-radius:50%;margin:0;background:transparent;font-size:var(--bn-text-title)}
 #bn .bn-record-play{background:var(--acid)}
 #bn .bn-record-play svg,#bn .bn-record-edit svg{width:18px;height:18px}
 #bn .bn-record-body .bn-row{flex-wrap:wrap;justify-content:flex-start;gap:2px 8px}
@@ -269,10 +269,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn:not(.bn-free-mode) .bn-mode-panel #bn-phases{margin-top:16px;gap:10px;grid-auto-rows:minmax(48px,auto);min-height:0}
 #bn:not(.bn-free-mode) .bn-mode-panel .bn-phase,#bn:not(.bn-free-mode) .bn-mode-panel #bn-add-phase{height:48px;min-height:48px;border-radius:10px}
 #bn:not(.bn-free-mode) .bn-mode-panel .bn-phase-face{height:46px;min-height:46px;padding-left:12px}
-#bn .bn-mode-panel .bn-phase-face strong{font-size:12px;font-weight:650}
-#bn .bn-mode-panel .bn-inline-bars input{font-size:16px;font-weight:600}
-#bn .bn-mode-panel #bn-add-phase{font-size:12px;padding:0 12px;gap:6px}
-#bn .bn-mode-panel #bn-add-phase span{font-size:18px}
+#bn .bn-mode-panel .bn-phase-face strong{font-size:var(--bn-text-caption);font-weight:650}
+#bn .bn-mode-panel .bn-inline-bars input{font-size:var(--bn-text-label);font-weight:600}
+#bn .bn-mode-panel #bn-add-phase{font-size:var(--bn-text-caption);padding:0 12px;gap:6px}
+#bn .bn-mode-panel #bn-add-phase span{font-size:var(--bn-text-title)}
 #bn:not(.bn-free-mode) .bn-route-dock{margin-top:20px;padding-top:16px;min-height:76px}
 @container bn-preview (max-width:360px){
  #bn .bn-mode-content{padding:16px}
@@ -281,12 +281,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 @container bn-preview (max-width:699px){
  #bn .bn-library-head{padding-top:4px}
  #bn .bn-source-tabs .bn-source-slider{left:3px;top:3px;bottom:3px;border-radius:10px}
- #bn .bn-record-body h3{font-size:13px;line-height:1.3}
- #bn .bn-record-body .bn-muted{font-size:11px}
+ #bn .bn-record-body h3{font-size:var(--bn-text-body);line-height:1.3}
+ #bn .bn-record-body .bn-muted{font-size:var(--bn-text-caption)}
  #bn .bn-editor-toolbar .bn-editor-actions{padding:10px 0 0;gap:6px}
  #bn .bn-editor-toolbar .bn-editor-actions button{background:transparent;border:0}
  #bn .bn-editor-toolbar .bn-select-trigger{padding:0 6px}
- #bn .bn-editor-toolbar .bn-bpm-rail button{font-size:16px;transform:none}
+ #bn .bn-editor-toolbar .bn-bpm-rail button{font-size:var(--bn-text-label);transform:none}
  #bn .bn-daw-hint{margin:14px 0 10px}
  #bn .bn-machine-foot{margin-top:16px;padding-top:0}
  #bn .bn-calendar-top{margin-bottom:12px}
@@ -326,7 +326,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn [data-level=weak] .bn-pad-volume i{transform:scaleX(.18)}
 #bn [data-hit=true] .bn-pad-volume i{opacity:.85;transition-duration:60ms}
 #bn [data-level=idle] .bn-pad-volume{visibility:hidden}
-#bn .bn-volume-key{display:flex;justify-content:center;gap:16px;font-size:11px;color:var(--muted);line-height:inherit;margin-top:0}
+#bn .bn-volume-key{display:flex;justify-content:center;gap:16px;font-size:var(--bn-text-caption);color:var(--muted);line-height:inherit;margin-top:0}
 #bn .bn-volume-key span{display:flex;align-items:center;gap:4px}
 #bn .bn-volume-key i{width:8px;height:8px;border-radius:50%;background:#e4e5de;border:1px solid #999b90}
 #bn .bn-volume-key [data-level=normal] i{background:var(--acid)}
@@ -347,13 +347,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 
 /* Meter and bar count share a compact, aligned listbox. */
 #bn .bn-select-menu{border-radius:12px;padding:4px;max-height:232px;overscroll-behavior:contain}
-#bn .bn-select-menu button{height:36px;min-height:36px;padding:0 8px;font-size:13px;font-weight:500}
-#bn .bn-editor-toolbar .bn-select-trigger{font-size:13px;font-weight:650;border-radius:9px;line-height:1}
+#bn .bn-select-menu button{height:36px;min-height:36px;padding:0 8px;font-size:var(--bn-text-body);font-weight:500}
+#bn .bn-editor-toolbar .bn-select-trigger{font-size:var(--bn-text-body);font-weight:650;border-radius:9px;line-height:1}
 
 /* Parameters, edit history and view controls have separate visual groups. */
 #bn .bn-editor-toolbar{padding:0;border:0;background:transparent;border-radius:0}
 #bn .bn-editor-toolbar .bn-editor-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}
-#bn .bn-editor-toolbar .bn-editor-options>label{font-size:11px;grid-template-rows:16px 44px;gap:6px}
+#bn .bn-editor-toolbar .bn-editor-options>label{font-size:var(--bn-text-caption);grid-template-rows:16px 44px;gap:6px}
 #bn .bn-editor-toolbar .bn-select-trigger{padding:0 10px;background:var(--paper)}
 #bn .bn-editor-toolbar .bn-editor-actions{display:flex;justify-content:space-between;gap:10px;border:0;margin:14px 0 0;padding:0}
 #bn .bn-editor-toolbar .bn-tool-group{display:flex;gap:8px}
@@ -372,7 +372,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-editor-toolbar .bn-wheel-compact:before{display:none}
 #bn .bn-editor-toolbar .bn-wheel-compact .bn-bpm-rail,#bn .bn-editor-toolbar .bn-wheel-compact .bn-bpm-rail button{height:42px;min-height:42px;line-height:42px}
 #bn .bn-tempo-caption{display:flex;justify-content:space-between;align-items:center;gap:2px;white-space:nowrap}
-#bn .bn-tempo-caption>span{font-size:10px;color:var(--muted);font-weight:400}
+#bn .bn-tempo-caption>span{font-size:var(--bn-text-micro);color:var(--muted);font-weight:400}
 #bn .bn-editor-toolbar .bn-editor-actions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 #bn .bn-editor-toolbar .bn-tool-group{display:contents}
 #bn .bn-editor-toolbar .bn-editor-actions button,#bn .bn-editor-toolbar #bn-undo,#bn .bn-editor-toolbar #bn-redo,#bn .bn-editor-toolbar #bn-follow{width:100%;min-width:0}
@@ -389,7 +389,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-machine-settings .bn-select-trigger{background:#ffffff0b;border-color:#ffffff29;color:var(--white)}
 #bn .bn-machine-settings .bn-wheel-compact{background:transparent;border-color:transparent;color:var(--white)}
 #bn .bn-machine-settings .bn-wheel-compact:before{top:2px;bottom:2px;width:60px;left:calc(50% - 30px);border-radius:10px;background:#ffffff12}
-#bn .bn-machine-settings .bn-bpm-rail button{font-size:16px;color:var(--white)}
+#bn .bn-machine-settings .bn-bpm-rail button{font-size:var(--bn-text-label);color:var(--white)}
 #bn .bn-machine-settings .bn-bpm-rail button[aria-pressed=true]{transform:scale(1.05)}
 #bn .bn-machine-settings .bn-editor-actions{margin-top:18px;padding-top:14px;border-top:1px solid #ffffff1a}
 #bn .bn-machine-settings .bn-editor-actions button,#bn .bn-machine-settings #bn-undo,#bn .bn-machine-settings #bn-redo,#bn .bn-machine-settings #bn-follow{background:#ffffff0b;color:var(--white)}
@@ -419,21 +419,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-machine-settings .bn-editor-actions{margin-top:8px;padding-top:0;border:0}
 #bn .bn-machine-settings+.bn-machine{padding:12px}
 #bn .bn-machine-settings+.bn-machine .bn-daw-hint{margin-bottom:8px}
-#bn .bn-machine-settings .bn-wheel-compact>small{display:block;position:absolute;top:0;left:4px;right:auto;line-height:42px;padding:0 3px;font-size:9px;letter-spacing:0;background:var(--paper);color:var(--muted);pointer-events:none}
+#bn .bn-machine-settings .bn-wheel-compact>small{display:block;position:absolute;top:0;left:4px;right:auto;line-height:42px;padding:0 3px;font-size:var(--bn-text-micro);letter-spacing:0;background:var(--paper);color:var(--muted);pointer-events:none}
 /* Quiet parameter chips and an unboxed tempo ruler. */
-#bn .bn-machine-settings .bn-editor-options>label:not(:last-child){position:relative;height:44px;padding:0 12px;border-radius:10px;background:var(--paper);box-sizing:border-box;font-size:11px}
-#bn .bn-machine-settings .bn-editor-options>label:not(:last-child) .bn-select-trigger{position:static;border:0;background:transparent;padding:0 0 0 8px;border-radius:0;font-size:14px}
+#bn .bn-machine-settings .bn-editor-options>label:not(:last-child){position:relative;height:44px;padding:0 12px;border-radius:10px;background:var(--paper);box-sizing:border-box;font-size:var(--bn-text-caption)}
+#bn .bn-machine-settings .bn-editor-options>label:not(:last-child) .bn-select-trigger{position:static;border:0;background:transparent;padding:0 0 0 8px;border-radius:0;font-size:var(--bn-text-body)}
 #bn .bn-machine-settings .bn-wheel-compact{border:0;background:transparent;border-radius:0}
 #bn .bn-machine-settings .bn-wheel-compact:before{top:2px;bottom:2px;background:var(--paper);border:0;border-radius:10px}
-#bn .bn-machine-settings .bn-wheel-compact>small{background:var(--white);font-size:10px;left:0}
+#bn .bn-machine-settings .bn-wheel-compact>small{background:var(--white);font-size:var(--bn-text-micro);left:0}
 /* Volume gestures stay inside the pads; the rest of the page remains scrollable. */
 #bn .bn-mode-panel .bn-drum[data-free=true]{touch-action:none;-webkit-touch-callout:none;user-select:none}
-#bn .bn-pad-percent{position:absolute;top:4px;right:5px;font-size:9px;line-height:12px;font-weight:500;color:var(--muted);pointer-events:none}
+#bn .bn-pad-percent{position:absolute;top:4px;right:5px;font-size:var(--bn-text-micro);line-height:12px;font-weight:500;color:var(--muted);pointer-events:none}
 #bn .bn-mode-panel .bn-drum[data-adjusting=true]{box-shadow:inset 0 0 0 2px var(--ink);cursor:ns-resize}
 #bn .bn-mode-panel .bn-drum[data-adjusting=true] .bn-pad-percent{color:var(--ink);font-weight:750}
 #bn .bn-mode-panel .bn-drum[data-free=true] .bn-pad-volume{visibility:visible}
 #bn .bn-pad-percent{display:none}
-#bn .bn-mode-panel .bn-drum[data-adjusting=true] .bn-pad-percent{display:flex;align-items:center;justify-content:center;inset:2px;border-radius:inherit;background:var(--paper);font-size:22px;line-height:1;color:var(--ink)}
+#bn .bn-mode-panel .bn-drum[data-adjusting=true] .bn-pad-percent{display:flex;align-items:center;justify-content:center;inset:2px;border-radius:inherit;background:var(--paper);font-size:var(--bn-text-title);line-height:1;color:var(--ink)}
 
 /* Free practice uses the lime accent; route colors describe the scheduled mix. */
 #bn{--free-accent:var(--acid);--free-accent-ink:var(--ink)}
@@ -451,28 +451,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-mode-panel .bn-drum[data-free=false][data-level=idle][aria-pressed=true]{background:#e4e5de}
 
 /* Library previews keep transport local to each record. */
-#bn .bn-record-practice{grid-column:4;grid-row:2;justify-self:stretch;min-height:44px;padding:8px 14px;border:0;border-radius:12px;background:var(--paper);font-size:13px;font-weight:700}
-#bn .bn-preview-error{grid-column:1 / -1;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+#bn .bn-record-practice{grid-column:4;grid-row:2;justify-self:stretch;min-height:44px;padding:8px 14px;border:0;border-radius:12px;background:var(--paper);font-size:var(--bn-text-body);font-weight:700}
+#bn .bn-preview-error{grid-column:1 / -1;font-size:var(--bn-text-caption);line-height:1.5;overflow-wrap:anywhere}
 #bn .bn-record-play[aria-pressed="true"]{background:var(--acid)}
 #bn .bn-call-course{display:grid;gap:12px;margin-top:12px}
 #bn .bn-call-course>.bn-row{display:grid;gap:8px}
 #bn .bn-call-length{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;background:var(--paper);padding:4px;border-radius:12px}
-#bn .bn-call-length button{min-width:44px;min-height:44px;padding:8px;border:0;border-radius:8px;background:transparent;font-size:14px}
+#bn .bn-call-length button{min-width:44px;min-height:44px;padding:8px;border:0;border-radius:8px;background:transparent;font-size:var(--bn-text-body)}
 #bn .bn-call-length button[aria-pressed="true"]{background:var(--ink);color:var(--white)}
 
 #bn .bn-record{grid-template-columns:48px minmax(0,1fr) 44px 68px;gap:8px;padding:12px;align-items:center}
 #bn .bn-record>.bn-art,#bn .bn-record>.bn-saved-art{grid-column:1;grid-row:1 / 3;align-self:center}
 #bn .bn-record-body{display:contents}
 #bn .bn-record-body h3{grid-column:2 / 4;grid-row:1;margin:0;overflow-wrap:anywhere}
-#bn .bn-record-body .bn-muted{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;font-size:12px;line-height:1.4}
+#bn .bn-record-body .bn-muted{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;font-size:var(--bn-text-caption);line-height:1.4}
 #bn .bn-record .bn-favorite,#bn .bn-record .bn-record-edit{grid-column:4;grid-row:1;justify-self:end}
 #bn .bn-record .bn-record-play{grid-column:3;grid-row:2}
 #bn .bn-record .bn-preview-error{grid-row:auto}
 #bn .bn-mode-panel[data-mode=call] .bn-mode-help{margin:0 0 8px}
 #bn .bn-mode-panel[data-mode=call] .bn-target-heading{min-height:24px;margin-bottom:4px}
-#bn .bn-mode-panel[data-mode=call] .bn-call-drum-name{display:block;min-height:28px;line-height:14px;font-size:12px}
-#bn .bn-mode-panel[data-mode=call] #bn-drum-help{text-align:left;margin:6px 0 0;min-height:18px;font-size:12px;line-height:18px}
-#bn .bn-mode-panel[data-mode=call] .bn-call-course h3{margin:0;font-size:14px;line-height:22px}
+#bn .bn-mode-panel[data-mode=call] .bn-call-drum-name{display:block;min-height:28px;line-height:14px;font-size:var(--bn-text-caption)}
+#bn .bn-mode-panel[data-mode=call] #bn-drum-help{text-align:left;margin:6px 0 0;min-height:18px;font-size:var(--bn-text-caption);line-height:18px}
+#bn .bn-mode-panel[data-mode=call] .bn-call-course h3{margin:0;font-size:var(--bn-text-body);line-height:22px}
 #bn .bn-mode-panel[data-mode=call] .bn-practice-progress{margin-top:0}
 #bn .bn-call-course>.bn-row{grid-template-columns:minmax(0,1fr);justify-content:stretch}
 #bn .bn-mode-panel[data-mode=call] .bn-drum{height:64px;min-height:64px;padding-top:6px;padding-bottom:6px;gap:4px}
@@ -489,47 +489,47 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 /* Compact curated cards without shrinking their action targets. */
 #bn .bn-record:not(.bn-saved-record){grid-template-columns:32px minmax(0,1fr) 44px 44px 68px;column-gap:8px;row-gap:2px;padding:8px;border-radius:14px}
 #bn .bn-record:not(.bn-saved-record)>.bn-art{width:32px;height:32px;border-radius:9px}
-#bn .bn-record:not(.bn-saved-record) .bn-record-body h3{font-size:14px;line-height:18px}
+#bn .bn-record:not(.bn-saved-record) .bn-record-body h3{font-size:var(--bn-text-body);line-height:18px}
 #bn .bn-record:not(.bn-saved-record) .bn-record-body .bn-muted{justify-content:flex-start;margin-top:2px;line-height:16px}
 #bn .bn-record:not(.bn-saved-record)>.bn-art{display:grid;place-items:center;padding:0}
 #bn .bn-record:not(.bn-saved-record) .bn-disc{width:28px;height:28px;box-shadow:none}
-#bn .bn-record:not(.bn-saved-record) .bn-disc span{width:22px;height:22px;border-width:3px;font-size:9px}
+#bn .bn-record:not(.bn-saved-record) .bn-disc span{width:22px;height:22px;border-width:3px;font-size:var(--bn-text-micro)}
 /* A single row shares space between rhythm details and compact actions. */
 #bn .bn-record:not(.bn-saved-record){grid-template-columns:28px minmax(0,1fr) 28px 32px 44px;gap:4px;padding:8px}
 #bn .bn-record:not(.bn-saved-record)>.bn-art{grid-row:1;width:28px;height:28px}
 #bn .bn-record:not(.bn-saved-record) .bn-disc{width:24px;height:24px}
-#bn .bn-record:not(.bn-saved-record) .bn-disc span{width:19px;height:19px;font-size:8px}
+#bn .bn-record:not(.bn-saved-record) .bn-disc span{width:19px;height:19px;font-size:var(--bn-text-micro)}
 #bn .bn-record:not(.bn-saved-record) .bn-record-body{grid-column:2;grid-row:1}
-#bn .bn-record:not(.bn-saved-record) .bn-record-body h3{font-size:13px;line-height:17px}
-#bn .bn-record:not(.bn-saved-record) .bn-record-body .bn-muted{gap:4px;font-size:10px;line-height:14px}
-#bn .bn-record:not(.bn-saved-record) .bn-favorite{grid-column:3;grid-row:1;width:28px;height:32px;min-height:32px;padding:4px;font-size:20px}
+#bn .bn-record:not(.bn-saved-record) .bn-record-body h3{font-size:var(--bn-text-body);line-height:17px}
+#bn .bn-record:not(.bn-saved-record) .bn-record-body .bn-muted{gap:4px;font-size:var(--bn-text-micro);line-height:14px}
+#bn .bn-record:not(.bn-saved-record) .bn-favorite{grid-column:3;grid-row:1;width:28px;height:32px;min-height:32px;padding:4px;font-size:var(--bn-text-title)}
 #bn .bn-record:not(.bn-saved-record) .bn-record-play{grid-column:4;grid-row:1;width:32px;height:32px;min-height:32px;padding:7px}
-#bn .bn-record:not(.bn-saved-record) .bn-record-practice{grid-column:5;grid-row:1;width:44px;height:32px;min-height:32px;padding:4px;font-size:11px;border-radius:9px;white-space:nowrap}
+#bn .bn-record:not(.bn-saved-record) .bn-record-practice{grid-column:5;grid-row:1;width:44px;height:32px;min-height:32px;padding:4px;font-size:var(--bn-text-caption);border-radius:9px;white-space:nowrap}
 
 /* Keep meter, length and subdivision in one compact toolbar row. */
 #bn .bn-machine-settings .bn-editor-options{grid-template-columns:minmax(0,1fr) minmax(0,.8fr) minmax(0,1.4fr);column-gap:8px}
 #bn .bn-machine-settings .bn-editor-options>label:not(:last-child){padding:0 8px;gap:4px}
-#bn .bn-machine-settings .bn-editor-options>label:not(:last-child) .bn-select-trigger{padding-left:2px;font-size:12px}
+#bn .bn-machine-settings .bn-editor-options>label:not(:last-child) .bn-select-trigger{padding-left:2px;font-size:var(--bn-text-caption)}
 #bn .bn-select-menu [role="option"]{white-space:normal}
 
 #bn .bn-source-header{display:flex;align-items:center;gap:8px}
 #bn .bn-source-header .bn-source-tabs{flex:1;min-width:0}
-#bn .bn-library-manage{flex-shrink:0;margin:0;padding:6px 12px;min-height:36px;border-radius:9px;background:var(--paper);font-size:12px}
+#bn .bn-library-manage{flex-shrink:0;margin:0;padding:6px 12px;min-height:36px;border-radius:9px;background:var(--paper);font-size:var(--bn-text-caption)}
 #bn .bn-saved-record{position:relative}
 #bn .bn-saved-record .bn-record-body h3{padding-right:36px}
 #bn .bn-saved-record .bn-record-edit{grid-column:3;grid-row:1;width:32px;height:32px;min-height:32px;padding:7px}
-#bn .bn-record-more{position:static;grid-column:4;grid-row:1;justify-self:end;width:32px;height:32px;min-height:32px;padding:0;font-size:20px;border-radius:8px;background:transparent}
+#bn .bn-record-more{position:static;grid-column:4;grid-row:1;justify-self:end;width:32px;height:32px;min-height:32px;padding:0;font-size:var(--bn-text-title);border-radius:8px;background:transparent}
 #bn .bn-version-panel{display:grid;gap:12px;max-height:70dvh;overflow:auto;min-width:0;text-align:left}
-#bn .bn-version-panel h2{margin:0;font-size:20px}
+#bn .bn-version-panel h2{margin:0;font-size:var(--bn-text-title)}
 #bn .bn-version-panel p{margin:0}
 #bn .bn-version-panel strong,#bn .bn-version-name{overflow-wrap:anywhere}
 #bn .bn-version-entry{display:grid;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
-#bn .bn-version-entry small{color:var(--muted);font-size:11px}
+#bn .bn-version-entry small{color:var(--muted);font-size:var(--bn-text-caption)}
 #bn .bn-version-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-#bn .bn-version-actions button,#bn .bn-management-menu>button{min-height:36px;padding:6px 10px;border-radius:8px;background:var(--paper);font-size:12px}
+#bn .bn-version-actions button,#bn .bn-management-menu>button{min-height:36px;padding:6px 10px;border-radius:8px;background:var(--paper);font-size:var(--bn-text-caption)}
 #bn .bn-management-menu{display:grid;gap:8px}
 #bn .bn-version-panel input:not([type="checkbox"]){display:block;width:100%;box-sizing:border-box;min-height:36px;margin:6px 0;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--paper);font:inherit}
-#bn .bn-backup-restore{display:flex;align-items:flex-start;gap:8px;font-size:13px}
+#bn .bn-backup-restore{display:flex;align-items:flex-start;gap:8px;font-size:var(--bn-text-body)}
 
 #bn .bn-record:not(.bn-saved-record) :is(.bn-favorite,.bn-record-play,.bn-record-practice){display:grid;place-items:center;align-self:center;line-height:1;box-sizing:border-box}
 #bn .bn-record .bn-favorite svg{display:block;width:20px;height:20px}
@@ -539,13 +539,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-saved-record{grid-template-columns:44px minmax(0,1fr) 40px 64px;gap:10px 8px;padding:14px;align-items:center}
 #bn .bn-saved-record .bn-saved-art{grid-column:1;grid-row:1;width:44px;height:44px;min-width:0;box-sizing:border-box}
 #bn .bn-saved-record .bn-record-body{display:block;grid-column:2/4;grid-row:1;min-width:0}
-#bn .bn-saved-record .bn-record-body h3{padding:0;margin:0 0 4px;font-size:15px;line-height:20px;overflow-wrap:anywhere}
-#bn .bn-saved-record .bn-record-body .bn-muted{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:flex-start;gap:2px 6px;font-size:12px;line-height:17px}
+#bn .bn-saved-record .bn-record-body h3{padding:0;margin:0 0 4px;font-size:var(--bn-text-label);line-height:20px;overflow-wrap:anywhere}
+#bn .bn-saved-record .bn-record-body .bn-muted{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:flex-start;gap:2px 6px;font-size:var(--bn-text-caption);line-height:17px}
 #bn .bn-saved-record .bn-record-body .bn-muted span{white-space:nowrap}
 #bn .bn-saved-record .bn-record-more{grid-column:4;grid-row:1;width:36px;height:36px;min-height:36px;align-self:start}
-#bn .bn-saved-record .bn-record-edit{grid-column:1/3;grid-row:2;justify-self:start;display:flex;align-items:center;justify-content:center;gap:6px;width:auto;height:40px;min-height:40px;padding:0 10px;border-radius:9px;background:var(--paper);font-size:12px;line-height:1}
+#bn .bn-saved-record .bn-record-edit{grid-column:1/3;grid-row:2;justify-self:start;display:flex;align-items:center;justify-content:center;gap:6px;width:auto;height:40px;min-height:40px;padding:0 10px;border-radius:9px;background:var(--paper);font-size:var(--bn-text-caption);line-height:1}
 #bn .bn-saved-record .bn-record-play{grid-column:3;grid-row:2;width:40px;height:40px;min-height:40px;padding:10px;align-self:center}
-#bn .bn-saved-record .bn-record-practice{grid-column:4;grid-row:2;display:grid;place-items:center;height:40px;min-height:40px;padding:0 8px;font-size:12px;line-height:1;border-radius:10px;white-space:nowrap;align-self:center}
+#bn .bn-saved-record .bn-record-practice{grid-column:4;grid-row:2;display:grid;place-items:center;height:40px;min-height:40px;padding:0 8px;font-size:var(--bn-text-caption);line-height:1;border-radius:10px;white-space:nowrap;align-self:center}
 #bn .bn-saved-record .bn-preview-error{grid-column:1/-1;grid-row:auto}
 
 /* Phase previews share the existing compact route chip. */

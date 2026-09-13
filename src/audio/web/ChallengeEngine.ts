@@ -1,6 +1,6 @@
 import {scheduleClick} from './clickSound'
 import {challengeEvents, challengePosition, hitSteps, type Challenge, type ChallengeSound} from '../../core/challenge/challenge'
-export type ChallengeOptions = {challenge: Challenge; bpm: number; rounds: number; sound: ChallengeSound; reference: boolean; volume: number}
+export type ChallengeOptions = {countIn?: boolean; repeat?: boolean; challenge: Challenge; bpm: number; rounds: number; sound: ChallengeSound; reference: boolean; volume: number}
 type Voice = {source: AudioScheduledSourceNode; gain: GainNode}
 export class ChallengeEngine {
   private context: AudioContext | null = null
@@ -16,7 +16,7 @@ export class ChallengeEngine {
   constructor(private readonly factory = () => new AudioContext(), private readonly interrupted?: () => void) {}
   get position() {
     const step = this.running && this.context && this.options ? (this.context.currentTime - this.origin) / (15 / this.options.bpm) : this.offset
-    return challengePosition(step, this.options?.rounds ?? 1)
+    return challengePosition(step, this.options?.repeat ? Infinity : this.options?.rounds ?? 1, this.options?.countIn)
   }
   async start(options: ChallengeOptions) {
     if (!Number.isFinite(options.bpm) || options.bpm < 40 || options.bpm > 180 || !Number.isInteger(options.rounds) || options.rounds < 1 || options.rounds > 4 || !Number.isFinite(options.volume) || options.volume < 0 || options.volume > 100) throw new Error('挑战设置无效')
@@ -29,7 +29,7 @@ export class ChallengeEngine {
     await context.resume()
     if (generation !== this.generation) return false
     if (context.state !== 'running') throw new Error('声音未能开启，请点击重试')
-    if (this.offset >= options.rounds * 32) this.offset = 0
+    if (!options.repeat && this.offset >= (options.countIn ? 16 : 0) + options.rounds * 32) this.offset = 0
     this.origin = context.currentTime + 0.03 - this.offset * 15 / options.bpm
     this.nextStep = Math.ceil(this.offset - 1e-7)
     this.running = true
@@ -80,15 +80,17 @@ export class ChallengeEngine {
   }
   private schedule = () => {
     if (!this.running || !this.context || !this.options) return
-    const {bpm, rounds, sound, reference} = this.options
+    const {bpm, sound, reference} = this.options
+    const rounds = this.options.repeat ? Infinity : this.options.rounds
     const duration = 15 / bpm
-    const total = rounds * 32
+    const total = (this.options.countIn ? 16 : 0) + rounds * 32
     if (this.position.complete) { this.offset = total; this.halt(); return }
     // Keep the absolute musical position after stalls, never replay missed hits.
     this.nextStep = Math.max(this.nextStep, Math.ceil((this.context.currentTime - this.origin) / duration - 1e-7))
     while (this.nextStep < total && this.origin + this.nextStep * duration < this.context.currentTime + .12) {
       const at = this.origin + this.nextStep * duration
-      const events = challengeEvents(this.nextStep, rounds, this.hits, reference)
+      const events = challengeEvents(this.nextStep, rounds, this.hits, reference, this.options.countIn)
+      if (events.reference) this.sound(at, 'click', .16)
       if (events.target) this.sound(at, sound, sound === 'drum' ? .45 : sound === 'click' ? .16 : .23)
       this.nextStep++
     }

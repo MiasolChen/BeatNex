@@ -1,13 +1,13 @@
 import {CHALLENGES, type ChallengeSound} from '../core/challenge/challenge'
 export const CHALLENGE_KEY = 'beatnex:challenge:v1'
-export type ChallengeSettings = {display?: 'grid' | 'staff'; id: string; bpm: number; rounds: number; sound: ChallengeSound; reference: boolean; volume: number}
+export type ChallengeSettings = {countIn?: boolean; repeat?: boolean; display?: 'grid' | 'staff'; id: string; bpm: number; rounds: number; sound: ChallengeSound; reference: boolean; volume: number}
 export type ChallengeRecord = {id: string; at: string; bpm: number; rounds: number; sound: ChallengeSound; reference: boolean; volume: number; feedback: string}
 export type ChallengeData = {schemaVersion: 1; settings: ChallengeSettings; completions: number; last: ChallengeRecord | null}
 export const DEFAULT_CHALLENGE: ChallengeData = {schemaVersion: 1, settings: {display: 'staff', id: CHALLENGES[0].id, bpm: 90, rounds: 1, sound: 'click', reference: true, volume: 40}, completions: 0, last: null}
 function validSettings(value: unknown): value is ChallengeSettings {
   if (!value || typeof value !== 'object') return false
   const v = value as ChallengeSettings
-  return (v.display === undefined || v.display === 'grid' || v.display === 'staff') && CHALLENGES.some(c => c.id === v.id) && Number.isInteger(v.bpm) && v.bpm >= 40 && v.bpm <= 180 && Number.isInteger(v.rounds) && v.rounds >= 1 && v.rounds <= 4 && ['click','clap','drum'].includes(v.sound) && typeof v.reference === 'boolean' && Number.isInteger(v.volume) && v.volume >= 0 && v.volume <= 100
+  return (v.countIn === undefined || typeof v.countIn === 'boolean') && (v.repeat === undefined || typeof v.repeat === 'boolean') && (v.display === undefined || v.display === 'grid' || v.display === 'staff') && CHALLENGES.some(c => c.id === v.id) && Number.isInteger(v.bpm) && v.bpm >= 40 && v.bpm <= 180 && Number.isInteger(v.rounds) && v.rounds >= 1 && v.rounds <= 4 && ['click','clap','drum'].includes(v.sound) && typeof v.reference === 'boolean' && Number.isInteger(v.volume) && v.volume >= 0 && v.volume <= 100
 }
 export function validChallengeData(value: unknown): value is ChallengeData {
   if (!value || typeof value !== 'object') return false

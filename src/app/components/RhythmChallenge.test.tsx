@@ -6,11 +6,11 @@ import type { RhythmChallenge } from '../../features/useRhythmChallenge'
 import { ChallengeCards, RhythmChallenge as RhythmChallengeView } from './RhythmChallenge'
 import { RhythmStaff } from './RhythmStaff'
 
-const stateFor = (status: RhythmChallenge['status'], phase = 0, display?: 'grid' | 'staff'): RhythmChallenge => ({
-  data: display ? { ...DEFAULT_CHALLENGE, settings: { ...DEFAULT_CHALLENGE.settings, display } } : DEFAULT_CHALLENGE,
+const stateFor = (status: RhythmChallenge['status'], phase = 0, display?: 'grid' | 'staff', repeat = false, countIn = false): RhythmChallenge => ({
+  data: display || repeat || countIn ? { ...DEFAULT_CHALLENGE, settings: { ...DEFAULT_CHALLENGE.settings, ...(display ? { display } : {}), repeat, countIn } } : DEFAULT_CHALLENGE,
   challenge: CHALLENGES[0],
   status,
-  position: { step: status === 'complete' ? 32 : status === 'ready' ? 0 : phase * 8, total: 32, complete: status === 'complete', round: 1, phraseStep: phase * 8 },
+  position: { step: status === 'complete' ? 32 : status === 'ready' ? 0 : phase * 8, total: 32, complete: status === 'complete', countIn: false, round: 1, phraseStep: phase * 8 },
   storageError: '', error: '',
   play: async () => {}, pause() {}, reset() {}, update() {}, feedback() {}, setDisplay() {},
 })
@@ -32,6 +32,30 @@ describe('RhythmStaff SSR notation', () => {
 })
 
 describe('RhythmChallenge SSR controls', () => {
+  it.each([false, true])('renders one-shot and infinite playback controls with %s selected', (repeat) => {
+    const markup = renderToStaticMarkup(<RhythmChallengeView state={stateFor('ready', 0, undefined, repeat)} />)
+    expect(markup).toContain('<div class="rc-loop-mode" role="group" aria-label="播放方式">')
+    const controls = [...markup.matchAll(/<button type="button"[^>]*aria-label="(只播一次|无限循环)"[^>]*>/g)]
+    expect(controls).toHaveLength(1)
+    expect(controls.every(([control]) => !control.includes('disabled'))).toBe(true)
+    expect(controls.map(([control]) => control.includes('aria-pressed="true"'))).toEqual([repeat])
+  })
+
+  it('locks playback mode controls while playing', () => {
+    const markup = renderToStaticMarkup(<RhythmChallengeView state={stateFor('playing', 0, undefined, true)} />)
+    const controls = [...markup.matchAll(/<button type="button"[^>]*aria-label="(只播一次|无限循环)"[^>]*>/g)]
+    expect(controls).toHaveLength(1)
+    expect(controls.every(([control]) => control.includes('disabled=""'))).toBe(true)
+  })
+
+  it('renders the toolbar with an optional four-beat count-in switch', () => {
+    const markup = renderToStaticMarkup(<RhythmChallengeView state={stateFor('ready', 0, undefined, false, true)} />)
+    expect(markup).toContain('<div class="rc-toolbar" role="group" aria-label="节奏工具栏">')
+    expect(markup).toContain('aria-label="音色"')
+    expect(markup).toContain('aria-label="挑战速度"')
+    expect(markup).toMatch(/aria-label="播放四拍预备音"[^>]*checked=""/)
+  })
+
   it.each(['grid', 'staff'] as const)('keeps the notation switch enabled and selects %s mode', (display) => {
     const markup = renderToStaticMarkup(<RhythmChallengeView state={stateFor('playing', 0, display)} />)
     const switches = [...markup.matchAll(/<input[^>]*role="switch"[^>]*aria-label="五线谱显示"[^>]*>/g)]
@@ -54,18 +78,19 @@ describe('RhythmChallenge SSR controls', () => {
   it('makes the ready action clear while leaving settings collapsed', () => {
     const markup = renderToStaticMarkup(<RhythmChallengeView state={stateFor('ready')} />)
     expect(markup).toContain('开始播放')
-    expect(markup).toContain('<details class="rc-settings">')
+    expect(markup).toContain('<div class="rc-toolbar" role="group" aria-label="节奏工具栏">')
     expect(markup).toContain('class="rc-notation"')
   })
 
-  it('locks settings and challenge cards while loading or playing', () => {
+  it('locks playback settings and challenge cards while loading or playing', () => {
     for (const status of ['loading', 'playing'] as const) {
       const markup = renderToStaticMarkup(<RhythmChallengeView state={stateFor(status)} />)
-      expect(markup.match(/<fieldset disabled="">/g)).toHaveLength(2)
+      expect(markup).toContain('<div class="rc-toolbar" role="group" aria-label="节奏工具栏">')
       expect(markup).not.toContain('辅助打拍声')
       expect(markup).not.toContain('参考拍音量')
       expect(markup.match(/<button[^>]*disabled=""[^>]*aria-label="开始挑战：[^\"]*"/g)).toHaveLength(4)
       expect(markup).toContain(status === 'loading' ? '取消开启' : '暂停播放')
+      expect(markup).toMatch(/aria-label="播放四拍预备音"[^>]*disabled=""/)
     }
   })
 
@@ -91,5 +116,23 @@ describe('RhythmChallenge SSR controls', () => {
     expect(markup.match(/class="rc-card"/g)).toHaveLength(4)
     expect(markup.match(/aria-label="开始挑战：/g)).toHaveLength(4)
     expect(markup).toContain('选择节奏')
+  })
+})
+
+
+describe('count-in dots', () => {
+  it('highlights each count-in beat and clears the dots when paused or in the phrase', () => {
+    for (let beat = 0; beat < 4; beat++) {
+      const state = stateFor('playing', 0, 'staff', false, true)
+      state.position = {...state.position, countIn: true, step: beat * 4 + 1}
+      const markup = renderToStaticMarkup(<RhythmChallengeView state={state} />)
+      expect(markup).toContain(`预备音，第 ${beat + 1} 拍`)
+      const dots = [...markup.matchAll(/<i aria-hidden="true" data-current="(true|false)"/g)]
+      expect(dots.map(match => match[1])).toEqual([0,1,2,3].map(index => String(index === beat)))
+      state.status = 'paused'
+      expect(renderToStaticMarkup(<RhythmChallengeView state={state} />)).not.toContain('<i aria-hidden="true" data-current="true"')
+      state.status = 'playing'; state.position.countIn = false
+      expect(renderToStaticMarkup(<RhythmChallengeView state={state} />)).not.toContain('<i aria-hidden="true" data-current="true"')
+    }
   })
 })

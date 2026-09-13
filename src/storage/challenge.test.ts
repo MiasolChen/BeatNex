@@ -31,11 +31,29 @@ describe('challenge storage', () => {
     expect(readChallenge()).toEqual({ data: value, error: '' })
   })
 
+  it('round-trips the optional infinite repeat preference', () => {
+    const value = { ...DEFAULT_CHALLENGE, settings: { ...DEFAULT_CHALLENGE.settings, repeat: true } }
+    const target = storage()
+    vi.stubGlobal('localStorage', target)
+    expect(writeChallenge(value)).toBe('')
+    expect(readChallenge().data.settings.repeat).toBe(true)
+  })
+
+  it('round-trips the optional count-in preference', () => {
+    const value = { ...DEFAULT_CHALLENGE, settings: { ...DEFAULT_CHALLENGE.settings, countIn: true } }
+    const target = storage()
+    vi.stubGlobal('localStorage', target)
+    expect(writeChallenge(value)).toBe('')
+    expect(readChallenge().data.settings.countIn).toBe(true)
+  })
+
   it.each([
     ['negative completions', { ...DEFAULT_CHALLENGE, completions: -1 }],
     ['fractional completions', { ...DEFAULT_CHALLENGE, completions: 1.5 }],
     ['unknown challenge', { ...DEFAULT_CHALLENGE, settings: { ...DEFAULT_CHALLENGE.settings, id: 'unknown' } }],
     ['invalid display mode', { ...DEFAULT_CHALLENGE, settings: { ...DEFAULT_CHALLENGE.settings, display: 'staff-and-grid' } }],
+    ['invalid repeat mode', { ...DEFAULT_CHALLENGE, settings: { ...DEFAULT_CHALLENGE.settings, repeat: 'infinite' } }],
+    ['invalid count-in mode', { ...DEFAULT_CHALLENGE, settings: { ...DEFAULT_CHALLENGE.settings, countIn: 'yes' } }],
     ['out of range tempo', { ...DEFAULT_CHALLENGE, settings: { ...DEFAULT_CHALLENGE.settings, bpm: 181 } }],
     ['invalid feedback', { ...DEFAULT_CHALLENGE, last: { ...DEFAULT_CHALLENGE.settings, at: '2026-09-13T00:00:00.000Z', feedback: '准确率' } }],
   ])('rejects %s without treating it as valid data', (_label, value) => {

@@ -1,3 +1,5 @@
+import {TempoWheel} from './TempoWheel'
+import {Icon} from './Icons'
 import {RhythmStaff} from './RhythmStaff'
 import {useEffect, useRef} from 'react'
 import {CHALLENGES, hitSteps, type Challenge} from '../../core/challenge/challenge'
@@ -18,18 +20,23 @@ export function RhythmChallenge({state}: {state: ChallengeState}) {
   const heading=useRef<HTMLHeadingElement>(null), previous=useRef(challenge.id)
   useEffect(()=>{if(previous.current!==challenge.id){previous.current=challenge.id;heading.current?.focus()}},[challenge.id])
   const ready=status==='ready', complete=status==='complete'
+  const playLabel=status==='loading'?'取消开启':status==='playing'?'暂停播放':complete?'重新播放':status==='paused'?'继续播放':'开始播放'
   return <section className="rc-workspace" aria-label="节奏挑战练习">
-    <article className="rc-player"><div className="rc-heading"><span className="rc-label">节奏播放</span><span>{settings.bpm} BPM · 约 {Math.ceil((settings.rounds*8)*60/settings.bpm)} 秒</span></div><h1 ref={heading} tabIndex={-1}>{challenge.name}</h1>
-    <div className="rc-transport"><button className="rc-primary" type="button" aria-busy={status==='loading'} onClick={()=>locked?state.pause():void state.play()}>{status==='loading'?'取消开启':status==='playing'?'暂停播放':complete?'重新播放':status==='paused'?'继续播放':'开始播放'}</button><button type="button" disabled={ready} onClick={state.reset}>回到开始</button></div>
-    {error&&<p role="alert" className="rc-error">{error}</p>}
-    <section className="rc-notation" aria-label="节奏图"><div className="rc-heading"><h2>节奏图</h2><label className="rc-display-switch"><span>点线</span><input type="checkbox" role="switch" aria-label="五线谱显示" checked={(settings.display??'staff')==='staff'} onChange={e=>state.setDisplay(e.target.checked?'staff':'grid')}/><span>五线谱</span></label></div><p>{(settings.display??'staff')==='grid'?'圆点表示发声，横线表示无击打。':'音符表示发声，休止符表示静音。'}空拍没有声音，指针继续走。</p>{(settings.display??'staff')==='grid'?<Phrase challenge={challenge} step={position.phraseStep} active={status==='playing'}/>:<RhythmStaff challenge={challenge} step={position.phraseStep} active={status==='playing'}/>}</section>
-    </article>
-    <details className="rc-settings"><summary>调整声音和速度 <span>{locked?'先暂停再调整':`${settings.bpm} BPM · ${settings.rounds} 次`}</span></summary>
-    <fieldset disabled={locked}><legend>播放声音</legend><div className="rc-sounds">{(['click','clap','drum'] as const).map((sound,i)=><button type="button" key={sound} aria-pressed={settings.sound===sound} onClick={()=>state.update({sound})}>{['节拍器','拍手','鼓声'][i]}</button>)}</div><p>节拍器声音与跷跷板相同。</p></fieldset>
-    <fieldset disabled={locked}><legend>播放速度与次数</legend><label className="rc-range">速度（BPM） <output>{settings.bpm} BPM</output><input type="range" min={40} max={180} step={1} value={settings.bpm} aria-label="挑战速度" aria-valuetext={`${settings.bpm} BPM`} onChange={e=>state.update({bpm:Number(e.target.value)})}/></label><div className="rc-tempo-buttons"><button type="button" disabled={settings.bpm<=40} onClick={()=>state.update({bpm:Math.max(40,settings.bpm-5)})} aria-label="减慢 5 BPM">−5</button><button type="button" onClick={()=>state.update({bpm:90})} disabled={settings.bpm===90}>90 BPM</button><button type="button" disabled={settings.bpm>=180} onClick={()=>state.update({bpm:Math.min(180,settings.bpm+5)})} aria-label="加快 5 BPM">+5</button></div><label className="rc-repeat">播放次数<select value={settings.rounds} onChange={e=>state.update({rounds:Number(e.target.value)})}>{[1,2,3,4].map(n=><option value={n} key={n}>{n} 次</option>)}</select></label><p>每次播放两小节。修改次数会回到开始。</p></fieldset>
+    <article className="rc-player"><div className="rc-console"><div className="rc-heading"><span className="rc-label">节奏播放</span><span>{settings.bpm} BPM · {settings.repeat?'无限循环':`约 ${Math.ceil((8+(settings.countIn?4:0))*60/settings.bpm)} 秒`}</span></div><h1 ref={heading} tabIndex={-1}>{challenge.name}</h1>
+    <div className="rc-toolbar" role="group" aria-label="节奏工具栏">
+    <div className="rc-transport"><button className="rc-primary" type="button" aria-label={playLabel} title={playLabel} aria-busy={status==='loading'} onClick={()=>locked?state.pause():void state.play()}><Icon name={status==='playing'?'pause':status==='loading'?'reset':'play'}/></button><button type="button" aria-label="回到开始" title="回到开始" disabled={ready} onClick={state.reset}><Icon name="reset"/></button></div>
+<div className="rc-loop-mode" role="group" aria-label="播放方式"><button type="button" disabled={locked} aria-label={settings.repeat?'无限循环':'只播一次'} title="切换单次 / 无限循环" aria-pressed={Boolean(settings.repeat)} onClick={()=>state.update({repeat:!settings.repeat})}><span aria-hidden="true">{settings.repeat?'∞':'1×'}</span></button></div><label className="rc-display-switch rc-view-control" title="切换点线 / 五线谱"><input type="checkbox" role="switch" aria-label="五线谱显示" checked={(settings.display??'staff')==='staff'} onChange={e=>state.setDisplay(e.target.checked?'staff':'grid')}/><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 5h20M2 9h20M2 13h20M2 17h20M2 21h20M15 4v12"/><ellipse cx="12" cy="17" rx="3" ry="2"/></svg></label>
+    <label className="rc-tool rc-tone-control"><select aria-label="音色" disabled={locked} value={settings.sound} onChange={e=>state.update({sound:e.target.value as 'click'|'clap'|'drum'})}><option value="click">节拍器</option><option value="clap">拍手</option><option value="drum">鼓声</option></select></label>
+    <fieldset className="rc-tempo-wheel" disabled={locked} aria-label="播放速度"><TempoWheel value={settings.bpm} min={40} max={180} onChange={bpm=>state.update({bpm})} label="挑战速度" compact/></fieldset>
+    <div className="rc-preparation"><label className="rc-display-switch" title="四拍预备音"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0v6l2 3H4l2-3zM10 21h4M12 1v2"/></svg><input type="checkbox" role="switch" aria-label="播放四拍预备音" disabled={locked} checked={Boolean(settings.countIn)} onChange={e=>state.update({countIn:e.target.checked})}/></label>
+    <div className="rc-count-in" role="img" aria-label={settings.countIn ? position.countIn&&status==='playing' ? `预备音，第 ${Math.min(4,Math.floor(position.step/4)+1)} 拍` : '四拍预备音' : '预备音已关闭'} data-enabled={Boolean(settings.countIn)}>{[0,1,2,3].map(beat=><i key={beat} aria-hidden="true" data-current={Boolean(settings.countIn)&&position.countIn&&status==='playing'&&Math.floor(position.step/4)===beat}/>)}</div></div>
+    </div>
 
+    </div>
+    {error&&<p role="alert" className="rc-error">{error}</p>}
+    <section className="rc-notation" aria-label="节奏图"><div className="rc-heading"><h2>节奏图</h2></div><p>{(settings.display??'staff')==='grid'?'圆点表示发声，横线表示无击打。':'音符表示发声，休止符表示静音。'}空拍没有声音，指针继续走。</p>{(settings.display??'staff')==='grid'?<Phrase challenge={challenge} step={position.phraseStep} active={status==='playing'&&!position.countIn}/>:<RhythmStaff challenge={challenge} step={position.phraseStep} active={status==='playing'&&!position.countIn}/>}</section>
+    </article>
     {storageError&&<p role="alert" className="rc-error">{storageError}</p>}
-    </details>
     <ChallengeCards selected={challenge.id} disabled={locked} onStart={id=>void state.play(id)}/>
   </section>
 }

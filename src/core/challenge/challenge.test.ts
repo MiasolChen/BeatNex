@@ -19,6 +19,10 @@ describe('rhythm challenge content and timeline', () => {
     expect(challengePosition(32, 2)).toMatchObject({ round: 2, phraseStep: 0, complete: false })
     expect(challengePosition(63, 2)).toMatchObject({ round: 2, phraseStep: 31, complete: false })
     expect(challengePosition(64, 2)).toMatchObject({ complete: true, step: 64, total: 64 })
+    expect(challengePosition(0, 1, true)).toMatchObject({ step: 0, total: 48, countIn: true, phraseStep: 0, complete: false })
+    expect(challengePosition(15, 1, true).countIn).toBe(true)
+    expect(challengePosition(16, 1, true)).toMatchObject({ countIn: false, phraseStep: 0, step: 16 })
+    expect(challengePosition(48, 1, true)).toMatchObject({ complete: true, step: 48, total: 48 })
   })
 
   it('plays only chart hits and keeps every empty chart position silent', () => {
@@ -36,5 +40,8 @@ describe('rhythm challenge content and timeline', () => {
 
     expect(challengeEvents(32, 2, [0, 4, 8], true)).toEqual({ target: true, reference: false })
     expect(challengeEvents(64, 2, [0, 4, 8], true)).toEqual({ target: false, reference: false })
+    expect(challengeEvents(0, 1, [0, 4, 8], true, true)).toEqual({ target: false, reference: true })
+    expect(challengeEvents(16, 1, [0, 4, 8], true, true)).toEqual({ target: true, reference: false })
+    expect(challengeEvents(48, 1, [0, 4, 8], true, true)).toEqual({ target: false, reference: false })
   })
 })

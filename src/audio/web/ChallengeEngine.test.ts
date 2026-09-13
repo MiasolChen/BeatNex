@@ -71,6 +71,20 @@ describe('ChallengeEngine audio clock and lifecycle', () => {
     expect(engine.position.phraseStep).toBeGreaterThanOrEqual(1)
   })
 
+  it('plays an optional four-beat count-in once before infinite playback', async () => {
+    await engine.start(options({ bpm: 180, repeat: true, countIn: true }))
+    expect(context.sources.filter(source => Math.abs(source.startAt - 0.03) < 1e-6)).toHaveLength(1)
+    expect(engine.position.countIn).toBe(true)
+
+    const secondPhrase = 0.03 + (16 + 32) * (15 / 180)
+    context.currentTime = secondPhrase
+    vi.advanceTimersByTime(25)
+    expect(engine.running).toBe(true)
+    expect(engine.position.countIn).toBe(false)
+    expect(engine.position.complete).toBe(false)
+    expect(context.sources.filter(source => Math.abs(source.startAt - secondPhrase) < 1e-6)).toHaveLength(1)
+  })
+
   it('does not play a legacy reference click on chart two’s empty opening beat', async () => {
     await engine.start(options({ challenge: CHALLENGES[1], bpm: 180, reference: true }))
     const musicStart = 0.03
@@ -95,6 +109,23 @@ describe('ChallengeEngine audio clock and lifecycle', () => {
     expect(engine.position.step).toBeCloseTo(before)
 
     await engine.start(options({ bpm: 90 }))
+    context.currentTime += 0.03
+    expect(engine.position.step).toBeCloseTo(before)
+  })
+
+  it('keeps infinite playback running across phrase boundaries and resumes after pause', async () => {
+    await engine.start(options({ bpm: 180, repeat: true }))
+    context.currentTime = 0.03 + 32 * (15 / 180) + 0.01
+    vi.advanceTimersByTime(25)
+    expect(engine.running).toBe(true)
+    expect(engine.position.complete).toBe(false)
+    expect(engine.position.step).toBeGreaterThanOrEqual(32)
+
+    const before = engine.position.step
+    engine.pause()
+    expect(engine.running).toBe(false)
+    expect(engine.position.step).toBeCloseTo(before)
+    await engine.start(options({ bpm: 180, repeat: true }))
     context.currentTime += 0.03
     expect(engine.position.step).toBeCloseTo(before)
   })
