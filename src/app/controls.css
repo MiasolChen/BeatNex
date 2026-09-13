@@ -22,6 +22,9 @@
 #bn :is(.bn-control,.bn-filter,.bn-favorite,.bn-record-play,:where(.bn-editor-actions button),:where(.bn-feedback button))[aria-pressed=true] {
   background:var(--bn-secondary); color:var(--ink); border-color:var(--ink); box-shadow:inset 0 -3px 0 var(--ink);
 }
+/* Toggle controls already expose selection through their switch position.
+   Keep the visible surface full-height instead of cutting it with an inset shadow. */
+#bn .bn-control[aria-pressed=true] {box-shadow:none;border-color:var(--control-line)}
 #bn :is(button,input,select):focus-visible {outline:3px solid var(--focus);outline-offset:3px}
 #bn :is(button,input,select):disabled {opacity:.45;cursor:not-allowed;translate:none;box-shadow:none}
 #bn :is(.bn-primary,.bn-smallbtn,.bn-favorite,.bn-record-play,.bn-record-edit,.bn-record-more,.bn-control,:where(.bn-editor-actions button),:where(#bn-reset),:where(#bn-save),.bn-nav button,.bn-calendar-launch) svg {
