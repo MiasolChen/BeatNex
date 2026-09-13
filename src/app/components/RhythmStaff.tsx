@@ -16,9 +16,8 @@ export function RhythmStaff({challenge, step, active}: {challenge: Challenge; st
         if (previous && previous.at+previous.length===note.at && Math.floor(previous.at/4)===Math.floor(note.at/4)) group.push(note)
         else groups.push([note])
       }
-      return <svg className="rc-staff" key={bar} viewBox="0 0 390 96" role="img" aria-label={label}>
+      return <div className="rc-staff-bar" key={bar}><span className="rc-staff-label">第 {bar+1} 小节</span><svg className="rc-staff" viewBox="0 22 390 74" role="img" aria-label={label}>
         <title>{label}</title>
-        <text x="8" y="15" className="rc-staff-label">第 {bar+1} 小节</text>
         {[0,1,2,3,4].map(line=><line key={line} className="rc-staff-line" x1="8" x2="381" y1={44+line*10} y2={44+line*10}/>)}
         <path d="M8 44V84 M381 44V84" className="rc-staff-barline"/>
         <g aria-hidden="true" fill="currentColor"><rect x="18" y="53" width="3" height="22"/><rect x="24" y="53" width="3" height="22"/></g>
@@ -44,7 +43,7 @@ export function RhythmStaff({challenge, step, active}: {challenge: Challenge; st
           <rect x={x(group[0].at)+5} y="28" width={x(group[group.length-1].at)-x(group[0].at)+1} height="3.5"/>
           {group.every(note=>note.length===1)&&<rect x={x(group[0].at)+5} y="34" width={x(group[group.length-1].at)-x(group[0].at)+1} height="3.5"/>}
         </g>)}
-      </svg>
+      </svg></div>
     })}
   </div>
 }

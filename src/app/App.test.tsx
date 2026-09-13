@@ -34,7 +34,10 @@ describe('confirmed BeatNex initial interface', () => {
     const start = practice.match(/<button\b[^>]*aria-label="开始挑战：[^"]+"[^>]*>[\s\S]*?<\/button>/)?.[0] ?? ''
     expect(start.includes('播放')).toBe(true)
     expect(/\bdisabled(?:=|\s|>)/.test(start)).toBe(false)
-    expect(practice.includes('90 BPM')).toBe(true)
+    const challengeTempo = practice.match(/<input\b[^>]*aria-label="挑战速度"[^>]*>/)?.[0] ?? ''
+    expect(challengeTempo).toContain('value="90"')
+    expect(challengeTempo).toContain('min="40"')
+    expect(challengeTempo).toContain('max="180"')
     expect((practice.match(/class="rc-card"/g) ?? []).length).toBe(4)
     expect(practice.includes('Foundation Backbeat')).toBe(true) // retained drum practice is still mounted
     expect(practice.includes('BOOM BAP / HIP-HOP')).toBe(true)
