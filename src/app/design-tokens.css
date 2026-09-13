@@ -1,9 +1,30 @@
-/* Shared type scale: use semantic roles instead of page-specific sizes. */
-#bn{--bn-text-micro:10px;--bn-text-caption:12px;--bn-text-body:14px;--bn-text-label:16px;--bn-text-title:20px;--bn-text-display:24px;--bn-text-hero:32px;--bn-text-metric:48px;--bn-control-size:44px;--bn-icon-size:18px;--bn-card-padding:14px}
-#bn .bn-heading h1,#bn .rc-player h1,#bn .bn-session h2{font-size:var(--bn-text-title);line-height:1.3;letter-spacing:-.025em}
-#bn .rc-player h1{margin:8px 0 12px}
-#bn .rc-console{padding:var(--bn-card-padding)}
-#bn .rc-transport button{height:var(--bn-control-size)}
-#bn .rc-transport .rc-primary{width:var(--bn-control-size)}
-#bn .rc-transport .rc-primary svg,#bn .rc-toolbar svg{width:var(--bn-icon-size);height:var(--bn-icon-size)}
-#bn .bn-bpm-rail button{font-size:var(--bn-text-title)}
+/* BeatNex: original coral / pool blue / warm paper. Legacy aliases keep callers shared. */
+:root {
+  --bn-paper:#f5eedf; --bn-surface:#fffcf5; --bn-ink:#202735;
+  --bn-primary:#ff715b; --bn-secondary:#53c8d6; --bn-accent:#f4ca62;
+  --bn-muted:#62636a; --bn-line:#d6cfc2; --bn-soft:#eae3d6;
+  --bn-dark-surface:#303c4b; --bn-dark-hover:#415268; --bn-dark-muted:#c5ced8; --bn-dark-line:#7d8b9b;
+  --bn-focus:#006b7b; --bn-danger:#a33132; --bn-danger-soft:#ffe1d9;
+  --bn-heat-1:#def1ee; --bn-heat-2:#aedbda; --bn-heat-3:#75c3c8; --bn-heat-4:#3c929d;
+  --bn-success:#276956; --bn-success-soft:#d5ece2;
+  --bn-text-micro:12px; --bn-text-caption:12px; --bn-text-body:14px;
+  --bn-text-label:16px; --bn-text-title:20px; --bn-text-display:24px;
+  --bn-text-hero:32px; --bn-text-metric:48px;
+  --bn-control-size:44px; --bn-icon-size:20px; --bn-card-padding:16px;
+  --bn-radius-control:12px; --bn-radius-card:20px;
+  --bn-border:1.5px solid var(--bn-ink); --bn-shadow:3px 4px 0 var(--bn-ink);
+  --bn-space-1:4px; --bn-space-2:8px; --bn-space-3:12px; --bn-space-4:16px;
+  --bn-space-6:24px; --bn-space-8:32px;
+  --bn-motion-fast:140ms; --bn-motion-ease:cubic-bezier(.22,1,.36,1);
+}
+#bn {
+  --ink:var(--bn-ink); --paper:var(--bn-paper); --white:var(--bn-surface);
+  --acid:var(--bn-primary); --lilac:var(--bn-secondary); --orange:var(--bn-accent);
+  --muted:var(--bn-muted); --line:var(--bn-line); --radius:var(--bn-radius-card);
+  --control-bg:var(--paper); --control-ink:var(--ink); --control-line:var(--bn-ink);
+  --control-hover:var(--bn-soft); --focus:var(--bn-focus);
+}
+#bn :is(.bn-session,.rc-console,.bn-dance-timer) {
+  --control-bg:var(--bn-dark-surface); --control-ink:var(--white);
+  --control-line:var(--bn-dark-line); --control-hover:var(--bn-dark-hover); --focus:var(--bn-secondary);
+}

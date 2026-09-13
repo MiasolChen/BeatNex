@@ -2,8 +2,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { App } from './app/App'
-import './app/styles.css'
 import './app/design-tokens.css'
+import './app/styles.css'
+import './app/controls.css'
 
 const root = document.getElementById('root')
 

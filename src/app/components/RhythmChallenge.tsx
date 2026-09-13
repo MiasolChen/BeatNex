@@ -5,7 +5,7 @@ import {CHALLENGES, hitSteps, type Challenge} from '../../core/challenge/challen
 import type {RhythmChallenge as ChallengeState} from '../../features/useRhythmChallenge'
 import './rhythm-challenge.css'
 export function ChallengeCards({onStart, selected, disabled = false}: {onStart: (id: string) => void; selected?: string; disabled?: boolean}) {
-  return <section className="rc-catalog" aria-label="四个节奏挑战"><div className="rc-heading"><h2>选择节奏</h2><span>选一张卡，直接开始</span></div><div className="rc-cards">{CHALLENGES.map((c,i) => <article className="rc-card" key={c.id} data-selected={selected === c.id}><span className="rc-number">0{i+1}</span><div><h3>节奏 {String(i+1).padStart(2,'0')}</h3><p>{c.hint}</p><button type="button" disabled={disabled} aria-label={`开始挑战：${c.name}`} onClick={()=>onStart(c.id)}>播放 <span aria-hidden="true">↗</span></button></div></article>)}</div></section>
+  return <section className="rc-catalog" aria-label="四个节奏挑战"><div className="rc-heading"><h2>选择节奏</h2><span>选一张卡，直接开始</span></div><div className="rc-cards">{CHALLENGES.map((c,i) => <article className="rc-card" key={c.id} data-selected={selected === c.id}><span className="rc-number">0{i+1}</span><div><h3>节奏 {String(i+1).padStart(2,'0')}</h3><p>{c.hint}</p><button className="bn-control bn-control-icon" type="button" disabled={disabled} aria-label={`开始挑战：${c.name}`} onClick={()=>onStart(c.id)}><Icon name="play"/></button></div></article>)}</div></section>
 }
 function Phrase({challenge, step, active = false}: {challenge: Challenge; step: number; active?: boolean}) {
   const hits = hitSteps(challenge.tokens)
@@ -36,8 +36,8 @@ export function RhythmChallenge({state}: {state: ChallengeState}) {
         <div className="rc-toolbar" role="group" aria-label="节奏工具栏" ref={heading} tabIndex={-1}>
           <div className="rc-main-tools">
           <div className="rc-transport">
-            <button className="rc-primary" type="button" aria-label={playLabel} title={playLabel} aria-busy={status==='loading'} onClick={()=>locked?state.pause():void state.play()}><Icon name={status==='playing'?'pause':status==='loading'?'reset':'play'}/></button>
-            <button type="button" aria-label="回到开始" title="回到开始" disabled={ready} onClick={state.reset}><Icon name="reset"/></button>
+            <button className="rc-primary bn-control bn-control-icon bn-control-primary" type="button" aria-label={playLabel} title={playLabel} aria-busy={status==='loading'} onClick={()=>locked?state.pause():void state.play()}><Icon name={status==='playing'?'pause':status==='loading'?'reset':'play'}/></button>
+            <button className="bn-control bn-control-icon" type="button" aria-label="回到开始" title="回到开始" disabled={ready} onClick={state.reset}><Icon name="reset"/></button>
           </div>
           <fieldset className="rc-tempo" disabled={locked} aria-label="播放速度">
             <div className="rc-tempo-controls">
@@ -48,9 +48,9 @@ export function RhythmChallenge({state}: {state: ChallengeState}) {
           </fieldset>
           </div>
           <div className="rc-settings">
-            <label className="rc-tone-control"><select aria-label="音色" disabled={locked} value={settings.sound} onChange={e=>state.update({sound:e.target.value as 'click'|'clap'|'drum'})}><option value="click">节拍器</option><option value="clap">拍手</option><option value="drum">鼓声</option></select></label>
-            <div className="rc-loop-mode" role="group" aria-label="播放方式"><button type="button" disabled={locked} aria-label={settings.repeat?'无限循环':'只播一次'} aria-pressed={Boolean(settings.repeat)} onClick={()=>state.update({repeat:!settings.repeat})}><span>循环</span><span className="rc-toggle" aria-hidden="true"/></button></div>
-            <label className="rc-display-switch rc-preparation"><span>预备音</span><input type="checkbox" role="switch" aria-label="播放四拍预备音" disabled={locked} checked={Boolean(settings.countIn)} onChange={e=>state.update({countIn:e.target.checked})}/></label>
+            <label className="rc-tone-control"><select className="bn-control" aria-label="音色" disabled={locked} value={settings.sound} onChange={e=>state.update({sound:e.target.value as 'click'|'clap'|'drum'})}><option value="click">节拍器</option><option value="clap">拍手</option><option value="drum">鼓声</option></select></label>
+            <div className="rc-loop-mode" role="group" aria-label="播放方式"><button className="bn-control" type="button" disabled={locked} aria-label={settings.repeat?'无限循环':'只播一次'} aria-pressed={Boolean(settings.repeat)} onClick={()=>state.update({repeat:!settings.repeat})}><span>循环</span><span className="rc-toggle" aria-hidden="true"/></button></div>
+            <label className="rc-display-switch rc-preparation bn-control"><span>预备音</span><input type="checkbox" role="switch" aria-label="播放四拍预备音" disabled={locked} checked={Boolean(settings.countIn)} onChange={e=>state.update({countIn:e.target.checked})}/></label>
           </div>
           <div className="rc-playback-status">
             <span role="status">{counting?'准备进入':status==='playing'?`第 ${position.round} 轮 · 第 ${Math.min(2,Math.floor(position.phraseStep/16)+1)} 小节`:status==='loading'?'正在准备音频…':status==='paused'?'已暂停 · 可调整设置':complete?'本轮播放结束':'点击播放 · 跟着节奏走'}</span>

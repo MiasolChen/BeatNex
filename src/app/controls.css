@@ -1,0 +1,126 @@
+/* Shared control skins. Page styles own placement; these own appearance and hit size. */
+#bn :is(.bn-primary,.bn-smallbtn,.bn-filter,.bn-save,.bn-select-trigger,.bn-record-play,.bn-record-practice,.bn-record-edit,.bn-record-more,.bn-favorite,.bn-library-manage,:where(#bn-metro-play),:where(#bn-machine-play),:where(#bn-save),:where(#bn-undo),:where(#bn-redo),:where(#bn-follow),:where(#bn-landscape),:where(#bn-reset),:where(#bn-free-end),:where(#bn-dance-start),:where(#bn-dance-finish),:where(#bn-calendar-prev),:where(#bn-calendar-next),:where(#bn-calendar-today),:where(.bn-version-actions button),:where(.bn-management-menu>button),:where(.bn-dance-actions button),:where(.bn-editor-actions button),:where(.bn-save-actions button),:where(.bn-feedback button),:where(.bn-target-heading button),.bn-control) {
+  box-sizing:border-box; min-height:var(--bn-control-size); height:var(--bn-control-size);
+  border:1px solid var(--control-line); border-radius:var(--bn-radius-control);
+  background:var(--control-bg); color:var(--control-ink); padding:0 12px;
+  font-family:inherit; font-size:var(--bn-text-body); font-weight:650; line-height:1.2;
+  transition:background-color var(--bn-motion-fast),box-shadow var(--bn-motion-fast),translate var(--bn-motion-fast);
+  transform:none; touch-action:manipulation;
+}
+#bn :is(.bn-smallbtn,.bn-favorite,.bn-record-play,.bn-record-more,:where(#bn-reset),:where(#bn-free-end),:where(#bn-save),:where(#bn-calendar-prev),:where(#bn-calendar-next),.bn-control-icon) {
+  width:var(--bn-control-size); min-width:var(--bn-control-size); padding:0;
+  display:grid; place-items:center; flex-shrink:0;
+}
+#bn :is(.bn-primary,.bn-save,:where(#bn-metro-play),:where(#bn-machine-play),:where(#bn-dance-start),.bn-control-primary) {
+  background:var(--bn-primary); color:var(--ink); border:var(--bn-border);
+  box-shadow:2px 3px 0 var(--ink); font-weight:800;
+}
+#bn :is(.bn-primary,.bn-save,:where(#bn-metro-play),:where(#bn-machine-play),:where(#bn-dance-start),.bn-control-primary):active:not(:disabled) {
+  translate:1px 2px; box-shadow:1px 1px 0 var(--ink);
+}
+#bn :is(.bn-control,.bn-primary,.bn-smallbtn,.bn-filter,.bn-save,.bn-select-trigger,.bn-record-play,.bn-record-practice,.bn-record-edit,.bn-record-more,.bn-favorite,.bn-library-manage,:where(.bn-version-actions button),:where(.bn-management-menu>button),:where(.bn-editor-actions button)):hover:not(:disabled) {filter:brightness(.96)}
+#bn :is(.bn-control,.bn-filter,.bn-favorite,.bn-record-play,:where(.bn-editor-actions button),:where(.bn-feedback button))[aria-pressed=true] {
+  background:var(--bn-secondary); color:var(--ink); border-color:var(--ink); box-shadow:inset 0 -3px 0 var(--ink);
+}
+#bn :is(button,input,select):focus-visible {outline:3px solid var(--focus);outline-offset:3px}
+#bn :is(button,input,select):disabled {opacity:.45;cursor:not-allowed;translate:none;box-shadow:none}
+#bn :is(.bn-primary,.bn-smallbtn,.bn-favorite,.bn-record-play,.bn-record-edit,.bn-record-more,.bn-control,:where(.bn-editor-actions button),:where(#bn-reset),:where(#bn-save),.bn-nav button,.bn-calendar-launch) svg {
+  width:var(--bn-icon-size);height:var(--bn-icon-size);flex-shrink:0;
+}
+#bn :is(.bn-save-name input,.bn-version-panel input:not([type=checkbox]),.bn-select-menu) {
+  border:1px solid var(--ink);border-radius:var(--bn-radius-control);background:var(--white);color:var(--ink);
+  font-size:var(--bn-text-label);min-height:var(--bn-control-size);
+}
+#bn .bn-select-menu {padding:4px;box-shadow:var(--bn-shadow)}
+#bn .bn-select-menu button {min-height:44px;border-radius:8px}
+#bn .bn-select-menu button[aria-selected=true] {background:var(--bn-secondary);color:var(--ink)}
+#bn .bn-backup-restore {min-height:44px;align-items:center}
+#bn .bn-backup-restore input {accent-color:var(--bn-focus)}
+#bn .bn-version-actions .bn-danger {background:var(--bn-danger-soft);color:var(--bn-danger);border-color:var(--bn-danger)}
+
+/* Shared segmented control appearance; existing sliders keep their geometry and behavior. */
+#bn :is(.rc-mode-switch,.bn-practice-modes,.bn-source-tabs) {background:var(--bn-soft);border-radius:16px;padding:4px;gap:4px}
+#bn :is(.rc-mode-switch,.bn-practice-modes,.bn-source-tabs,.bn-calendar-tabs) button {
+  height:44px;min-height:44px;border:0;border-radius:var(--bn-radius-control);font-size:var(--bn-text-body);font-weight:750;
+  background:transparent;color:var(--ink);transform:none;
+}
+#bn :is(.rc-mode-switch,.bn-practice-modes) button[aria-pressed=true],#bn :is(.bn-source-tabs,.bn-calendar-tabs) button[aria-selected=true] {color:var(--white)}
+#bn .rc-mode-switch button[aria-pressed=true] {background:var(--ink)}
+#bn .bn-practice-modes {--mode-inset:4px;--mode-gap:4px;--mode-radius:12px}
+#bn .bn-source-tabs {margin-bottom:0}
+#bn .bn-source-slider {background:var(--ink);border-radius:12px}
+#bn .bn-calendar-tabs,#bn .bn-calendar-slider {height:44px;border-radius:12px}
+#bn .bn-calendar-tracks i {background:var(--bn-soft);border-radius:12px}
+#bn .bn-calendar-tabs button {padding:0}
+#bn .bn-mode-tabs button {height:44px;min-height:44px;scale:1}
+#bn .bn-mode-tabs i {background:var(--bn-secondary)}
+
+/* Unified sheets, with a small ink offset. Nested content keeps its own layout. */
+#bn :is(.bn-session,.bn-mode-panel,.bn-machine-settings,.bn-machine,.bn-metronome,.bn-calendar-sheet,.bn-dance-timer,.bn-dialog,.rc-player) {
+  border:var(--bn-border);border-radius:var(--bn-radius-card);box-shadow:var(--bn-shadow);
+}
+#bn :is(.bn-session,.bn-dance-timer) {background:var(--ink);color:var(--white)}
+#bn :is(.bn-mode-panel,.bn-machine-settings,.bn-machine,.bn-metronome,.bn-calendar-sheet,.bn-dialog) {background:var(--white)}
+#bn .bn-dialog {max-height:calc(100svh - 48px);overflow:auto;padding:var(--bn-card-padding)}
+#bn :is(.bn-error,.rc-error) {background:var(--bn-danger-soft);color:var(--bn-danger);border-radius:12px;padding:12px;font-size:var(--bn-text-body)}
+#bn .bn-toast {background:var(--ink);color:var(--white);border:1px solid var(--white);border-radius:12px}
+#bn .bn-heading h1,#bn .bn-session h2 {font-size:var(--bn-text-title);line-height:1.3;letter-spacing:-.025em}
+#bn .bn-bpm-rail button {font-size:var(--bn-text-title)}
+#bn .bn-session :is(.bn-sub,.bn-muted,.bn-bpm-wheel>small) {color:var(--bn-dark-muted)}
+#bn .bn-mode-panel .bn-drum[aria-pressed=true]:after {content:"";position:absolute;top:6px;left:6px;width:7px;height:4px;border-left:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(-45deg);pointer-events:none}
+#bn .bn-session .bn-primary {padding:0 8px;gap:4px;white-space:nowrap}
+#bn .bn-session .bn-tag {color:var(--ink);background:var(--bn-accent);border:0;font-weight:800}
+#bn .bn-session:after {display:none}
+#bn .bn-top {border-bottom:1px solid var(--line)}
+#bn .bn-mark {background:var(--bn-primary);box-shadow:2px 2px 0 var(--ink)}
+#bn>.bn-nav,#bn.bn-library-screen>.bn-nav,#bn>.bn-calendar-launch {
+  background:var(--white);border:var(--bn-border);box-shadow:2px 3px 0 var(--ink);backdrop-filter:none;
+}
+#bn>.bn-nav .bn-nav-slider>span {background:var(--bn-primary);box-shadow:none}
+#bn>.bn-calendar-launch[aria-current=page] {background:var(--bn-secondary)}
+#bn .bn-empty-mark {background:var(--bn-secondary);border:var(--bn-border);box-shadow:var(--bn-shadow)}
+#bn .bn-training-empty {background:var(--paper);color:var(--muted)}
+
+/* Marker is a shared original SVG mask: dry gaps survive all color variants. */
+#bn :is(.bn-heading h1,.rc-heading h2,.bn-empty h3,.bn-complete-number) {position:relative;isolation:isolate;width:fit-content}
+#bn :is(.bn-heading h1,.rc-heading h2,.bn-empty h3,.bn-complete-number):after {
+  content:'';position:absolute;z-index:-1;left:-5px;right:-9px;bottom:-3px;height:45%;
+  background:var(--bn-accent);mask:url('./art/marker-fill.svg') center/100% 100% no-repeat;pointer-events:none;transform:rotate(-2deg);
+}
+#bn .bn-heading h1:after {background:var(--bn-secondary)}
+#bn .bn-empty h3,#bn .bn-complete-number {margin-left:auto;margin-right:auto}
+#bn .bn-category[aria-pressed=true] {background:var(--bn-secondary);border-color:var(--ink);box-shadow:2px 3px 0 var(--ink)}
+#bn .bn-category-art {mask:url('./art/marker-fill.svg') center/100% 100% no-repeat;background:var(--ink)}
+#bn .bn-category-art i {visibility:hidden}
+#bn .bn-see-ball {background:var(--bn-primary)}
+#bn .bn-see-right .bn-see-ball {background:var(--bn-secondary)}
+#bn .bn-see-pivot {border-bottom-color:var(--bn-accent)}
+
+/* Both record families share a two-row layout; actions retain 44px targets. */
+#bn .bn-record,#bn .bn-record:not(.bn-saved-record),#bn .bn-saved-record {
+  grid-template-columns:44px minmax(0,1fr) 44px 76px;gap:8px;padding:12px;
+  border:1px solid var(--line);border-radius:16px;background:var(--white);
+}
+#bn .bn-record:not(.bn-saved-record)>.bn-art {grid-column:1;grid-row:1;width:36px;height:36px}
+#bn .bn-record:not(.bn-saved-record) .bn-record-body {grid-column:2/-1;grid-row:1}
+#bn .bn-record .bn-record-body h3 {line-height:1.4;font-size:var(--bn-text-body)}
+#bn .bn-record:not(.bn-saved-record) .bn-record-body .bn-muted {font-size:var(--bn-text-caption);flex-wrap:wrap;white-space:normal;line-height:1.4}
+#bn .bn-record:not(.bn-saved-record) .bn-favorite {grid-column:1;grid-row:2}
+#bn .bn-record .bn-record-play {grid-column:3;grid-row:2}
+#bn .bn-record .bn-record-practice {grid-column:4;grid-row:2;width:auto;padding:0 8px}
+#bn .bn-saved-record .bn-record-edit {grid-column:1/3;grid-row:2;width:auto}
+#bn .bn-saved-record .bn-record-more {align-self:center}
+#bn .bn-source-header {margin:16px 0 12px}
+#bn .bn-library-grid {grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+#bn .bn-record .bn-record-play svg {width:20px;height:20px}
+#bn .bn-machine-settings .bn-editor-options>label:not(:last-child) {border-radius:12px;background:var(--paper)}
+#bn .bn-machine-settings .bn-editor-options>label:not(:last-child) .bn-select-trigger {border:0;padding:0 4px;background:transparent;font-size:var(--bn-text-body)}
+#bn .bn-machine-transport #bn-save {flex-basis:44px}
+#bn .bn-version-actions {gap:8px}
+#bn .bn-save-actions {gap:8px;flex-wrap:wrap}
+#bn #bn-calendar-today {padding:0 8px;white-space:nowrap}
+#bn #bn-only-favorites {height:44px;min-height:44px;padding:0 8px;border-radius:12px}
+#bn .bn-calendar-top :is(#bn-calendar-prev,#bn-calendar-next) {font-size:0}
+#bn .bn-feedback {gap:8px}
+#bn :where(.bn-feedback button) {height:auto;min-height:44px;padding:8px}
+@media(prefers-reduced-motion:reduce){#bn :is(button,input,select){transition:none;translate:none!important}}

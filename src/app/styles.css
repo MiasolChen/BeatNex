@@ -1,5 +1,5 @@
 @import './prototype.css';
-html,body,#root {margin:0;min-width:320px;min-height:100%;background:#f4f3eb}
+html,body,#root {margin:0;min-width:320px;min-height:100%;background:var(--bn-paper)}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif}
 #bn-phone-preview{width:min(100%,900px)}
 #bn,#bn.bn-library-screen,#bn-phone-preview.bn-landscape #bn{height:100svh;min-height:0;max-height:none;border-radius:0}
@@ -7,7 +7,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn>main{overscroll-behavior:contain}
 #bn>.bn-nav,#bn>.bn-calendar-launch{bottom:max(16px,env(safe-area-inset-bottom))}
 #bn .bn-route-dock.bn-floating-delete{bottom:max(100px,calc(env(safe-area-inset-bottom) + 80px))}
-#bn .bn-error{background:#f6e6df;padding:12px;border-radius:12px;color:#843b2c;font-size:var(--bn-text-caption);margin-bottom:14px}
+#bn .bn-error{background:var(--bn-danger-soft);padding:12px;border-radius:12px;color:var(--bn-danger);font-size:var(--bn-text-caption);margin-bottom:14px}
 #bn .bn-error button{text-decoration:underline;margin-left:10px}
 #bn .bn-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 #bn .bn-select-trigger select{width:100%;height:44px;border:0;background:transparent;font:inherit;color:inherit}
@@ -41,13 +41,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-bar-track{display:flex;gap:4px;height:6px;margin:0 0 9px}
 #bn .bn-bar-track i{flex:1;min-width:0;border-radius:4px;background:var(--line);transition:background 120ms ease-out}
 #bn .bn-bar-track i.done{background:var(--ink)}
-#bn .bn-bar-track i.current{background:var(--acid);box-shadow:0 0 0 1px #98a54b}
+#bn .bn-bar-track i.current{background:var(--acid);box-shadow:0 0 0 1px var(--bn-muted)}
 #bn .bn-practice-progress #bn-guide{height:32px;font-size:var(--bn-text-caption);line-height:16px;color:var(--muted)}
 #bn .bn-course{position:relative}
 #bn .bn-repeat-control{position:relative;display:flex;width:88px;height:32px;padding:3px;margin:0;flex-shrink:0;border-radius:10px;background:var(--paper);border:1px solid var(--line);box-sizing:border-box}
 #bn .bn-repeat-control[hidden]{display:none}
 #bn .bn-repeat-control i{position:absolute;left:3px;top:3px;width:40px;height:24px;border-radius:7px;background:var(--acid);transition:transform 220ms cubic-bezier(.22,1,.36,1)}
-#bn .bn-repeat-control button{position:relative;flex:1;min-width:0;border:0;background:none;font-size:17px;line-height:24px;padding:0;z-index:1;color:var(--ink)}
+#bn .bn-repeat-control button{position:relative;flex:1;min-width:0;border:0;background:none;font-size:var(--bn-text-label);line-height:24px;padding:0;z-index:1;color:var(--ink)}
 #bn .bn-repeat-control button:disabled{opacity:.5;cursor:default}
 
 #bn .bn-course>.bn-row>div:first-child{min-width:0;flex:1}
@@ -67,8 +67,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-practice-modes button:active{opacity:.8}
 #bn .bn-mode-content{padding:18px}
 #bn .bn-target-heading{display:flex;justify-content:space-between;align-items:center;min-height:44px;gap:8px}
-#bn .bn-target-heading h3{font-size:17px;margin:0}
-#bn .bn-target-heading button{min-height:44px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:0 12px}
+#bn .bn-target-heading h3{font-size:var(--bn-text-label);margin:0}
 #bn .bn-mode-help{font-size:var(--bn-text-caption);line-height:1.6;color:var(--muted);margin:4px 0 14px}
 #bn .bn-mode-panel .bn-instruments{padding:0;background:none;border:0}
 #bn .bn-mode-panel .bn-drums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
@@ -98,20 +97,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 /* Compact practice layout on phones, without shrinking primary touch targets. */
 @container bn-preview (max-width:699px){
  #bn [data-view="practice"] .bn-layout{gap:10px}
- #bn [data-view="practice"] .bn-session{padding:14px;border-radius:18px}
+ #bn [data-view="practice"] .bn-session{padding:14px}
  #bn [data-view="practice"] .bn-session h2{font-size:var(--bn-text-title);line-height:1.15;letter-spacing:-.6px;margin:10px 0 5px}
  #bn [data-view="practice"] .bn-session .bn-beats{margin:10px 0}
  #bn [data-view="practice"] .bn-count{font-size:var(--bn-text-body);height:24px}
  #bn [data-view="practice"] .bn-session .bn-in-player{margin-top:10px;padding-top:8px}
- #bn [data-view="practice"] .bn-session .bn-primary{font-size:var(--bn-text-body);min-height:44px;height:44px}
- #bn [data-view="practice"] .bn-session #bn-reset,#bn [data-view="practice"] .bn-session #bn-free-end{height:44px;min-height:44px;width:44px;min-width:44px}
- #bn .bn-mode-panel{border-radius:16px}
  #bn .bn-practice-modes{--mode-inset:3px;--mode-gap:3px;--mode-radius:12px;border-radius:16px 16px 0 0}
  #bn .bn-practice-modes button{font-size:var(--bn-text-body);border-radius:12px}
  #bn .bn-mode-content{padding:12px}
  #bn .bn-target-heading{min-height:28px}
  #bn .bn-target-heading h3,#bn .bn-mode-panel .bn-course h3{font-size:var(--bn-text-body);line-height:22px}
- #bn .bn-target-heading button{font-size:var(--bn-text-caption)}
  #bn .bn-mode-help{margin:2px 0 8px;font-size:var(--bn-text-caption);line-height:1.5}
  #bn .bn-mode-panel .bn-drums{margin-top:8px;gap:7px}
  #bn .bn-mode-panel .bn-drum{min-height:56px;padding:6px 2px;gap:4px;line-height:1.2;border-radius:10px}
@@ -156,12 +151,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn .bn-mode-panel .bn-drum svg{width:20px;height:20px;flex-shrink:0}
  #bn .bn-mode-panel #bn-drum-help{font-size:var(--bn-text-caption);line-height:18px;margin-top:4px}
  #bn [data-view="practice"] .bn-layout{gap:8px}
- #bn [data-view="practice"] .bn-session{padding:14px 16px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);column-gap:8px;align-items:center}
+ #bn [data-view="practice"] .bn-session{padding:14px 16px;display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);column-gap:8px;align-items:center}
  #bn .bn-session>div:first-child{grid-column:1 / -1}
  #bn .bn-session>div:nth-child(2){display:contents}
  #bn .bn-session .bn-beats{grid-column:1 / -1}
  #bn .bn-session>div:nth-child(2)>.bn-row{gap:8px}
- #bn .bn-session .bn-primary{min-width:44px;padding:0 6px;gap:4px}
+ #bn .bn-session .bn-primary{min-width:44px;gap:4px}
  #bn [data-view="practice"] .bn-session .bn-beats{margin:6px 0}
  #bn [data-view="practice"] .bn-session .bn-in-player{margin:0;padding:0;border:0;min-width:0}
  #bn .bn-mode-content{padding:16px}
@@ -180,10 +175,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn h1,#bn [data-view=calendar] h1{font-size:var(--bn-text-title);line-height:1.25;letter-spacing:-.5px;margin:0}
  #bn .bn-heading h2,#bn .bn-dialog h2{font-size:var(--bn-text-title);line-height:1.3}
  #bn .bn-eyebrow{font-size:var(--bn-text-micro);letter-spacing:1px}
- #bn .bn-primary,#bn .bn-save{font-size:var(--bn-text-body);min-height:44px}
  #bn .bn-muted,#bn .bn-mode-help{font-size:var(--bn-text-caption)}
  #bn .bn-session .bn-sub{font-size:var(--bn-text-caption)}
- #bn .bn-session #bn-free-end,#bn .bn-session #bn-reset{flex:none;width:44px;min-width:44px}
+ #bn .bn-session #bn-free-end,#bn .bn-session #bn-reset{flex:none}
  #bn .bn-layout{gap:8px}
  #bn .bn-source-tabs{width:240px;max-width:100%;margin:0 0 16px;padding:3px;border-radius:13px}
  #bn .bn-source-tabs button{font-size:var(--bn-text-caption);min-height:38px;height:38px;padding:0 10px}
@@ -196,24 +190,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn .bn-rail-footer{font-size:var(--bn-text-caption);margin-top:4px}
  #bn .bn-curated-tools{margin:8px 0;font-size:var(--bn-text-caption)}
  #bn .bn-library-grid{gap:8px}
- #bn .bn-record{padding:12px;gap:6px;border-radius:16px}
  #bn .bn-record-body h3{font-size:var(--bn-text-body);margin:0 0 4px;overflow-wrap:anywhere}
  #bn .bn-record-body button{margin-top:6px;min-height:44px;padding:6px 8px}
  #bn .bn-record-body .bn-muted{font-size:var(--bn-text-caption)}
- #bn .bn-favorite{height:44px;width:44px;min-height:44px;font-size:var(--bn-text-title)}
  #bn .bn-empty{padding:20px 12px;min-height:160px}
  #bn .bn-empty h3{font-size:var(--bn-text-label)}
  #bn .bn-empty p{font-size:var(--bn-text-caption)}
- #bn .bn-machine{padding:16px;border-radius:18px}
+ #bn .bn-machine{padding:16px}
  #bn .bn-editor-toolbar{padding:12px;gap:12px;border-radius:14px}
  #bn .bn-editor-toolbar label{font-size:var(--bn-text-caption)}
- #bn .bn-editor-toolbar #bn-save{padding:0 6px;gap:4px;font-size:var(--bn-text-caption);white-space:nowrap}
+ #bn .bn-editor-toolbar #bn-save{gap:4px;white-space:nowrap}
  #bn .bn-editor-toolbar #bn-save svg{width:18px;height:18px}
  #bn .bn-editor-toolbar .bn-editor-options>label{gap:6px}
  #bn .bn-editor-toolbar .bn-tool-label{font-size:var(--bn-text-caption)}
  #bn .bn-daw-hint{font-size:var(--bn-text-caption);margin:6px 0}
  #bn .bn-machine-foot{padding-top:8px;margin-top:8px}
- #bn .bn-metronome{padding:16px;border-radius:18px}
+ #bn .bn-metronome{padding:16px}
  #bn .bn-metro-stage{height:300px}
  #bn .bn-metronome>.bn-bpm-wheel{height:64px;margin:8px 0 12px}
  #bn .bn-metronome .bn-bpm-rail,#bn .bn-metronome .bn-bpm-rail button{height:44px;min-height:44px}
@@ -221,12 +213,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn .bn-metronome .bn-bpm-wheel:before{top:2px;height:40px}
  #bn .bn-metronome .bn-bpm-wheel>small{top:46px;font-size:var(--bn-text-caption)}
  #bn .bn-metronome .bn-wheel-input{top:2px;height:40px;font-size:var(--bn-text-title)}
- #bn .bn-dance-timer{padding:20px;gap:8px 16px;grid-template-columns:minmax(0,1fr) 112px;min-height:132px;border-radius:18px}
+ #bn .bn-dance-timer{padding:20px;gap:8px 16px;grid-template-columns:minmax(0,1fr) 112px;min-height:132px}
  #bn #bn-dance-clock b{font-size:var(--bn-text-hero);letter-spacing:-1px}
  #bn #bn-dance-clock.bn-hours b{font-size:var(--bn-text-display)}
  #bn .bn-dance-actions{gap:10px}
- #bn .bn-dance-actions button{min-height:44px;height:44px}
- #bn .bn-calendar-sheet{margin-top:20px;padding:16px;min-height:0;border-radius:18px}
+ #bn .bn-calendar-sheet{margin-top:20px;padding:16px;min-height:0}
  #bn .bn-calendar-tabs{margin-bottom:16px}
  #bn .bn-calendar-tabs button{font-size:var(--bn-text-body)}
  #bn .bn-calendar-top strong{font-size:var(--bn-text-body)}
@@ -235,7 +226,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn [data-calendar-mode=day] .bn-calendar-sheet{min-height:0}
  #bn [data-calendar-mode=day] .bn-training-list{min-height:180px;max-height:280px}
  #bn #bn-year-grid button{height:64px;min-height:64px}
- #bn .bn-dialog{padding:16px;border-radius:16px;max-height:calc(100svh - 32px);overflow:auto}
+ #bn .bn-dialog{padding:16px;max-height:calc(100svh - 32px);overflow:auto}
  #bn .bn-dialog input{font-size:var(--bn-text-label)}
  #bn .bn-complete-number{font-size:var(--bn-text-metric)}
  #bn .bn-save-name{font-size:var(--bn-text-body);margin-top:12px}
@@ -245,16 +236,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 }
 
 /* Give artwork and icon actions independent space. */
-#bn .bn-record{grid-template-columns:48px minmax(0,1fr) 44px 44px;align-items:center}
+#bn .bn-record{align-items:center}
 #bn .bn-record .bn-art,#bn .bn-record .bn-saved-art{height:48px;width:48px;padding:4px}
 #bn .bn-record .bn-disc{width:40px;height:40px}
-#bn .bn-record .bn-favorite,#bn .bn-record-play,#bn .bn-record-edit{position:static;width:44px;height:44px;min-height:44px;padding:10px;display:grid;place-items:center;border:0;border-radius:50%;margin:0;background:transparent;font-size:var(--bn-text-title)}
-#bn .bn-record-play{background:var(--acid)}
+#bn .bn-record .bn-favorite{position:static;display:grid;place-items:center;margin:0}
+#bn .bn-record-play{position:static;display:grid;place-items:center;margin:0}
+#bn .bn-record-edit{position:static;width:44px;display:grid;place-items:center;margin:0}
 #bn .bn-record-play svg,#bn .bn-record-edit svg{width:18px;height:18px}
 #bn .bn-record-body .bn-row{flex-wrap:wrap;justify-content:flex-start;gap:2px 8px}
-#bn .bn-editor-toolbar .bn-editor-actions button,#bn .bn-editor-toolbar #bn-undo,#bn .bn-editor-toolbar #bn-redo,#bn .bn-editor-toolbar #bn-follow{display:grid;grid-template-rows:none;place-items:center;align-content:center;min-height:44px;height:44px;padding:10px;gap:0;background:transparent}
+#bn .bn-editor-toolbar .bn-editor-actions button,#bn .bn-editor-toolbar #bn-undo,#bn .bn-editor-toolbar #bn-redo,#bn .bn-editor-toolbar #bn-follow{display:grid;grid-template-rows:none;place-items:center;align-content:center;gap:0}
 #bn .bn-editor-toolbar .bn-editor-options{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px}
-#bn .bn-editor-toolbar #bn-save{min-width:44px;width:44px;padding:10px}
 /* Route sections need breathing room; keep the shared player and tabs stable. */
 #bn .bn-mode-content{padding:20px}
 #bn .bn-mode-help{margin:8px 0 16px}
@@ -284,8 +275,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
  #bn .bn-record-body h3{font-size:var(--bn-text-body);line-height:1.3}
  #bn .bn-record-body .bn-muted{font-size:var(--bn-text-caption)}
  #bn .bn-editor-toolbar .bn-editor-actions{padding:10px 0 0;gap:6px}
- #bn .bn-editor-toolbar .bn-editor-actions button{background:transparent;border:0}
- #bn .bn-editor-toolbar .bn-select-trigger{padding:0 6px}
  #bn .bn-editor-toolbar .bn-bpm-rail button{font-size:var(--bn-text-label);transform:none}
  #bn .bn-daw-hint{margin:14px 0 10px}
  #bn .bn-machine-foot{margin-top:16px;padding-top:0}
@@ -314,13 +303,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-mode-panel .bn-drum[aria-pressed=true]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 #bn .bn-mode-panel .bn-drum[data-level=normal]{background:var(--acid)}
 #bn .bn-mode-panel .bn-drum[data-level=weak]{background:var(--lilac)}
-#bn .bn-mode-panel .bn-drum[data-level=silent]{background:#e4e5de;color:#686960}
+#bn .bn-mode-panel .bn-drum[data-level=silent]{background:var(--bn-soft);color:var(--bn-muted)}
 #bn .bn-mode-panel .bn-drum:disabled{opacity:1;cursor:default;filter:none}
 /* A steady surface communicates mix level; only the inset light and meter respond to hits. */
 #bn .bn-mode-panel .bn-drum{isolation:isolate;transition:background-color 180ms ease,color 180ms ease}
 #bn .bn-mode-panel .bn-drum::before{content:"";position:absolute;inset:2px;border-radius:inherit;background:radial-gradient(ellipse at 50% 30%,rgba(255,255,255,.65),transparent 75%);opacity:0;pointer-events:none;z-index:-1;transition:opacity 220ms ease-out}
 #bn .bn-mode-panel .bn-drum[data-hit=true]::before{opacity:1;transition-duration:60ms}
-#bn .bn-pad-volume{position:absolute;left:8px;right:8px;bottom:3px;height:3px;border-radius:4px;background:rgba(32,34,30,.1);overflow:hidden;pointer-events:none}
+#bn .bn-pad-volume{position:absolute;left:8px;right:8px;bottom:3px;height:3px;border-radius:4px;background:color-mix(in srgb,var(--bn-ink) 10%,transparent);overflow:hidden;pointer-events:none}
 #bn .bn-pad-volume i{display:block;width:100%;height:100%;background:currentColor;border-radius:inherit;transform:scaleX(0);transform-origin:left;opacity:.25;transition:transform 180ms ease,opacity 220ms ease-out}
 #bn [data-level=normal] .bn-pad-volume i{transform:scaleX(1)}
 #bn [data-level=weak] .bn-pad-volume i{transform:scaleX(.18)}
@@ -328,7 +317,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn [data-level=idle] .bn-pad-volume{visibility:hidden}
 #bn .bn-volume-key{display:flex;justify-content:center;gap:16px;font-size:var(--bn-text-caption);color:var(--muted);line-height:inherit;margin-top:0}
 #bn .bn-volume-key span{display:flex;align-items:center;gap:4px}
-#bn .bn-volume-key i{width:8px;height:8px;border-radius:50%;background:#e4e5de;border:1px solid #999b90}
+#bn .bn-volume-key i{width:8px;height:8px;border-radius:50%;background:var(--bn-soft);border:1px solid var(--bn-muted)}
 #bn .bn-volume-key [data-level=normal] i{background:var(--acid)}
 #bn .bn-volume-key [data-level=weak] i{background:var(--lilac)}
 @media(prefers-reduced-motion:reduce){
@@ -341,28 +330,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-editor-toolbar .bn-editor-options{grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr) 44px}
 #bn .bn-editor-toolbar .bn-tool-icon{display:grid;place-items:center;line-height:0;width:20px;height:20px}
 #bn .bn-editor-toolbar .bn-tool-icon svg{display:block;width:20px;height:20px;margin:0}
-#bn .bn-editor-toolbar #bn-landscape,#bn .bn-editor-toolbar #bn-follow{border:1px solid transparent;border-radius:10px;padding:10px;height:44px;min-height:44px;grid-template-rows:none;place-items:center}
-#bn .bn-editor-toolbar .bn-select-trigger{min-width:0;width:100%;gap:4px;padding:0 6px}
+#bn .bn-editor-toolbar #bn-landscape,#bn .bn-editor-toolbar #bn-follow{grid-template-rows:none;place-items:center}
+#bn .bn-editor-toolbar .bn-select-trigger{min-width:0;width:100%;gap:4px}
 #bn .bn-editor-toolbar .bn-editor-options select{height:44px;min-height:44px}
 
 /* Meter and bar count share a compact, aligned listbox. */
 #bn .bn-select-menu{border-radius:12px;padding:4px;max-height:232px;overscroll-behavior:contain}
 #bn .bn-select-menu button{height:36px;min-height:36px;padding:0 8px;font-size:var(--bn-text-body);font-weight:500}
-#bn .bn-editor-toolbar .bn-select-trigger{font-size:var(--bn-text-body);font-weight:650;border-radius:9px;line-height:1}
+#bn .bn-editor-toolbar .bn-select-trigger{line-height:1}
 
 /* Parameters, edit history and view controls have separate visual groups. */
 #bn .bn-editor-toolbar{padding:0;border:0;background:transparent;border-radius:0}
 #bn .bn-editor-toolbar .bn-editor-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}
 #bn .bn-editor-toolbar .bn-editor-options>label{font-size:var(--bn-text-caption);grid-template-rows:16px 44px;gap:6px}
-#bn .bn-editor-toolbar .bn-select-trigger{padding:0 10px;background:var(--paper)}
 #bn .bn-editor-toolbar .bn-editor-actions{display:flex;justify-content:space-between;gap:10px;border:0;margin:14px 0 0;padding:0}
 #bn .bn-editor-toolbar .bn-tool-group{display:flex;gap:8px}
-#bn .bn-editor-toolbar .bn-editor-actions button,#bn .bn-editor-toolbar #bn-undo,#bn .bn-editor-toolbar #bn-redo,#bn .bn-editor-toolbar #bn-follow{width:44px;min-width:44px;background:var(--paper)}
-#bn .bn-editor-toolbar #bn-landscape[aria-pressed=true]{background:var(--lilac)}
-#bn .bn-editor-toolbar #bn-follow[aria-pressed=true]{background:var(--acid)}
+#bn .bn-editor-toolbar .bn-editor-actions button,#bn .bn-editor-toolbar #bn-undo,#bn .bn-editor-toolbar #bn-redo,#bn .bn-editor-toolbar #bn-follow{width:44px;min-width:44px}
 #bn .bn-machine-transport{display:flex;gap:12px;align-items:center}
 #bn .bn-machine-transport #bn-machine-play{flex:1;min-width:0}
-#bn .bn-machine-transport #bn-save{width:44px;height:44px;min-height:44px;flex:0 0 44px;padding:10px;display:grid;place-items:center;border-radius:12px;background:var(--ink);color:var(--acid)}
+#bn .bn-machine-transport #bn-save{flex:0 0 44px;display:grid;place-items:center}
 #bn .bn-machine-transport .bn-tool-icon,#bn .bn-machine-transport .bn-tool-icon svg{display:block;width:20px;height:20px;line-height:0}
 #bn .bn-select-menu{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;padding:4px}
 #bn .bn-select-menu button{padding:0 8px}
@@ -378,37 +364,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-editor-toolbar .bn-editor-actions button,#bn .bn-editor-toolbar #bn-undo,#bn .bn-editor-toolbar #bn-redo,#bn .bn-editor-toolbar #bn-follow{width:100%;min-width:0}
 /* Compact discrete selectors leave room for the continuous tempo rail. */
 #bn .bn-editor-toolbar .bn-editor-options{grid-template-columns:64px 52px minmax(0,1fr);gap:12px}
-#bn .bn-editor-toolbar .bn-wheel-compact{background:#c5b7fa25;border-color:transparent}
+#bn .bn-editor-toolbar .bn-wheel-compact{background:color-mix(in srgb, var(--bn-secondary) 14.5%, transparent);border-color:transparent}
 #bn .bn-editor-toolbar .bn-wheel-compact:before{display:block;top:3px;bottom:3px;height:auto;left:calc(50% - 25px);width:50px;border-radius:7px;background:var(--white)}
 #bn .bn-editor-toolbar .bn-wheel-compact .bn-bpm-rail{mask-image:linear-gradient(to right,transparent,#000 12%,#000 88%,transparent)}
-#bn .bn-editor-toolbar .bn-select-trigger{padding:0 8px}
 
 /* Match the practice page: a dark control card followed by a light working surface. */
-#bn .bn-machine-settings{padding:20px;margin-bottom:12px;border-radius:20px;background:var(--ink);color:var(--white);border-color:var(--ink)}
-#bn .bn-machine-settings .bn-editor-options>label,#bn .bn-machine-settings .bn-tempo-caption>span{color:#bfc1b7}
-#bn .bn-machine-settings .bn-select-trigger{background:#ffffff0b;border-color:#ffffff29;color:var(--white)}
+#bn .bn-machine-settings{padding:20px;margin-bottom:12px;border-color:var(--ink)}
+#bn .bn-machine-settings .bn-editor-options>label,#bn .bn-machine-settings .bn-tempo-caption>span{color:var(--bn-dark-line)}
 #bn .bn-machine-settings .bn-wheel-compact{background:transparent;border-color:transparent;color:var(--white)}
-#bn .bn-machine-settings .bn-wheel-compact:before{top:2px;bottom:2px;width:60px;left:calc(50% - 30px);border-radius:10px;background:#ffffff12}
+#bn .bn-machine-settings .bn-wheel-compact:before{top:2px;bottom:2px;width:60px;left:calc(50% - 30px);border-radius:10px;background:color-mix(in srgb, var(--bn-surface) 7.1%, transparent)}
 #bn .bn-machine-settings .bn-bpm-rail button{font-size:var(--bn-text-label);color:var(--white)}
 #bn .bn-machine-settings .bn-bpm-rail button[aria-pressed=true]{transform:scale(1.05)}
-#bn .bn-machine-settings .bn-editor-actions{margin-top:18px;padding-top:14px;border-top:1px solid #ffffff1a}
-#bn .bn-machine-settings .bn-editor-actions button,#bn .bn-machine-settings #bn-undo,#bn .bn-machine-settings #bn-redo,#bn .bn-machine-settings #bn-follow{background:#ffffff0b;color:var(--white)}
-#bn .bn-machine-settings #bn-landscape[aria-pressed=true],#bn .bn-machine-settings #bn-follow[aria-pressed=true]{background:var(--acid);color:var(--ink)}
-#bn .bn-machine-settings+.bn-machine{padding:16px;border-radius:20px}
+#bn .bn-machine-settings .bn-editor-actions{margin-top:18px;padding-top:14px;border-top:1px solid color-mix(in srgb, var(--bn-surface) 10.2%, transparent)}
+#bn .bn-machine-settings+.bn-machine{padding:16px}
 #bn .bn-machine-settings+.bn-machine .bn-daw-hint{margin:0 0 14px}
 @container bn-preview (max-width:359px){#bn .bn-machine-settings{padding:16px}}
 /* Give continuous tempo adjustment its own full-width gesture area. */
-#bn .bn-machine-settings{background:var(--white);color:var(--ink);border-color:var(--line);padding:16px;border-radius:18px}
+#bn .bn-machine-settings{border-color:var(--line);padding:16px}
 #bn .bn-machine-settings .bn-editor-options{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;row-gap:16px}
 #bn .bn-machine-settings .bn-editor-options>label:last-child{grid-column:1/-1}
 #bn .bn-machine-settings .bn-editor-options>label,#bn .bn-machine-settings .bn-tempo-caption>span{color:var(--muted)}
-#bn .bn-machine-settings .bn-select-trigger{background:var(--paper);border-color:var(--line);color:var(--ink);padding:0 12px}
 #bn .bn-machine-settings .bn-wheel-compact{background:var(--paper);color:var(--ink);border:1px solid var(--line)}
 #bn .bn-machine-settings .bn-wheel-compact:before{background:var(--white);border:1px solid var(--line);box-sizing:border-box}
 #bn .bn-machine-settings .bn-bpm-rail button{color:var(--ink)}
 #bn .bn-machine-settings .bn-editor-actions{margin-top:16px;padding-top:12px;border-color:var(--line)}
-#bn .bn-machine-settings .bn-editor-actions button,#bn .bn-machine-settings #bn-undo,#bn .bn-machine-settings #bn-redo,#bn .bn-machine-settings #bn-follow{background:transparent;color:var(--ink)}
-#bn .bn-machine-settings #bn-landscape[aria-pressed=true],#bn .bn-machine-settings #bn-follow[aria-pressed=true]{background:var(--acid);color:var(--ink)}
 /* Keep the mobile control card short without shrinking touch targets. */
 #bn .bn-machine-settings{padding:12px;margin-bottom:8px}
 #bn .bn-machine-settings .bn-editor-options{row-gap:8px}
@@ -422,7 +401,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-machine-settings .bn-wheel-compact>small{display:block;position:absolute;top:0;left:4px;right:auto;line-height:42px;padding:0 3px;font-size:var(--bn-text-micro);letter-spacing:0;background:var(--paper);color:var(--muted);pointer-events:none}
 /* Quiet parameter chips and an unboxed tempo ruler. */
 #bn .bn-machine-settings .bn-editor-options>label:not(:last-child){position:relative;height:44px;padding:0 12px;border-radius:10px;background:var(--paper);box-sizing:border-box;font-size:var(--bn-text-caption)}
-#bn .bn-machine-settings .bn-editor-options>label:not(:last-child) .bn-select-trigger{position:static;border:0;background:transparent;padding:0 0 0 8px;border-radius:0;font-size:var(--bn-text-body)}
+#bn .bn-machine-settings .bn-editor-options>label:not(:last-child) .bn-select-trigger{position:static}
 #bn .bn-machine-settings .bn-wheel-compact{border:0;background:transparent;border-radius:0}
 #bn .bn-machine-settings .bn-wheel-compact:before{top:2px;bottom:2px;background:var(--paper);border:0;border-radius:10px}
 #bn .bn-machine-settings .bn-wheel-compact>small{background:var(--white);font-size:var(--bn-text-micro);left:0}
@@ -448,25 +427,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-mode-panel .bn-drum,
 #bn .bn-mode-panel .bn-drum[aria-pressed=true],
 #bn .bn-mode-panel .bn-drum[data-adjusting=true]{border-color:transparent;box-shadow:none}
-#bn .bn-mode-panel .bn-drum[data-free=false][data-level=idle][aria-pressed=true]{background:#e4e5de}
+#bn .bn-mode-panel .bn-drum[data-free=false][data-level=idle][aria-pressed=true]{background:var(--bn-soft)}
 
 /* Library previews keep transport local to each record. */
-#bn .bn-record-practice{grid-column:4;grid-row:2;justify-self:stretch;min-height:44px;padding:8px 14px;border:0;border-radius:12px;background:var(--paper);font-size:var(--bn-text-body);font-weight:700}
+#bn .bn-record-practice{grid-column:4;grid-row:2;justify-self:stretch}
 #bn .bn-preview-error{grid-column:1 / -1;font-size:var(--bn-text-caption);line-height:1.5;overflow-wrap:anywhere}
-#bn .bn-record-play[aria-pressed="true"]{background:var(--acid)}
 #bn .bn-call-course{display:grid;gap:12px;margin-top:12px}
 #bn .bn-call-course>.bn-row{display:grid;gap:8px}
 #bn .bn-call-length{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;background:var(--paper);padding:4px;border-radius:12px}
 #bn .bn-call-length button{min-width:44px;min-height:44px;padding:8px;border:0;border-radius:8px;background:transparent;font-size:var(--bn-text-body)}
 #bn .bn-call-length button[aria-pressed="true"]{background:var(--ink);color:var(--white)}
 
-#bn .bn-record{grid-template-columns:48px minmax(0,1fr) 44px 68px;gap:8px;padding:12px;align-items:center}
+#bn .bn-record{align-items:center}
 #bn .bn-record>.bn-art,#bn .bn-record>.bn-saved-art{grid-column:1;grid-row:1 / 3;align-self:center}
 #bn .bn-record-body{display:contents}
 #bn .bn-record-body h3{grid-column:2 / 4;grid-row:1;margin:0;overflow-wrap:anywhere}
 #bn .bn-record-body .bn-muted{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;font-size:var(--bn-text-caption);line-height:1.4}
-#bn .bn-record .bn-favorite,#bn .bn-record .bn-record-edit{grid-column:4;grid-row:1;justify-self:end}
-#bn .bn-record .bn-record-play{grid-column:3;grid-row:2}
+#bn .bn-record .bn-favorite{justify-self:end}
+#bn .bn-record .bn-record-edit{grid-column:4;grid-row:1;justify-self:end}
 #bn .bn-record .bn-preview-error{grid-row:auto}
 #bn .bn-mode-panel[data-mode=call] .bn-mode-help{margin:0 0 8px}
 #bn .bn-mode-panel[data-mode=call] .bn-target-heading{min-height:24px;margin-bottom:4px}
@@ -477,17 +455,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-call-course>.bn-row{grid-template-columns:minmax(0,1fr);justify-content:stretch}
 #bn .bn-mode-panel[data-mode=call] .bn-drum{height:64px;min-height:64px;padding-top:6px;padding-bottom:6px;gap:4px}
 /* Keep curated card actions together below the title. */
-#bn .bn-record:not(.bn-saved-record){grid-template-columns:40px minmax(0,1fr) 44px 44px 68px}
 #bn .bn-record:not(.bn-saved-record)>.bn-art{grid-row:1;width:40px;height:40px}
 #bn .bn-record:not(.bn-saved-record) .bn-record-body h3{grid-column:2 / -1}
 #bn .bn-record:not(.bn-saved-record) .bn-record-body .bn-muted{grid-column:1 / 3}
-#bn .bn-record:not(.bn-saved-record) .bn-favorite{grid-column:3;grid-row:2}
-#bn .bn-record:not(.bn-saved-record) .bn-record-play{grid-column:4}
-#bn .bn-record:not(.bn-saved-record) .bn-record-practice{grid-column:5}
 #bn .bn-record:not(.bn-saved-record) .bn-record-body{display:block;grid-column:2 / -1;grid-row:1}
 #bn .bn-record:not(.bn-saved-record) .bn-record-body .bn-muted{flex-direction:row;gap:8px;white-space:nowrap;margin-top:4px}
 /* Compact curated cards without shrinking their action targets. */
-#bn .bn-record:not(.bn-saved-record){grid-template-columns:32px minmax(0,1fr) 44px 44px 68px;column-gap:8px;row-gap:2px;padding:8px;border-radius:14px}
 #bn .bn-record:not(.bn-saved-record)>.bn-art{width:32px;height:32px;border-radius:9px}
 #bn .bn-record:not(.bn-saved-record) .bn-record-body h3{font-size:var(--bn-text-body);line-height:18px}
 #bn .bn-record:not(.bn-saved-record) .bn-record-body .bn-muted{justify-content:flex-start;margin-top:2px;line-height:16px}
@@ -495,30 +468,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-record:not(.bn-saved-record) .bn-disc{width:28px;height:28px;box-shadow:none}
 #bn .bn-record:not(.bn-saved-record) .bn-disc span{width:22px;height:22px;border-width:3px;font-size:var(--bn-text-micro)}
 /* A single row shares space between rhythm details and compact actions. */
-#bn .bn-record:not(.bn-saved-record){grid-template-columns:28px minmax(0,1fr) 28px 32px 44px;gap:4px;padding:8px}
 #bn .bn-record:not(.bn-saved-record)>.bn-art{grid-row:1;width:28px;height:28px}
 #bn .bn-record:not(.bn-saved-record) .bn-disc{width:24px;height:24px}
 #bn .bn-record:not(.bn-saved-record) .bn-disc span{width:19px;height:19px;font-size:var(--bn-text-micro)}
 #bn .bn-record:not(.bn-saved-record) .bn-record-body{grid-column:2;grid-row:1}
 #bn .bn-record:not(.bn-saved-record) .bn-record-body h3{font-size:var(--bn-text-body);line-height:17px}
 #bn .bn-record:not(.bn-saved-record) .bn-record-body .bn-muted{gap:4px;font-size:var(--bn-text-micro);line-height:14px}
-#bn .bn-record:not(.bn-saved-record) .bn-favorite{grid-column:3;grid-row:1;width:28px;height:32px;min-height:32px;padding:4px;font-size:var(--bn-text-title)}
-#bn .bn-record:not(.bn-saved-record) .bn-record-play{grid-column:4;grid-row:1;width:32px;height:32px;min-height:32px;padding:7px}
-#bn .bn-record:not(.bn-saved-record) .bn-record-practice{grid-column:5;grid-row:1;width:44px;height:32px;min-height:32px;padding:4px;font-size:var(--bn-text-caption);border-radius:9px;white-space:nowrap}
+#bn .bn-record:not(.bn-saved-record) .bn-record-practice{white-space:nowrap}
 
 /* Keep meter, length and subdivision in one compact toolbar row. */
 #bn .bn-machine-settings .bn-editor-options{grid-template-columns:minmax(0,1fr) minmax(0,.8fr) minmax(0,1.4fr);column-gap:8px}
 #bn .bn-machine-settings .bn-editor-options>label:not(:last-child){padding:0 8px;gap:4px}
-#bn .bn-machine-settings .bn-editor-options>label:not(:last-child) .bn-select-trigger{padding-left:2px;font-size:var(--bn-text-caption)}
+#bn .bn-machine-settings .bn-editor-options>label:not(:last-child) .bn-select-trigger{padding-left:2px}
 #bn .bn-select-menu [role="option"]{white-space:normal}
 
 #bn .bn-source-header{display:flex;align-items:center;gap:8px}
 #bn .bn-source-header .bn-source-tabs{flex:1;min-width:0}
-#bn .bn-library-manage{flex-shrink:0;margin:0;padding:6px 12px;min-height:36px;border-radius:9px;background:var(--paper);font-size:var(--bn-text-caption)}
+#bn .bn-library-manage{flex-shrink:0;margin:0}
 #bn .bn-saved-record{position:relative}
 #bn .bn-saved-record .bn-record-body h3{padding-right:36px}
-#bn .bn-saved-record .bn-record-edit{grid-column:3;grid-row:1;width:32px;height:32px;min-height:32px;padding:7px}
-#bn .bn-record-more{position:static;grid-column:4;grid-row:1;justify-self:end;width:32px;height:32px;min-height:32px;padding:0;font-size:var(--bn-text-title);border-radius:8px;background:transparent}
+#bn .bn-saved-record .bn-record-edit{grid-column:3;grid-row:1;width:32px}
+#bn .bn-record-more{position:static;grid-column:4;grid-row:1;justify-self:end}
 #bn .bn-version-panel{display:grid;gap:12px;max-height:70dvh;overflow:auto;min-width:0;text-align:left}
 #bn .bn-version-panel h2{margin:0;font-size:var(--bn-text-title)}
 #bn .bn-version-panel p{margin:0}
@@ -526,7 +496,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-version-entry{display:grid;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
 #bn .bn-version-entry small{color:var(--muted);font-size:var(--bn-text-caption)}
 #bn .bn-version-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-#bn .bn-version-actions button,#bn .bn-management-menu>button{min-height:36px;padding:6px 10px;border-radius:8px;background:var(--paper);font-size:var(--bn-text-caption)}
 #bn .bn-management-menu{display:grid;gap:8px}
 #bn .bn-version-panel input:not([type="checkbox"]){display:block;width:100%;box-sizing:border-box;min-height:36px;margin:6px 0;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--paper);font:inherit}
 #bn .bn-backup-restore{display:flex;align-items:flex-start;gap:8px;font-size:var(--bn-text-body)}
@@ -536,16 +505,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-
 #bn .bn-record .bn-favorite[aria-pressed="true"] svg{fill:currentColor}
 
 /* Saved combinations have separate information and action rows. */
-#bn .bn-saved-record{grid-template-columns:44px minmax(0,1fr) 40px 64px;gap:10px 8px;padding:14px;align-items:center}
+#bn .bn-saved-record{align-items:center}
 #bn .bn-saved-record .bn-saved-art{grid-column:1;grid-row:1;width:44px;height:44px;min-width:0;box-sizing:border-box}
 #bn .bn-saved-record .bn-record-body{display:block;grid-column:2/4;grid-row:1;min-width:0}
 #bn .bn-saved-record .bn-record-body h3{padding:0;margin:0 0 4px;font-size:var(--bn-text-label);line-height:20px;overflow-wrap:anywhere}
 #bn .bn-saved-record .bn-record-body .bn-muted{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:flex-start;gap:2px 6px;font-size:var(--bn-text-caption);line-height:17px}
 #bn .bn-saved-record .bn-record-body .bn-muted span{white-space:nowrap}
-#bn .bn-saved-record .bn-record-more{grid-column:4;grid-row:1;width:36px;height:36px;min-height:36px;align-self:start}
-#bn .bn-saved-record .bn-record-edit{grid-column:1/3;grid-row:2;justify-self:start;display:flex;align-items:center;justify-content:center;gap:6px;width:auto;height:40px;min-height:40px;padding:0 10px;border-radius:9px;background:var(--paper);font-size:var(--bn-text-caption);line-height:1}
-#bn .bn-saved-record .bn-record-play{grid-column:3;grid-row:2;width:40px;height:40px;min-height:40px;padding:10px;align-self:center}
-#bn .bn-saved-record .bn-record-practice{grid-column:4;grid-row:2;display:grid;place-items:center;height:40px;min-height:40px;padding:0 8px;font-size:var(--bn-text-caption);line-height:1;border-radius:10px;white-space:nowrap;align-self:center}
+#bn .bn-saved-record .bn-record-more{grid-column:4;grid-row:1;align-self:start}
+#bn .bn-saved-record .bn-record-edit{grid-column:1/3;grid-row:2;justify-self:start;display:flex;align-items:center;justify-content:center;gap:6px;width:auto;line-height:1}
+#bn .bn-saved-record .bn-record-play{grid-column:3;grid-row:2;align-self:center}
+#bn .bn-saved-record .bn-record-practice{grid-column:4;grid-row:2;display:grid;place-items:center;line-height:1;white-space:nowrap;align-self:center}
 #bn .bn-saved-record .bn-preview-error{grid-column:1/-1;grid-row:auto}
 
 /* Phase previews share the existing compact route chip. */

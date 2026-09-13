@@ -35,7 +35,7 @@ describe('RhythmChallenge SSR controls', () => {
   it.each([false, true])('renders one-shot and infinite playback controls with %s selected', (repeat) => {
     const markup = renderToStaticMarkup(<RhythmChallengeView state={stateFor('ready', 0, undefined, repeat)} />)
     expect(markup).toContain('<div class="rc-loop-mode" role="group" aria-label="播放方式">')
-    const controls = [...markup.matchAll(/<button type="button"[^>]*aria-label="(只播一次|无限循环)"[^>]*>/g)]
+    const controls = [...markup.matchAll(/<button\b(?=[^>]*\btype="button")(?=[^>]*\baria-label="(只播一次|无限循环)")[^>]*>/g)]
     expect(controls).toHaveLength(1)
     expect(controls.every(([control]) => !control.includes('disabled'))).toBe(true)
     expect(controls.map(([control]) => control.includes('aria-pressed="true"'))).toEqual([repeat])
@@ -43,7 +43,7 @@ describe('RhythmChallenge SSR controls', () => {
 
   it('locks playback mode controls while playing', () => {
     const markup = renderToStaticMarkup(<RhythmChallengeView state={stateFor('playing', 0, undefined, true)} />)
-    const controls = [...markup.matchAll(/<button type="button"[^>]*aria-label="(只播一次|无限循环)"[^>]*>/g)]
+    const controls = [...markup.matchAll(/<button\b(?=[^>]*\btype="button")(?=[^>]*\baria-label="(只播一次|无限循环)")[^>]*>/g)]
     expect(controls).toHaveLength(1)
     expect(controls.every(([control]) => control.includes('disabled=""'))).toBe(true)
   })

@@ -32,7 +32,9 @@ describe('confirmed BeatNex initial interface', () => {
   it('provides an enabled direct challenge action at the default tempo', () => {
     const practice = page('practice')
     const start = practice.match(/<button\b[^>]*aria-label="开始挑战：[^"]+"[^>]*>[\s\S]*?<\/button>/)?.[0] ?? ''
-    expect(start.includes('播放')).toBe(true)
+    expect(start).toMatch(/aria-label="开始挑战：[^\"]+"/)
+    expect(start).toMatch(/class="[^"]*bn-control-icon[^"]*"/)
+    expect(start).toContain('<svg')
     expect(/\bdisabled(?:=|\s|>)/.test(start)).toBe(false)
     const challengeTempo = practice.match(/<input\b[^>]*aria-label="挑战速度"[^>]*>/)?.[0] ?? ''
     expect(challengeTempo).toContain('value="90"')
