@@ -24,6 +24,7 @@ const appFor = (status: EngineSnapshot['status'], options: {
   const mode = settings.routeEnabled ? 'route' : 'free'
   return {
     settings,
+    practiceKind: 'drums',
     selectedDrums: settings.targets,
     pattern: BOOM_BAP_PATTERNS[0],
     source: BOOM_BAP_PATTERNS[0],
@@ -41,6 +42,8 @@ const appFor = (status: EngineSnapshot['status'], options: {
     setVersionPanel() {}, restoreVersion() {}, manageVersion() { return true }, exportBackup() { throw new Error('unused') }, importBackup() { return true },
     phasePreview: { key: undefined, loading: false, snapshot: snapshot('idle'), toggle() {}, stop() {} },
     preview: { key: undefined, loading: false, snapshot: snapshot('idle'), toggle() {}, stop() {} },
+    challenge: {} as BeatNex['challenge'],
+    changePracticeKind() {}, startChallenge() {},
     changeFreeVolume() {},
   } as BeatNex
 }

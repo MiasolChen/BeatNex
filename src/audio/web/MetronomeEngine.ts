@@ -1,3 +1,4 @@
+import {scheduleClick} from './clickSound'
 export interface MetronomeBeat {
   at: number
   period: number
@@ -128,24 +129,14 @@ export class MetronomeEngine {
     if (this.nextAt < context.currentTime) this.nextAt = context.currentTime + 0.005
     while (this.nextAt < context.currentTime + 0.12) {
       const at = this.nextAt
-      const oscillator = context.createOscillator()
-      const gain = context.createGain()
-      const voice = { oscillator, gain, at }
-      oscillator.type = 'sine'
-      oscillator.frequency.setValueAtTime(1000, at)
-      gain.gain.setValueAtTime(0, at)
-      gain.gain.linearRampToValueAtTime(0.16, at + 0.002)
-      gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.045)
-      oscillator.connect(gain)
-      gain.connect(context.destination)
+      const {oscillator, gain} = scheduleClick(context, at)
+      const voice = {oscillator, gain, at}
       this.voices.add(voice)
       oscillator.onended = () => {
         this.voices.delete(voice)
         oscillator.disconnect()
         gain.disconnect()
       }
-      oscillator.start(at)
-      oscillator.stop(at + 0.05)
       this.queue.push({ at, period: 60 / this.bpm, index: this.nextIndex++ })
       this.nextAt = at + 60 / this.bpm
     }

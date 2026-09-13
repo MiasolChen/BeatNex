@@ -1,3 +1,4 @@
+import {useRhythmChallenge} from './useRhythmChallenge'
 import {useEffect,useMemo,useRef,useState} from 'react'
 import {BOOM_BAP_PATTERNS,findPattern} from '../core/pattern/fixtures'
 import {DRUM_IDS,type DrumId,type Pattern,type Meter} from '../core/pattern/types'
@@ -22,6 +23,7 @@ export function useBeatNex(){
  const meterDrafts=useRef<Partial<Record<Meter,Pattern>>>({})
  const [source,setSource]=useState<Pattern>(()=>settings.workspace?.source??pattern)
  const [page,setPage]=useState<Page>('practice')
+ const [practiceKind,setPracticeKind]=useState<'drums'|'challenge'>('challenge')
  const [muted,setMuted]=useState<DrumId[]>(()=>settings.workspace?.muted??[])
  const restoreStates=useRef(new WeakMap<Pattern,{settings:typeof settings;source:Pattern;muted:DrumId[];activeId?:string}>())
  const restoreState=(p:Pattern)=>{const value=restoreStates.current.get(p);if(value){resetAll();setSettings(value.settings);setSource(value.source);setMuted(value.muted);setActiveId(library.value.some(item=>item.id===value.activeId&&!item.deletedAt)?value.activeId:undefined)}}
@@ -44,6 +46,9 @@ export function useBeatNex(){
  const freeAudio=useDrumMachine(pattern,settings.bpm)
  const phasePreview=usePhasePreview(page==='practice'&&settings.routeEnabled,pattern,settings.bpm,settings.phases,settings.targets,()=>{routeAudio.pause();freeAudio.pause()})
  const preview=useLibraryPreview(page==='library',()=>{routeAudio.pause();freeAudio.pause();phasePreview.stop()})
+ const challenge=useRhythmChallenge(page==='practice'&&practiceKind==='challenge',()=>{routeAudio.pause();freeAudio.pause();phasePreview.stop();preview.stop();setCompleted(false)})
+ const changePracticeKind=(kind:'drums'|'challenge')=>{challenge.reset();routeAudio.pause();freeAudio.pause();phasePreview.stop();setCompleted(false);setPracticeKind(kind)}
+ const startChallenge=(id:string)=>{resetAll();setPage('practice');setPracticeKind('challenge');setLandscape(false);void challenge.play(id)}
  const audio=page==='practice'?(settings.routeEnabled?routeAudio:freeAudio):routeAudio
  const selectedDrums=settings.routeEnabled?settings.targets:(settings.freeTargets??settings.targets)
  const {snapshot}=audio
@@ -58,13 +63,13 @@ export function useBeatNex(){
  useEffect(()=>{const error=startupError||combinations.error||favorites.error;if(error)notice(error);return()=>clearTimeout(notifyTimer.current)},[])
  const patch=(values:Partial<PracticeSettings>)=>setSettings(s=>({...s,...values}))
  const reset=()=>{phasePreview.stop();audio.stop();setCompleted(false);setFeedback('')}
- const resetAll=()=>{routeAudio.stop();freeAudio.stop();phasePreview.stop();preview.stop();setCompleted(false);setFeedback('')}
+ const resetAll=()=>{challenge.reset();routeAudio.stop();freeAudio.stop();phasePreview.stop();preview.stop();setCompleted(false);setFeedback('')}
  const switchPage=(next:Page)=>{if(next===page)return;resetAll();setPage(next);if(next!=='machine')setLandscape(false)}
  const changeBpm=(bpm:number)=>patch({bpm})
- const togglePlayback=()=>{phasePreview.stop();if(playing)audio.pause();else{if(currentCompleted)reset();void audio.play()}}
+ const togglePlayback=()=>{challenge.reset();phasePreview.stop();if(playing)audio.pause();else{if(currentCompleted)reset();void audio.play()}}
  const changeFreeVolume=(drum:DrumId,percent:number)=>{if(settings.routeEnabled||!Number.isFinite(percent))return;setSettings(s=>({...s,freeVolumes:{...s.freeVolumes,[drum]:Math.max(0,Math.min(100,Math.round(percent)))}}))}
  const selectDrum=(drum:DrumId,remove:boolean)=>{if(settings.routeEnabled&&(playing||loading))return;const next=remove?selectedDrums.filter(d=>d!==drum):Array.from(new Set([...selectedDrums,drum]));patch(settings.routeEnabled?{targets:next}:{freeTargets:next})}
- const choosePattern=(id:string,specialized=false)=>{const next=BOOM_BAP_PATTERNS.find(p=>p.id===id);if(!next)return;resetAll();meterDrafts.current={};setPattern(next);setSource(next);setActiveId(undefined);setMuted([]);setHistory([]);setFuture([]);const lesson=specialized?BOOM_BAP_LESSONS.find(x=>x.name===next.name):undefined;patch({bpm:next.recommendedBpm,patternName:next.name,difficulty:next.difficulty,...(lesson?{targets:[...lesson.targets],routeEnabled:true,repeat:'once' as const,phases:phaseIds.map((id,index)=>({id,instanceId:`phase-${index}`,bars:4}))}:{})});setPage('practice')}
+ const choosePattern=(id:string,specialized=false)=>{const next=BOOM_BAP_PATTERNS.find(p=>p.id===id);if(!next)return;resetAll();setPracticeKind('drums');meterDrafts.current={};setPattern(next);setSource(next);setActiveId(undefined);setMuted([]);setHistory([]);setFuture([]);const lesson=specialized?BOOM_BAP_LESSONS.find(x=>x.name===next.name):undefined;patch({bpm:next.recommendedBpm,patternName:next.name,difficulty:next.difficulty,...(lesson?{targets:[...lesson.targets],routeEnabled:true,repeat:'once' as const,phases:phaseIds.map((id,index)=>({id,instanceId:`phase-${index}`,bars:4}))}:{})});setPage('practice')}
  const changePattern=(next:Pattern)=>{setHistory(h=>[...h.slice(-49),pattern]);setFuture([]);setPattern(next)}
  const toggleStep=(drum:DrumId,step:number)=>changePattern(togglePatternStep(pattern,drum,step))
  const changeSubdivision=(subdivision:Pattern['subdivision'])=>{if(subdivision===pattern.subdivision)return;changePattern(withSubdivision(pattern,subdivision));notice('已切换细分，撤销可恢复原鼓点')}
@@ -85,7 +90,7 @@ export function useBeatNex(){
    const entries=appendRevision(library.value,id,name,source.id,makeSnapshot(nextPattern,settings.bpm,muted,settings))
    if(!persistLibrary(entries))return false
    setActiveId(id);setPattern(nextPattern);setSource(nextPattern);setSaveOpen(false);notice(activeId?'已保存新版本':'已保存到节奏库')
-   if(practice){resetAll();setPage('practice')}return true
+   if(practice){resetAll();setPracticeKind('drums');setPage('practice')}return true
   }catch(error){notice(error instanceof Error?error.message:'保存失败');return false}
  }
  const applySnapshot=(value:Snapshot,id:string)=>{
@@ -94,7 +99,7 @@ export function useBeatNex(){
  }
  const load=(id:string,destination:Page)=>{const item=library.value.find(x=>x.id===id&&!x.deletedAt);if(!item)return
   const value=item.versions.find(v=>v.id===item.currentId)!.snapshot
-  applySnapshot({...value,pattern:{...value.pattern,name:item.name}},id);setHistory([]);setFuture([]);setPage(destination);notice(destination==='practice'?'已使用 '+item.name:'已打开 '+item.name)
+  applySnapshot({...value,pattern:{...value.pattern,name:item.name}},id);setHistory([]);setFuture([]);setPracticeKind('drums');setPage(destination);notice(destination==='practice'?'已使用 '+item.name:'已打开 '+item.name)
  }
  const restoreVersion=(id:string,revisionId?:string)=>{
   const item=library.value.find(x=>x.id===id&&!x.deletedAt);if(!item)return
@@ -149,6 +154,6 @@ export function useBeatNex(){
  const endFree=()=>{notice('本次自由练习 '+Math.floor(snapshot.elapsed/60).toString().padStart(2,'0')+':'+Math.floor(snapshot.elapsed%60).toString().padStart(2,'0'));reset()}
  const phases=settings.phases.map(p=>({...p,label:PHASE_LABELS[phaseIds.indexOf(p.id as never)]}))
  const submitFeedback=(value:string)=>{setFeedback(value);try{localStorage.setItem('beatnex:last-training-feedback',value)}catch{notice('反馈仅保留在本次练习')}}
- return {versionPanel,setVersionPanel,library:library.value,restoreVersion,manageVersion,exportBackup,importBackup,settings,mode,changeMode,phasePreview,preview,selectedDrums,pattern,source,page,muted,history,future,combinations:combinations.value,favorites:favorites.value,activeId,toast,completed:page==='practice'&&settings.routeEnabled&&currentCompleted,saveOpen,setSaveOpen,feedback,submitFeedback,landscape,setLandscape,follow,setFollow,notice,audio,snapshot,playing,loading,totalBars,cycle,round,changeRepeat,activeIndex,phases,switchPage,changeBpm,togglePlayback,changeFreeVolume,selectDrum,choosePattern,toggleStep,changeMeter,changePatternBars,changeSubdivision,undo,redo,restore,toggleMute,save,load,toggleFavorite,reorder,removePhase,addPhase,changeBars,toggleRoute,endFree,reset,setCompleted}
+ return {challenge,practiceKind,changePracticeKind,startChallenge,versionPanel,setVersionPanel,library:library.value,restoreVersion,manageVersion,exportBackup,importBackup,settings,mode,changeMode,phasePreview,preview,selectedDrums,pattern,source,page,muted,history,future,combinations:combinations.value,favorites:favorites.value,activeId,toast,completed:page==='practice'&&settings.routeEnabled&&currentCompleted,saveOpen,setSaveOpen,feedback,submitFeedback,landscape,setLandscape,follow,setFollow,notice,audio,snapshot,playing,loading,totalBars,cycle,round,changeRepeat,activeIndex,phases,switchPage,changeBpm,togglePlayback,changeFreeVolume,selectDrum,choosePattern,toggleStep,changeMeter,changePatternBars,changeSubdivision,undo,redo,restore,toggleMute,save,load,toggleFavorite,reorder,removePhase,addPhase,changeBars,toggleRoute,endFree,reset,setCompleted}
 }
 export type BeatNex=ReturnType<typeof useBeatNex>
